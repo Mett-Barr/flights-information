@@ -1,4 +1,4 @@
-package moozy.flightinformation.ui.theme
+package moozy.flightinformation.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
