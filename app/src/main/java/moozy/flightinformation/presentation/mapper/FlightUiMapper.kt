@@ -1,7 +1,6 @@
 package moozy.flightinformation.presentation.mapper
 
-import moozy.flightinformation.data.remote.dto.InstantScheduleDomesticArrivalDto
-import moozy.flightinformation.data.remote.dto.InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem
+import moozy.flightinformation.data.datasource.flights.dto.InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem
 import moozy.flightinformation.presentation.state.FlightArrivalItemUiModel
 import kotlin.collections.map
 

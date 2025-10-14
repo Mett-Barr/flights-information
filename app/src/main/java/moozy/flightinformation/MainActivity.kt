@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FlightInformationTheme {
                 val viewModel: MainViewModel = hiltViewModel()
-                val uiState by viewModel.ui.()
+                val uiState by viewModel.ui.collectAsStateWithLifecycle()
 
                 FlightScreen(flightArrivalsUiState = uiState)
             }

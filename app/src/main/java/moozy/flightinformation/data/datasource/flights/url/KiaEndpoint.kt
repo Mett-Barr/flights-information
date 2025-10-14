@@ -1,4 +1,4 @@
-package moozy.flightinformation.data.remote.url
+package moozy.flightinformation.data.datasource.flights.url
 
 private const val KIA_BASE = "https://www.kia.gov.tw"
 

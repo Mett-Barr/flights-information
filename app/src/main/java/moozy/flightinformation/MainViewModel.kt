@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import moozy.flightinformation.data.remote.api.FlightApi
+import moozy.flightinformation.data.datasource.flights.api.FlightApi
+import moozy.flightinformation.data.repository.flights.FlightsRepository
 import moozy.flightinformation.presentation.mapper.toUiModels
 import moozy.flightinformation.presentation.state.FlightArrivalsUiState
 import moozy.flightinformation.presentation.state.FlightArrivalsUiState.*
@@ -15,9 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val flightApi: FlightApi
+    private val flightsRepository: FlightsRepository
 ) : ViewModel() {
-
     private val _ui = MutableStateFlow<FlightArrivalsUiState>(Loading)
     val ui: StateFlow<FlightArrivalsUiState> = _ui.asStateFlow()
 
@@ -34,7 +34,7 @@ class MainViewModel @Inject constructor(
             if (initial) _ui.value = Loading
             else (_ui.value as? Content)?.let { _ui.value = it.copy(isRefreshing = true) }
 
-            FlightApi.instantDomesticArrivals() // Result<List<Dto>>
+            flightsRepository.fetchArrivals() // Result<List<Dto>>
                 .mapCatching { it.toUiModels() } // DTO -> UiModel（只做 UI 格式化）
                 .fold(
                     onSuccess = { items ->

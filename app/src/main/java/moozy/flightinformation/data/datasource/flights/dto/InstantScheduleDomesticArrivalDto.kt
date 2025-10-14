@@ -1,4 +1,4 @@
-package moozy.flightinformation.data.remote.dto
+package moozy.flightinformation.data.datasource.flights.dto
 
 import kotlinx.serialization.Serializable
 
