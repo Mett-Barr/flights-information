@@ -5,5 +5,5 @@ import moozy.flightinformation.domain.model.currency.Currencies
 import moozy.flightinformation.domain.model.currency.CurrencyCode
 
 interface CurrencyRepository {
-    suspend fun getLatest(base: String?, codes: Set<CurrencyCode>): Result<Currencies>
+    suspend fun getLatest(base: CurrencyCode?, codes: Set<CurrencyCode>): Result<Currencies>
 }

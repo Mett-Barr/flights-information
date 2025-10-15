@@ -14,14 +14,14 @@ class CurrencyRepositoryImpl @Inject constructor(
 ) : CurrencyRepository {
 
     override suspend fun getLatest(
-        base: String?,
+        base: CurrencyCode?,
         codes: Set<CurrencyCode>
     ): Result<Currencies> {
         if (codes.isEmpty()) {
             return Result.failure(IllegalArgumentException("At least one currency code is required"))
         }
         val currenciesCsv = codes.toCsv()
-        return networkDataSource.fetchLatest(base, currenciesCsv).mapCatching { it.toCurrencies() }
+        return networkDataSource.fetchLatest(base?.code, currenciesCsv).mapCatching { it.toCurrencies() }
     }
 
     private fun Iterable<CurrencyCode>.toCsv(): String =

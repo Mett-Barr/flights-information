@@ -4,40 +4,88 @@ import moozy.flightinformation.data.datasource.flights.dto.InstantScheduleDomest
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
 import kotlin.collections.map
 
-/** 單一函數：DTO → UiModel（不做 enum，不碰資源/網路/DB） */
-fun InstantScheduleDomesticArrivalDtoItem.toUiModel(): FlightArrivalItemUiModel {
-    fun t(s: String?) = if (s.isNullOrBlank()) "--:--" else s
-    val statusRaw = (airFlyStatus ?: "").trim()
 
-    // 規範化一個「狀態鍵」（全大寫，中文/英文都吃），UI 用這個鍵決定顏色/樣式
-    val key = when (statusRaw.uppercase()) {
-        "抵達", "ARRIVED" -> "ARRIVED"
-        "出登", "出發", "DEPARTED" -> "DEPARTED"
-        "時間更改", "SCHEDULE CHANGE", "SCHEDULE_CHANGE" -> "SCHEDULE_CHANGE"
-        "取消", "CANCELLED" -> "CANCELLED"
-        "延誤", "DELAYED" -> "DELAYED"
+fun InstantScheduleDomesticArrivalDtoItem.toUiModel(): FlightArrivalItemUiModel {
+    fun clean(s: String?) = s?.trim().orEmpty()
+    fun nnTime(s: String?) = clean(s).ifBlank { "--:--" }
+
+    val expected = nnTime(expectTime)
+    val actualOrExpected = clean(realTime).ifBlank { expected }
+
+    // -------- 狀態正規化（中英皆吃）--------
+    val statusRaw = clean(airFlyStatus)
+    val upper = statusRaw.uppercase()
+    val isOnTimeWord = listOf("ON TIME", "ONTIME", "ON-TIME", "準時", "準點", "正常", "準點到達", "準點出發")
+        .any { upper.contains(it) }
+
+    val statusKey = when {
+        upper == "ARRIVED" || statusRaw == "抵達" -> "ARRIVED"
+        upper == "DEPARTED" || statusRaw in listOf("出發", "出登") -> "DEPARTED"
+        upper.replace(" ", "_") == "SCHEDULE_CHANGE" || statusRaw == "時間更改" -> "SCHEDULE_CHANGE"
+        upper == "CANCELLED" || statusRaw == "取消" -> "CANCELLED"
+        upper == "DELAYED" || statusRaw == "延誤" -> "DELAYED"
+        isOnTimeWord -> "ON_TIME"
         else -> "UNKNOWN"
     }
 
-    // 展示字串（直接給畫面用）
-    val statusText = when (key) {
-        "ARRIVED" -> "抵達ARRIVED"
-        "DEPARTED" -> "出發DEPARTED"
-        "SCHEDULE_CHANGE" -> "時間更改SCHEDULE CHANGE"
-        "CANCELLED" -> "取消CANCELLED"
-        "DELAYED" -> "延誤DELAYED"
-        else -> "狀態未知"
+    val badgeText = when (statusKey) {
+        "ARRIVED" -> "Arrived"
+        "DEPARTED" -> "Departed"
+        "SCHEDULE_CHANGE" -> "Schedule change"
+        "CANCELLED" -> "Cancelled"
+        "DELAYED" -> "Delayed"
+        "ON_TIME" -> "On time"
+        else -> "Unknown"
+    }
+
+    // -------- 航空公司＋班號（避免重複代碼）--------
+    val code = clean(airLineCode)
+    val numRaw = clean(airLineNum)
+    val flightNo = when {
+        numRaw.startsWith(code) -> numRaw
+        code.isNotBlank() && numRaw.isNotBlank() -> "$code $numRaw"
+        numRaw.isNotBlank() -> numRaw
+        else -> "--"
+    }
+    val airline = clean(airLineName).ifBlank { code.ifBlank { "Airline" } }
+    val carrierLine = "$airline · $flightNo"
+
+    // -------- 出發地（含 IATA）--------
+    val depName = clean(upAirportName)
+    val depCode = clean(upAirportCode)
+    val departure = when {
+        depName.isNotBlank() && depCode.isNotBlank() -> "$depName ($depCode)"
+        depName.isNotBlank() -> depName
+        depCode.isNotBlank() -> depCode
+        else -> "--"
+    }
+
+    // -------- 登機門 / 機型 --------
+    val gate = clean(airBoardingGate).ifBlank { "--" }
+    val aircraft = clean(airPlaneType).ifBlank { "--" }
+
+    // -------- 下方狀態行（可帶原因）--------
+    val cause = clean(airFlyDelayCause)
+    val statusLine = when (statusKey) {
+        "DELAYED" -> if (cause.isNotBlank()) "Delayed · $cause" else "Delayed"
+        "SCHEDULE_CHANGE" -> "Schedule change"
+        "CANCELLED" -> "Cancelled"
+        "ARRIVED" -> if (isOnTimeWord) "Arrived · On time" else "Arrived"
+        "DEPARTED" -> if (isOnTimeWord) "Departed · On time" else "Departed"
+        "ON_TIME" -> "On time"
+        else -> if (statusRaw.isNotBlank()) statusRaw else "Status unknown"
     }
 
     return FlightArrivalItemUiModel(
-        scheduleText = "預計時間  ${t(expectTime)}",
-        actualText = "實際時間  ${t(realTime)}",
-        originCode = upAirportCode.orEmpty(),
-        originName = upAirportName.orEmpty(),
-        flightNo = airLineNum.orEmpty(),
-        gateText = "航廈/登機門：${airBoardingGate?.ifBlank { "--" } ?: "--"}",
-        statusText = statusText,
-        statusKey = key,
+        headlineTimeText = actualOrExpected,
+        expectedLabelText = "Expected $expected",
+        badgeText = badgeText,
+        carrierLineText = carrierLine,
+        departureText = departure,
+        gateText = "Gate $gate",
+        aircraftText = aircraft,
+        flightStatusText = statusLine,
+        statusKey = statusKey,
         airlineLogoUrl = airLineLogo
     )
 }

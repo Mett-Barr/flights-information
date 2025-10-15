@@ -84,10 +84,27 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.androidx.material3.adaptive.navigation3)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
+
+    implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
+    implementation("androidx.compose.material3.adaptive:adaptive:1.3.0-alpha01")
+    implementation("androidx.compose.material3.adaptive:adaptive-layout:1.3.0-alpha01")
+    implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.3.0-alpha01")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.5.0-alpha06")
+    implementation("androidx.window:window:1.5.0")
+    implementation("androidx.window:window-core:1.5.0")
+
+
 
     implementation(libs.hilt.android)
+    implementation(libs.androidx.compose.runtime)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+
+
+    implementation(libs.kotlinx.collections.immutable)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
