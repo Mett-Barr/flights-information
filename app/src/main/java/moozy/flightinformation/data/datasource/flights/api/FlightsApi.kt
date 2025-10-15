@@ -7,11 +7,12 @@ import moozy.flightinformation.data.network.request
 import moozy.flightinformation.data.datasource.flights.dto.InstantScheduleDomesticArrivalDto
 import moozy.flightinformation.data.datasource.flights.url.KiaEndpoint
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
-class FlightApi @Inject constructor(
-    private val http: KtorHttpRequester
+class FlightsApi @Inject constructor(
+    @param:Named("FlightsRequester") private val http: KtorHttpRequester
 ) {
     suspend fun instantDomesticArrivals(): Result<List<InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem>> =
         http.request {

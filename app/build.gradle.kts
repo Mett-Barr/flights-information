@@ -16,6 +16,7 @@ val localProps = Properties().apply {
     if (f.exists()) load(f.inputStream())
 }
 val flightApiKey = localProps.getProperty("flight_api_key") ?: ""
+val freeExchangeApiKet = localProps.getProperty("free_currency_api_key") ?: ""
 
 android {
     namespace = "moozy.flightinformation"
@@ -32,6 +33,7 @@ android {
 
 
         buildConfigField("String", "FLIGHT_API_KEY", "\"$flightApiKey\"")
+        buildConfigField("String", "FREE_CURRENCY_API_KEY", "\"$freeExchangeApiKet\"")
     }
 
     buildTypes {

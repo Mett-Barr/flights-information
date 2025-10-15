@@ -1,4 +1,4 @@
-package moozy.flightinformation.presentation.state
+package moozy.flightinformation.presentation.state.flights
 
 data class FlightArrivalItemUiModel(
     val scheduleText: String,      // "預計時間 HH:mm"

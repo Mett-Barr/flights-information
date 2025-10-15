@@ -1,4 +1,4 @@
-package moozy.flightinformation.presentation.state
+package moozy.flightinformation.presentation.state.flights
 
 sealed class FlightArrivalsUiState {
     data object Loading : FlightArrivalsUiState()

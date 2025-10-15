@@ -26,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import moozy.flightinformation.presentation.state.FlightArrivalItemUiModel
-import moozy.flightinformation.presentation.state.FlightArrivalsUiState
+import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
+import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
 
 @Composable

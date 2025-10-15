@@ -1,7 +1,7 @@
 package moozy.flightinformation.presentation.mapper
 
 import moozy.flightinformation.data.datasource.flights.dto.InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem
-import moozy.flightinformation.presentation.state.FlightArrivalItemUiModel
+import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
 import kotlin.collections.map
 
 /** 單一函數：DTO → UiModel（不做 enum，不碰資源/網路/DB） */
