@@ -52,7 +52,15 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                 when (it) {
                     NavRoute.Flights -> {
                         val state by flightsViewModel.state.collectAsStateWithLifecycle()
-                        FlightsScreen(state, modifier, innerPadding)
+                        FlightsScreen(
+                            flightArrivalsUiState = state,
+                            modifier = modifier,
+                            onRefresh = flightsViewModel::refresh,
+                            onScreenVisible = flightsViewModel::enableAutoRefresh,
+                            onScreenHidden = flightsViewModel::disableAutoRefresh,
+                            refreshEvent = flightsViewModel.refreshEvent,
+                            innerPadding = innerPadding
+                        )
                     }
 
                     NavRoute.Currency -> {

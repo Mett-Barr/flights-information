@@ -1,6 +1,7 @@
 package moozy.flightinformation.presentation.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -143,14 +145,15 @@ private fun InfoColumn(title: String, value: String, modifier: Modifier = Modifi
 
 @Composable
 private fun StatusBadge(text: String, statusKey: String) {
+    val isDarkTheme = isSystemInDarkTheme()
     val (backgroundColor, textColor) = when (statusKey.uppercase()) {
-        "ON_TIME" -> Color(0xFFE0F7FA) to Color(0xFF00838F)
-        "DELAYED" -> Color(0xFFFFF3E0) to Color(0xFFE65100)
-        "CANCELLED" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
-        "ARRIVED" -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-        "DEPARTED" -> Color(0xFFE3F2FD) to Color(0xFF0D47A1)
-        "SCHEDULE_CHANGE" -> Color(0xFFF3E5F5) to Color(0xFF4A148C)
-        else -> Color.LightGray to Color.DarkGray // UNKNOWN
+        "ON_TIME" -> if (isDarkTheme) Color(0xFF00363A) to Color(0xFFB1F0F7) else Color(0xFFE0F7FA) to Color(0xFF00838F)
+        "DELAYED" -> if (isDarkTheme) Color(0xFF452700) to Color(0xFFFFDDB8) else Color(0xFFFFF3E0) to Color(0xFFE65100)
+        "CANCELLED" -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        "ARRIVED" -> if (isDarkTheme) Color(0xFF0A3818) to Color(0xFFB8F3B6) else Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+        "DEPARTED" -> if (isDarkTheme) Color(0xFF002B4D) to Color(0xFFD0E4FF) else Color(0xFFE3F2FD) to Color(0xFF0D47A1)
+        "SCHEDULE_CHANGE" -> if (isDarkTheme) Color(0xFF3C006C) to Color(0xFFF3D8FF) else Color(0xFFF3E5F5) to Color(0xFF4A148C)
+        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Box(
