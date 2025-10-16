@@ -1,4 +1,4 @@
-package moozy.flightinformation.data.repository.flights
+package moozy.flightinformation.domain.repository.flights
 
 import moozy.flightinformation.data.datasource.flights.dto.InstantScheduleDomesticArrivalDto
 

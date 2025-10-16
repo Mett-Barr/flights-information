@@ -4,9 +4,9 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import moozy.flightinformation.data.repository.currency.CurrencyRepository
+import moozy.flightinformation.domain.repository.currency.CurrencyRepository
 import moozy.flightinformation.data.repository.currency.CurrencyRepositoryImpl
-import moozy.flightinformation.data.repository.flights.FlightsRepository
+import moozy.flightinformation.domain.repository.flights.FlightsRepository
 import moozy.flightinformation.data.repository.flights.FlightsRepositoryImpl
 import javax.inject.Singleton
 

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import moozy.flightinformation.data.repository.currency.CurrencyRepository
+import moozy.flightinformation.domain.repository.currency.CurrencyRepository
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.MoneyCode
 import moozy.flightinformation.presentation.mapper.mapCurrenciesToRows

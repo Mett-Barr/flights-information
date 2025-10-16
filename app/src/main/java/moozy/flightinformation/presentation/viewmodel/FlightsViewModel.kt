@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import moozy.flightinformation.data.repository.flights.FlightsRepository
+import moozy.flightinformation.domain.repository.flights.FlightsRepository
 import moozy.flightinformation.presentation.mapper.toUiModels
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
 import moozy.flightinformation.util.time.ReTimer

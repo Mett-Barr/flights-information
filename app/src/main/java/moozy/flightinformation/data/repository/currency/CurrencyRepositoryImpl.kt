@@ -5,6 +5,7 @@ import moozy.flightinformation.data.datasource.currency.CurrencyNetworkDataSourc
 import moozy.flightinformation.data.datasource.currency.dto.toCurrencies
 import moozy.flightinformation.domain.model.currency.Currencies
 import moozy.flightinformation.domain.model.currency.CurrencyRate
+import moozy.flightinformation.domain.repository.currency.CurrencyRepository
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.MoneyCode
 import java.math.BigDecimal

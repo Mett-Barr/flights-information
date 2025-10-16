@@ -1,6 +1,5 @@
-package moozy.flightinformation.data.repository.currency
+package moozy.flightinformation.domain.repository.currency
 
-import kotlinx.coroutines.flow.StateFlow
 import moozy.flightinformation.domain.model.currency.Currencies
 import moozy.flightinformation.domain.value.CurrencyCode
 
