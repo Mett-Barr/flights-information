@@ -1,5 +1,6 @@
 package moozy.flightinformation.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -8,13 +9,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import moozy.flightinformation.data.repository.currency.CurrencyRepository
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.MoneyCode
 import moozy.flightinformation.presentation.mapper.mapCurrenciesToRows
+import moozy.flightinformation.presentation.mapper.nextContent
 import moozy.flightinformation.presentation.model.currency.CurrencyRow
 import moozy.flightinformation.presentation.state.currency.CurrencyUiState
+import moozy.flightinformation.util.collection.toggle
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,17 +33,68 @@ class CurrencyViewModel @Inject constructor(
         getCurrencies()
     }
 
-//    fun onCurrencySelected(currencyCode: CurrencyCode) {
-//        _state.update {
-//            when (it) {
-//                is CurrencyUiState.Content -> {
-//                    it.copy(selected = it.selected.toggle(currencyCode))
-//                }
-//
-//                else -> it
-//            }
-//        }
-//    }
+    fun onCurrencySelect(currencyCode: CurrencyCode) {
+        _state.update {
+            when (it) {
+                is CurrencyUiState.Content.Plain -> {
+                    it.copy(selected = it.selected.toggle(currencyCode))
+                }
+                is CurrencyUiState.Content.WithConversion -> {
+                    it.copy(selected = it.selected.toggle(currencyCode))
+                }
+                else -> it
+            }
+        }
+    }
+
+    fun onBaseCurrencySelect(currencyCode: CurrencyCode) {
+        _state.update {
+            when (it) {
+                is CurrencyUiState.Content.Plain -> {
+                    if (it.selectedBaseCurrency == currencyCode) {
+                        it.copy(selectedBaseCurrency = null)
+                    } else {
+                        it.copy(selectedBaseCurrency = currencyCode)
+                    }
+                }
+
+                is CurrencyUiState.Content.WithConversion -> {
+                    if (it.selectedBaseCurrency == currencyCode) {
+                        it.copy(selectedBaseCurrency = null)
+                    } else {
+                        it.copy(selectedBaseCurrency = currencyCode)
+                    }
+                }
+                else -> it
+            }
+        }
+    }
+
+    fun onCurrencyClick(currencyCode: String) {
+        _state.update {
+            when (it) {
+                is CurrencyUiState.Content.Plain -> {
+                    it.copy(rows = it.rows.toMutableList().apply {
+                        find { r -> r.code == currencyCode }?.let { row ->
+                            remove(row)
+                            add(0, row)
+                        }
+                    })
+                }
+
+                is CurrencyUiState.Content.WithConversion -> {
+                    it.copy(rows = it.rows.toMutableList().apply {
+                        find { r -> r.code == currencyCode }?.let { row ->
+                            remove(row)
+                            add(0, row)
+                        }
+                    })
+                }
+
+                else -> it
+            }
+        }
+    }
 
     fun getCurrencies() {
         viewModelScope.launch {
@@ -69,13 +124,26 @@ class CurrencyViewModel @Inject constructor(
                     CurrencyUiState.Content.Plain(
                         rows = rows,
                         selected = selectedFromResponse,
-                        isRefreshing = false
+                        isRefreshing = false,
+                        baseCode = currencies.base
                     )
                 },
                 onFailure = {
                     CurrencyUiState.Error(it.message)
                 }
             )
+        }
+    }
+
+    fun inputMoney(
+        content: CurrencyUiState.Content,                 // ① 當前 Content（必填）
+        chosenBase: CurrencyCode?,                        // ② 當前選中的 Currency（可為 null；需存在於 rows）
+        amountText: String?
+    ) {
+        viewModelScope.launch {
+            val r = nextContent(content, chosenBase, amountText)
+            Log.d("!!!", "nextContent: $r")
+            _state.value = r
         }
     }
 }

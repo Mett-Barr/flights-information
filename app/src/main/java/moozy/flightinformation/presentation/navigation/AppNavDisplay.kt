@@ -5,9 +5,11 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScope
+import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
@@ -15,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
+import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.presentation.component.RotatableScaffold
 import moozy.flightinformation.presentation.navigation.NavRoute
 import moozy.flightinformation.presentation.screen.CurrencyScreen
@@ -31,6 +35,7 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
     // 先放這邊管，原本想用 Nav3 但是太不適合只好自己控導航
     val flightsViewModel = hiltViewModel<FlightsViewModel>()
     val currencyViewModel = hiltViewModel<CurrencyViewModel>()
+    val scaffoldState = rememberNavigationSuiteScaffoldState()
 
     RotatableScaffold(
         navigationSuiteItems = {
@@ -41,8 +46,10 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                 }
             )
         },
-
+        state = scaffoldState,
     ) { innerPadding ->
+        val coroutineScope = rememberCoroutineScope()
+
         // 確保切換頁面狀態可保持
         rememberSaveableStateHolder().SaveableStateProvider(root) {
             AnimatedContent(
@@ -69,6 +76,21 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                         CurrencyScreen(
                             state = state,
                             onRefresh = currencyViewModel::getCurrencies,
+                            onCalculatorShow = {
+                                coroutineScope.launch {
+                                    scaffoldState.hide()
+                                }
+                            },
+                            onCalculatorDismiss = {
+                                coroutineScope.launch {
+                                    scaffoldState.show()
+                                }
+                            },
+                            onMoneyInput = currencyViewModel::inputMoney,
+                            onCurrencyClick = currencyViewModel::onCurrencyClick,
+                            onCurrencySelect = currencyViewModel::onCurrencySelect,
+                            onSearch = currencyViewModel::getCurrencies,
+                            onBaseCurrencySelect = currencyViewModel::onBaseCurrencySelect,
                             modifier = modifier,
                             innerPadding = innerPadding
                         )

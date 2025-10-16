@@ -13,31 +13,30 @@ sealed class CurrencyUiState {
         abstract val rows: List<CurrencyRow>
         abstract val selected: PersistentSet<CurrencyCode>
         abstract val isRefreshing: Boolean
+        abstract val baseCode: CurrencyCode
+        abstract val selectedBaseCurrency: CurrencyCode?
 
         /** 無使用者輸入的基底金額/貨幣 */
         data class Plain(
             override val rows: List<CurrencyRow>,
             override val selected: PersistentSet<CurrencyCode> = persistentSetOf(),
-            override val isRefreshing: Boolean = false
+            override val isRefreshing: Boolean = false,
+            override val baseCode: CurrencyCode,
+            override val selectedBaseCurrency: CurrencyCode? = null
         ) : Content()
 
         /** 有使用者輸入的基底金額/貨幣（用於換算展示） */
         data class WithConversion(
             override val rows: List<CurrencyRow>,
             val baseAmount: BigDecimal,
-            val baseCode: CurrencyCode,
+            override val baseCode: CurrencyCode,
             override val selected: PersistentSet<CurrencyCode> = persistentSetOf(),
-            override val isRefreshing: Boolean = false
+            override val isRefreshing: Boolean = false,
+            override val selectedBaseCurrency: CurrencyCode? = null
         ) : Content()
     }
     data class Error(val message: String?) : CurrencyUiState()
 }
-
-
-data class SelectableCurrency(
-    val currencyCode: CurrencyCode,
-    val isSelected: Boolean
-)
 
 sealed class CurrencyModel {
     data class Rate(

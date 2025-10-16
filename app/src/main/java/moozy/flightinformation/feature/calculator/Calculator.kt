@@ -1,11 +1,19 @@
 package moozy.flightinformation.feature.calculator
 
 
+import android.R.attr.text
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.shareIn
+import java.math.BigDecimal
 import java.util.Stack
 
 
@@ -14,6 +22,15 @@ import java.util.Stack
  */
 class Calculator {
     val infix = mutableStateListOf<String>()
+
+    val infixString by derivedStateOf {
+        infix.joinToString("")
+    }
+
+    val equal by derivedStateOf {
+        runCatching { BigDecimal(cal(infix)) }.getOrNull()
+    }
+
 
     // 當前狀態
     val currentState: MutableState<CurrentState> = mutableStateOf(CurrentState.NULL)
@@ -33,7 +50,6 @@ class Calculator {
     private fun inputAppend(string: String) {
         infix.add(infix.removeAt(infix.lastIndex) + string)
     }
-
 
     fun numInput(inputNum: String) {
         when (currentState.value) {
@@ -222,112 +238,117 @@ class Calculator {
     /** UI Function  */
 
     fun btBackSpace() {
-        if (infix.last().isNotEmpty()) {
+        try {
+            if (infix.last().isNotEmpty()) {
 
-            when (currentState.value) {
-                CurrentState.NULL -> {}
+                when (currentState.value) {
+                    CurrentState.NULL -> {}
 
-                CurrentState.ZERO -> {
-                    infix.dropLast(1)
-                    if (infix.isNotEmpty()) {
-                        when (infix.last()) {
-                            "(" -> currentState.value = CurrentState.LEFT
-                            else -> {
-
-                                currentState.value = CurrentState.OPERATOR
-                            }
-                        }
-                    } else {
-                        currentState.value = CurrentState.NULL
-                    }
-                }
-
-                CurrentState.INTEGER -> {
-                    infix.add(infix.removeAt(infix.lastIndex).dropLast(1))
-                    if (infix.last() == "") {
-                        infix.removeAt(infix.lastIndex)
-                        if (infixIsNotEmpty()) {
+                    CurrentState.ZERO -> {
+                        infix.dropLast(1)
+                        if (infix.isNotEmpty()) {
                             when (infix.last()) {
                                 "(" -> currentState.value = CurrentState.LEFT
-                                else -> currentState.value = CurrentState.OPERATOR
+                                else -> {
+
+                                    currentState.value = CurrentState.OPERATOR
+                                }
+                            }
+                        } else {
+                            currentState.value = CurrentState.NULL
+                        }
+                    }
+
+                    CurrentState.INTEGER -> {
+                        infix.add(infix.removeAt(infix.lastIndex).dropLast(1))
+                        if (infix.last() == "") {
+                            infix.removeAt(infix.lastIndex)
+                            if (infixIsNotEmpty()) {
+                                when (infix.last()) {
+                                    "(" -> currentState.value = CurrentState.LEFT
+                                    else -> currentState.value = CurrentState.OPERATOR
+                                }
                             }
                         }
                     }
-                }
 
-                CurrentState.DOUBLE -> {
-                    val deletedStr = infix.last().takeLast(1)
-                    infix.add(infix.removeAt(infix.lastIndex).dropLast(1))
+                    CurrentState.DOUBLE -> {
+                        val deletedStr = infix.last().takeLast(1)
+                        infix.add(infix.removeAt(infix.lastIndex).dropLast(1))
 
-                    if (deletedStr == ".") {
-                        when (infix.last()) {
-                            "0", "-0" -> currentState.value = CurrentState.ZERO
-                            else -> currentState.value = CurrentState.INTEGER
+                        if (deletedStr == ".") {
+                            when (infix.last()) {
+                                "0", "-0" -> currentState.value = CurrentState.ZERO
+                                else -> currentState.value = CurrentState.INTEGER
+                            }
                         }
                     }
-                }
 
-                CurrentState.NEGATIVE -> {
-                    infix.dropLast(1)
+                    CurrentState.NEGATIVE -> {
+                        infix.dropLast(1)
 
-                    if (infixIsNotEmpty()) {
-                        if (infix.last() == "(") CurrentState.LEFT
-                        else currentState.value = CurrentState.OPERATOR
+                        if (infixIsNotEmpty()) {
+                            if (infix.last() == "(") CurrentState.LEFT
+                            else currentState.value = CurrentState.OPERATOR
+                        }
                     }
-                }
 
-                CurrentState.OPERATOR -> {
-                    infix.dropLast(1)
+                    CurrentState.OPERATOR -> {
+                        infix.dropLast(1)
 
-                    val previous = infix.last()
-                    currentState.value =
-                        if (previous == ")") CurrentState.RIGHT
-                        else if (previous == "0") CurrentState.ZERO
-                        else if (previous.toIntOrNull() is Int) CurrentState.INTEGER
-                        else if (previous.toDoubleOrNull() is Double) CurrentState.DOUBLE
-                        else {
-                            Log.d("!!! error", "btBackSpace: $previous")
-                            CurrentState.DOUBLE
-                        }
-                }
+                        val previous = infix.last()
+                        currentState.value =
+                            if (previous == ")") CurrentState.RIGHT
+                            else if (previous == "0") CurrentState.ZERO
+                            else if (previous.toIntOrNull() is Int) CurrentState.INTEGER
+                            else if (previous.toDoubleOrNull() is Double) CurrentState.DOUBLE
+                            else {
+                                Log.d("!!! error", "btBackSpace: $previous")
+                                CurrentState.DOUBLE
+                            }
+                    }
 
-                CurrentState.LEFT -> {
-                    infix.dropLast(1)
+                    CurrentState.LEFT -> {
+                        infix.dropLast(1)
 
-                    val previous = infix.last()
-                    currentState.value =
-                        if (previous == "(") CurrentState.LEFT
-                        else CurrentState.OPERATOR
+                        val previous = infix.last()
+                        currentState.value =
+                            if (previous == "(") CurrentState.LEFT
+                            else CurrentState.OPERATOR
 
-                }
+                    }
 
-                CurrentState.RIGHT -> {
-                    infix.dropLast(1)
+                    CurrentState.RIGHT -> {
+                        infix.dropLast(1)
 
-                    val previous = infix.last()
-                    currentState.value =
-                        if (previous == ")") CurrentState.RIGHT
-                        else if (previous == "0") CurrentState.ZERO
-                        else if (previous.toIntOrNull() is Int) CurrentState.INTEGER
-                        else if (previous.toDoubleOrNull() is Double) CurrentState.DOUBLE
-                        else {
-                            Log.d("!!! error", "btBackSpace: $previous")
-                            CurrentState.DOUBLE
-                        }
+                        val previous = infix.last()
+                        currentState.value =
+                            if (previous == ")") CurrentState.RIGHT
+                            else if (previous == "0") CurrentState.ZERO
+                            else if (previous.toIntOrNull() is Int) CurrentState.INTEGER
+                            else if (previous.toDoubleOrNull() is Double) CurrentState.DOUBLE
+                            else {
+                                Log.d("!!! error", "btBackSpace: $previous")
+                                CurrentState.DOUBLE
+                            }
+                    }
                 }
             }
+        } catch (_: Exception) {
+            // 改不動了
         }
     }
 
     fun btAC() {
         infix.clear()
         currentState.value = CurrentState.NULL
+        parenthesesState.intValue = 0
     }
 
 
     companion object {
         fun cal(infix: List<String>): String {
-//        infix = list
+            if (infix.isEmpty()) return "0"
             val postfix = infixToPostfix(infix)
             val stack: Stack<Double> = Stack()
             if (infix.isEmpty()) {

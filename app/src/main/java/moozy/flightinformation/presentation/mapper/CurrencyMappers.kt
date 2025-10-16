@@ -1,7 +1,5 @@
 package moozy.flightinformation.presentation.mapper
 
-import kotlinx.collections.immutable.PersistentSet
-import moozy.flightinformation.data.datasource.currency.dto.CurrenciesDto
 import moozy.flightinformation.domain.model.currency.Currencies
 import moozy.flightinformation.domain.model.currency.CurrencyRate
 import moozy.flightinformation.domain.value.CurrencyCode
@@ -13,9 +11,6 @@ import moozy.flightinformation.presentation.model.currency.CurrencyRowWithConver
 import moozy.flightinformation.presentation.state.currency.CurrencyUiState
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.NumberFormat
-import java.util.Locale
-
 
 
 /** 使用者的換算要求（輸入金額與其貨幣） */
@@ -23,7 +18,6 @@ data class Conversion(
     val amount: BigDecimal,
     val input: CurrencyCode
 )
-
 
 /**
  * 只輸出純資料 row：
@@ -40,7 +34,7 @@ fun mapCurrenciesToRows(
 ): List<CurrencyRow> {
 
     fun CurrencyRate.rawCode(): String = when (val c = code) {
-        is MoneyCode.Known   -> c.code.code
+        is MoneyCode.Known -> c.code.code
         is MoneyCode.Unknown -> c.raw
     }
 
@@ -88,33 +82,90 @@ fun mapCurrenciesToRows(
     }.sortedBy { it.code }
 }
 
-//fun buildContentState(
-//    currencies: Currencies,
-//    selected: PersistentSet<CurrencyCode>,
-//    conversion: Conversion?,                // null → Plain；非 null → WithConversion
-//    isRefreshing: Boolean = false,
-//    locale: Locale = Locale.US,
-//    infoIndex: Map<String, CurrencyInfo> = CurrencyCode.entries.associateBy { it.code }
-//): CurrencyUiState.Content {
-//    val rows = mapCurrenciesToRows(
-//        currencies = currencies,
-//        conversion = conversion,
-//        locale = locale,
-//        infoIndex = infoIndex
-//    )
-//    return if (conversion == null) {
-//        CurrencyUiState.Content.Plain(
-//            rows = rows,
-//            selected = selected,
-//            isRefreshing = isRefreshing
-//        )
-//    } else {
-//        CurrencyUiState.Content.WithConversion(
-//            rows = rows,
-//            baseAmount = conversion.amount,
-//            baseCode = conversion.input,
-//            selected = selected,
-//            isRefreshing = isRefreshing
-//        )
-//    }
-//}
+
+// 複製貼上直接測試型最簡單實現（單函數、零外部狀態）
+fun nextContent(
+    content: CurrencyUiState.Content,   // ① 當前 Content（必填）
+    chosenBase: CurrencyCode?,          // ② 當前選中的 Currency（可為 null；需存在於 rows）
+    amountText: String?,                // ③ 當前輸入金額（String；可為 null/空/非法）
+    scale: Int = 18,
+    rounding: RoundingMode = RoundingMode.HALF_UP,
+    maxDecimals: Int = 3
+): CurrencyUiState.Content {
+    val rows = content.rows
+    val isRefreshing = content.isRefreshing
+    val selectedSet = content.selected
+
+    // 小工具：把小數位「限制為最多 N 位」且不補 0
+    fun BigDecimal.atMostScale(max: Int, rm: RoundingMode): BigDecimal =
+        if (this.scale() <= max) this.stripTrailingZeros()
+        else this.setScale(max, rm).stripTrailingZeros()
+
+    val rateIndex: Map<String, BigDecimal> = rows.associate { it.code to it.rate }
+
+    val baseFromChosen: CurrencyCode? = chosenBase?.takeIf { rateIndex.containsKey(it.code) }
+    val baseFromOld: CurrencyCode? =
+        (content as? CurrencyUiState.Content.WithConversion)?.baseCode
+            ?.takeIf { bc -> rateIndex.containsKey(bc.code) }
+    val baseFromRows: CurrencyCode? = rows.asSequence()
+        .mapNotNull { r -> CurrencyCode.entries.firstOrNull { it.code == r.code } }
+        .firstOrNull()
+    val baseCode: CurrencyCode? = baseFromChosen ?: baseFromOld ?: baseFromRows
+
+    val baseAmount: BigDecimal? = amountText?.trim()?.takeIf { it.isNotEmpty() }
+        ?.let { runCatching { BigDecimal(it) }.getOrNull() }
+
+    if (baseAmount == null || baseAmount.compareTo(BigDecimal.ZERO) == 0) {
+        val plainRows = rows.map { r ->
+            CurrencyRowPlain(code = r.code, name = r.name, symbol = r.symbol, rate = r.rate)
+        }
+        return CurrencyUiState.Content.Plain(
+            rows = plainRows,
+            selected = selectedSet,
+            isRefreshing = isRefreshing,
+            baseCode = content.baseCode
+        )
+    }
+
+    val denom: BigDecimal? = baseCode?.let { rateIndex[it.code] }
+
+    val valid = baseCode != null && baseAmount != null && denom != null && denom.signum() != 0
+    if (!valid) {
+        val plainRows: List<CurrencyRowPlain> = rows.map { r ->
+            CurrencyRowPlain(code = r.code, name = r.name, symbol = r.symbol, rate = r.rate)
+        }
+        return CurrencyUiState.Content.Plain(
+            rows = plainRows,
+            selected = selectedSet,
+            isRefreshing = isRefreshing,
+            baseCode = content.baseCode
+        )
+    }
+
+    val bc = baseCode!!
+    val amt = baseAmount!!
+    val d = denom!!
+
+    val withRows: List<CurrencyRowWithConversion> = rows.map { r ->
+        val raw = if (r.code == bc.code) amt
+        else amt.multiply(rateIndex[r.code]!!).divide(d, scale, rounding)
+        val converted = raw.atMostScale(maxDecimals, rounding)   // ★ 關鍵：最多三位小數
+        CurrencyRowWithConversion(
+            code = r.code,
+            name = r.name,
+            symbol = r.symbol,
+            rate = r.rate,
+            convertedAmount = converted,
+            baseAmount = amt,                 // 如也想限制它：amt.atMostScale(maxDecimals, rounding)
+            baseCode = content.baseCode.code
+        )
+    }
+
+    return CurrencyUiState.Content.WithConversion(
+        rows = withRows,
+        baseAmount = amt,                     // 如也想限制它：amt.atMostScale(maxDecimals, rounding)
+        baseCode = content.baseCode,
+        selected = selectedSet,
+        isRefreshing = isRefreshing,
+    )
+}

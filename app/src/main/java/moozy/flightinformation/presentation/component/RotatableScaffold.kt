@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldState
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScope
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
+import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
@@ -17,6 +19,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun RotatableScaffold(
     navigationSuiteItems: NavigationSuiteScope.() -> Unit,
+    state: NavigationSuiteScaffoldState = rememberNavigationSuiteScaffoldState(),
     content: @Composable (innerPadding: PaddingValues) -> Unit
 ) {
     val wsc = currentWindowAdaptiveInfo().windowSizeClass
@@ -47,6 +50,7 @@ fun RotatableScaffold(
     NavigationSuiteScaffold(
         layoutType = layoutType, // 拿掉這行就交給官方預設自動切換
         navigationSuiteItems = navigationSuiteItems,
+        state = state,
         content = { content(innerPadding) }
     )
 }
