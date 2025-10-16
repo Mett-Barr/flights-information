@@ -1,6 +1,10 @@
 package moozy.flightinformation.presentation.screen
 
 import android.util.Log
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -54,62 +59,82 @@ fun FlightsScreen(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        when (flightArrivalsUiState) {
-            is FlightArrivalsUiState.Loading -> {
-                CircularProgressIndicator()
-            }
-
-            is FlightArrivalsUiState.Error -> {
-                Text(
-                    text = flightArrivalsUiState.message,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-
-            is FlightArrivalsUiState.Content -> {
-                if (flightArrivalsUiState.items.isEmpty()) {
-                    Text(
-                        text = "No flight information available.",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                } else {
-                    val isRefreshing = flightArrivalsUiState.isRefreshing
-                    val lazyListState = rememberLazyListState()
-                    val pullRefreshState = rememberPullToRefreshState()
-
-                    LaunchedEffect(Unit) {
-                        refreshEvent?.collect {
-                            lazyListState.animateScrollToItem(0)
-                        }
+        AnimatedContent(
+            targetState = flightArrivalsUiState,
+            transitionSpec = { fadeIn().togetherWith(fadeOut()) },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            when (it) {
+                is FlightArrivalsUiState.Loading -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(Modifier.wrapContentSize())
                     }
+                }
 
-                    PullToRefreshBox(
-                        isRefreshing = isRefreshing,
-                        onRefresh = onRefresh,
-                        state = pullRefreshState,
-                    ) {
-                        LazyColumn(
-                            state = lazyListState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = innerPadding,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(flightArrivalsUiState.items) { item ->
-                                FlightArrivalItem(item = item)
-                            }
-
-                            if (innerPadding.calculateBottomPadding() == 0.dp) {
-                                item { Spacer(modifier = Modifier.height(8.dp)) }
-                            }
-                        }
+                is FlightArrivalsUiState.Error -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = it.message,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
                     }
+                }
 
+                is FlightArrivalsUiState.Content -> {
+                    FlightsContent(it, refreshEvent, onRefresh, innerPadding)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FlightsContent(
+    flightArrivalsUiState: FlightArrivalsUiState.Content,
+    refreshEvent: SharedFlow<Unit>?,
+    onRefresh: () -> Unit,
+    innerPadding: PaddingValues
+) {
+    if (flightArrivalsUiState.items.isEmpty()) {
+        Text(
+            text = "No flight information available.",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(16.dp)
+        )
+    } else {
+        val isRefreshing = flightArrivalsUiState.isRefreshing
+        val lazyListState = rememberLazyListState()
+        val pullRefreshState = rememberPullToRefreshState()
+
+        LaunchedEffect(Unit) {
+            refreshEvent?.collect {
+                lazyListState.animateScrollToItem(0)
+            }
+        }
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            state = pullRefreshState,
+        ) {
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                contentPadding = innerPadding,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(flightArrivalsUiState.items) { item ->
+                    FlightArrivalItem(item = item)
+                }
+
+                if (innerPadding.calculateBottomPadding() == 0.dp) {
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                }
+            }
+        }
+
     }
 }
 

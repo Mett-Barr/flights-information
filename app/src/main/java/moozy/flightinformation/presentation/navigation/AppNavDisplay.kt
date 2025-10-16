@@ -30,7 +30,7 @@ import moozy.flightinformation.presentation.viewmodel.FlightsViewModel
 @Composable
 fun AppNavDisplay(modifier: Modifier = Modifier) {
     var root by rememberSaveable {
-        mutableStateOf(NavRoute.Currency)
+        mutableStateOf(NavRoute.Flights)
     }
     // 先放這邊管，原本想用 Nav3 但是太不適合只好自己控導航
     val flightsViewModel = hiltViewModel<FlightsViewModel>()
@@ -75,7 +75,6 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                         val state by currencyViewModel.state.collectAsStateWithLifecycle()
                         CurrencyScreen(
                             state = state,
-                            onRefresh = currencyViewModel::getCurrencies,
                             onCalculatorShow = {
                                 coroutineScope.launch {
                                     scaffoldState.hide()

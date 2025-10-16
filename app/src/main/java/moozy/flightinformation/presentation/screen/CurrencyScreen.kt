@@ -6,8 +6,11 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,7 +59,6 @@ import moozy.flightinformation.presentation.state.currency.CurrencyUiState
 @Composable
 fun CurrencyScreen(
     state: CurrencyUiState,
-    onRefresh: () -> Unit,
     onCalculatorShow: () -> Unit,
     onCalculatorDismiss: () -> Unit,
     onMoneyInput: (
@@ -67,11 +68,16 @@ fun CurrencyScreen(
     ) -> Unit,
     onCurrencyClick: (String) -> Unit,
     onCurrencySelect: (CurrencyCode) -> Unit,
-    onSearch: () -> Unit,
+    onSearch: (CurrencyUiState.Content) -> Unit,
     onBaseCurrencySelect: (CurrencyCode) -> Unit,
     modifier: Modifier = Modifier,
     innerPadding: PaddingValues = PaddingValues(0.dp)
 ) {
+//    AnimatedContent(
+//        targetState = state,
+//        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
+//    ) {
+//    }
     when (val currentState = state) {
         is CurrencyUiState.Error -> CurrencyError(modifier)
         CurrencyUiState.Loading -> {
@@ -80,9 +86,8 @@ fun CurrencyScreen(
             }
         }
 
-        is CurrencyUiState.Content -> CurrencySuccess(
+        is CurrencyUiState.Content -> CurrencyContent(
             state = currentState,
-            onRefresh = onRefresh,
             onCalculatorShow = onCalculatorShow,
             onCalculatorDismiss = onCalculatorDismiss,
             onMoneyInput = onMoneyInput,
@@ -113,9 +118,8 @@ fun CurrencyLoading() {
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun CurrencySuccess(
+fun CurrencyContent(
     state: CurrencyUiState.Content,
-    onRefresh: () -> Unit,
     onCalculatorShow: () -> Unit,
     onCalculatorDismiss: () -> Unit,
     onMoneyInput: (
@@ -126,7 +130,7 @@ fun CurrencySuccess(
     onCurrencyClick: (String) -> Unit,
     onCurrencySelect: (CurrencyCode) -> Unit,
     onBaseCurrencySelect: (CurrencyCode) -> Unit,
-    onSearch: () -> Unit,
+    onSearch: (CurrencyUiState.Content) -> Unit,
     modifier: Modifier = Modifier,
     innerPadding: PaddingValues
 ) {
@@ -281,7 +285,7 @@ fun CurrencySuccess(
                                 if (isStage1) {
                                     isStage1 = false
                                 } else {
-                                    onSearch()
+                                    onSearch(state)
                                     showDialog = false
                                 }
                             },
@@ -296,6 +300,12 @@ fun CurrencySuccess(
                     }
                 }
             }
+        }
+    }
+
+    if (state.isRefreshing) {
+        Dialog({}) {
+            CircularProgressIndicator()
         }
     }
 }

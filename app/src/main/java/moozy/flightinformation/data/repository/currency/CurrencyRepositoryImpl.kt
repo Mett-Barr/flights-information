@@ -20,7 +20,7 @@ class CurrencyRepositoryImpl @Inject constructor(
         base: CurrencyCode?,
         codes: Set<CurrencyCode>
     ): Result<Currencies> {
-        return fakeResult
+//        return fakeResult
         if (codes.isEmpty()) {
             return Result.failure(IllegalArgumentException("At least one currency code is required"))
         }

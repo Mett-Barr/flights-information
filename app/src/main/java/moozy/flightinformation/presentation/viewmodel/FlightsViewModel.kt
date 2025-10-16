@@ -78,6 +78,7 @@ class FlightsViewModel @Inject constructor(
                     onSuccess = { items ->
                         _state.value =
                             FlightArrivalsUiState.Content(items = items, isRefreshing = false)
+                        delay(500)
                         _refreshEvent.emit(Unit)
                     },
                     onFailure = { e ->

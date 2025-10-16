@@ -239,98 +239,110 @@ class Calculator {
 
     fun btBackSpace() {
         try {
-            if (infix.last().isNotEmpty()) {
+            if (infix.isEmpty()) return
+            if (infix.last().isEmpty()) return
 
-                when (currentState.value) {
-                    CurrentState.NULL -> {}
+            when (currentState.value) {
+                CurrentState.NULL -> Unit
 
-                    CurrentState.ZERO -> {
-                        infix.dropLast(1)
+                CurrentState.ZERO -> {
+                    if (infix.isNotEmpty()) infix.removeAt(infix.lastIndex) // 真正移除
+                    if (infix.isNotEmpty()) {
+                        val prev = infix.last()
+                        currentState.value = if (prev == "(") CurrentState.LEFT else CurrentState.OPERATOR
+                    } else {
+                        currentState.value = CurrentState.NULL
+                    }
+                }
+
+                CurrentState.INTEGER -> {
+                    // 取出最後字串，去掉最後一個字元再放回；若變空字串則刪掉該項
+                    val last = infix.removeAt(infix.lastIndex)
+                    val chopped = last.dropLast(1)
+                    if (chopped.isNotEmpty()) {
+                        infix.add(chopped)
+                    }
+                    if (infix.isNotEmpty()) {
+                        val prev = infix.last()
+                        currentState.value = if (prev == "(") CurrentState.LEFT else CurrentState.OPERATOR
+                    } else {
+                        currentState.value = CurrentState.NULL
+                    }
+                }
+
+                CurrentState.DOUBLE -> {
+                    val last = infix.last()
+                    val deletedStr = last.takeLast(1)
+                    val chopped = last.dropLast(1)
+                    infix.removeAt(infix.lastIndex)
+                    if (chopped.isNotEmpty()) {
+                        infix.add(chopped)
+                    }
+                    if (deletedStr == ".") {
                         if (infix.isNotEmpty()) {
-                            when (infix.last()) {
-                                "(" -> currentState.value = CurrentState.LEFT
-                                else -> {
-
-                                    currentState.value = CurrentState.OPERATOR
-                                }
-                            }
+                            val prev = infix.last()
+                            currentState.value = if (prev == "0" || prev == "-0") CurrentState.ZERO else CurrentState.INTEGER
                         } else {
                             currentState.value = CurrentState.NULL
                         }
                     }
+                }
 
-                    CurrentState.INTEGER -> {
-                        infix.add(infix.removeAt(infix.lastIndex).dropLast(1))
-                        if (infix.last() == "") {
-                            infix.removeAt(infix.lastIndex)
-                            if (infixIsNotEmpty()) {
-                                when (infix.last()) {
-                                    "(" -> currentState.value = CurrentState.LEFT
-                                    else -> currentState.value = CurrentState.OPERATOR
-                                }
-                            }
-                        }
+                CurrentState.NEGATIVE -> {
+                    if (infix.isNotEmpty()) infix.removeAt(infix.lastIndex)
+                    if (infix.isNotEmpty()) {
+                        val prev = infix.last()
+                        currentState.value = if (prev == "(") CurrentState.LEFT else CurrentState.OPERATOR // ← 補上賦值
+                    } else {
+                        currentState.value = CurrentState.NULL
                     }
+                }
 
-                    CurrentState.DOUBLE -> {
-                        val deletedStr = infix.last().takeLast(1)
-                        infix.add(infix.removeAt(infix.lastIndex).dropLast(1))
-
-                        if (deletedStr == ".") {
-                            when (infix.last()) {
-                                "0", "-0" -> currentState.value = CurrentState.ZERO
-                                else -> currentState.value = CurrentState.INTEGER
-                            }
-                        }
-                    }
-
-                    CurrentState.NEGATIVE -> {
-                        infix.dropLast(1)
-
-                        if (infixIsNotEmpty()) {
-                            if (infix.last() == "(") CurrentState.LEFT
-                            else currentState.value = CurrentState.OPERATOR
-                        }
-                    }
-
-                    CurrentState.OPERATOR -> {
-                        infix.dropLast(1)
-
+                CurrentState.OPERATOR -> {
+                    if (infix.isNotEmpty()) infix.removeAt(infix.lastIndex)
+                    if (infix.isNotEmpty()) {
                         val previous = infix.last()
                         currentState.value =
                             if (previous == ")") CurrentState.RIGHT
                             else if (previous == "0") CurrentState.ZERO
-                            else if (previous.toIntOrNull() is Int) CurrentState.INTEGER
-                            else if (previous.toDoubleOrNull() is Double) CurrentState.DOUBLE
+                            else if (previous.toIntOrNull() != null) CurrentState.INTEGER
+                            else if (previous.toDoubleOrNull() != null) CurrentState.DOUBLE
                             else {
                                 Log.d("!!! error", "btBackSpace: $previous")
                                 CurrentState.DOUBLE
                             }
+                    } else {
+                        currentState.value = CurrentState.NULL
                     }
+                }
 
-                    CurrentState.LEFT -> {
-                        infix.dropLast(1)
-
+                CurrentState.LEFT -> {
+                    if (infix.isNotEmpty()) infix.removeAt(infix.lastIndex)
+                    if (infix.isNotEmpty()) {
                         val previous = infix.last()
-                        currentState.value =
-                            if (previous == "(") CurrentState.LEFT
-                            else CurrentState.OPERATOR
-
+                        Log.d("!!!", "btBackSpace: LEFT $previous")
+                        currentState.value = if (previous == "(") CurrentState.LEFT else CurrentState.OPERATOR
+                    } else {
+                        currentState.value = CurrentState.NULL
                     }
+                }
 
-                    CurrentState.RIGHT -> {
-                        infix.dropLast(1)
-
+                CurrentState.RIGHT -> {
+                    if (infix.isNotEmpty()) infix.removeAt(infix.lastIndex) // ← 關鍵：不要用 dropLast
+                    if (infix.isNotEmpty()) {
                         val previous = infix.last()
+                        Log.d("!!!", "btBackSpace: RIGHT $previous, size=${infix.size}")
                         currentState.value =
                             if (previous == ")") CurrentState.RIGHT
                             else if (previous == "0") CurrentState.ZERO
-                            else if (previous.toIntOrNull() is Int) CurrentState.INTEGER
-                            else if (previous.toDoubleOrNull() is Double) CurrentState.DOUBLE
+                            else if (previous.toIntOrNull() != null) CurrentState.INTEGER
+                            else if (previous.toDoubleOrNull() != null) CurrentState.DOUBLE
                             else {
                                 Log.d("!!! error", "btBackSpace: $previous")
                                 CurrentState.DOUBLE
                             }
+                    } else {
+                        currentState.value = CurrentState.NULL
                     }
                 }
             }
@@ -338,6 +350,7 @@ class Calculator {
             // 改不動了
         }
     }
+
 
     fun btAC() {
         infix.clear()

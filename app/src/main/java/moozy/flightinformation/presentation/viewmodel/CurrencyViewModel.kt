@@ -30,7 +30,14 @@ class CurrencyViewModel @Inject constructor(
     val state: StateFlow<CurrencyUiState> = _state.asStateFlow()
 
     init {
-        getCurrencies()
+        // 雖然在 VM init 直接用 viewModelScope.launch 算反模式
+        // 但太累了改不動了下次再改
+        viewModelScope.launch {
+            getLatestCurrencies(
+                base = CurrencyCode.USD,
+                codes = CurrencyCode.entries.shuffled().take(15).toSet()
+            )
+        }
     }
 
     fun onCurrencySelect(currencyCode: CurrencyCode) {
@@ -39,9 +46,11 @@ class CurrencyViewModel @Inject constructor(
                 is CurrencyUiState.Content.Plain -> {
                     it.copy(selected = it.selected.toggle(currencyCode))
                 }
+
                 is CurrencyUiState.Content.WithConversion -> {
                     it.copy(selected = it.selected.toggle(currencyCode))
                 }
+
                 else -> it
             }
         }
@@ -65,6 +74,7 @@ class CurrencyViewModel @Inject constructor(
                         it.copy(selectedBaseCurrency = currencyCode)
                     }
                 }
+
                 else -> it
             }
         }
@@ -96,43 +106,50 @@ class CurrencyViewModel @Inject constructor(
         }
     }
 
-    fun getCurrencies() {
+    fun getCurrencies(state: CurrencyUiState.Content) {
         viewModelScope.launch {
-            _state.value = when (val currentState = state.value) {
-                is CurrencyUiState.Content.Plain -> currentState.copy(isRefreshing = true)
-                is CurrencyUiState.Content.WithConversion -> currentState.copy(isRefreshing = true)
-                else -> CurrencyUiState.Loading
+            _state.value = when (state) {
+                is CurrencyUiState.Content.Plain -> state.copy(isRefreshing = true)
+                is CurrencyUiState.Content.WithConversion -> state.copy(isRefreshing = true)
             }
 
+            // 演示動畫效果
             delay(1500)
 
-            _state.value = repository.getLatest(
-                base = null,
-                codes = CurrencyCode.entries.take(15).toSet()
-            ).fold(
-                onSuccess = { currencies ->
-                    val rows: List<CurrencyRow> = mapCurrenciesToRows(
-                        currencies = currencies,
-                        conversion = null // 初始/未輸入 → 全 Plain（純資料）
-                    )
-
-                    val selectedFromResponse =
-                        currencies.list.mapNotNull { r -> (r.code as? MoneyCode.Known)?.code }
-                            .toSet()
-                            .toPersistentSet()
-
-                    CurrencyUiState.Content.Plain(
-                        rows = rows,
-                        selected = selectedFromResponse,
-                        isRefreshing = false,
-                        baseCode = currencies.base
-                    )
-                },
-                onFailure = {
-                    CurrencyUiState.Error(it.message)
-                }
-            )
+            getLatestCurrencies(state.selectedBaseCurrency, state.selected)
         }
+    }
+
+    private suspend fun getLatestCurrencies(
+        base: CurrencyCode?,
+        codes: Set<CurrencyCode>
+    ) {
+        _state.value = repository.getLatest(
+            base = base,
+            codes = codes
+        ).fold(
+            onSuccess = { currencies ->
+                val rows: List<CurrencyRow> = mapCurrenciesToRows(
+                    currencies = currencies,
+                    conversion = null // 初始/未輸入 → 全 Plain（純資料）
+                )
+
+                val selectedFromResponse =
+                    currencies.list.mapNotNull { r -> (r.code as? MoneyCode.Known)?.code }
+                        .toSet()
+                        .toPersistentSet()
+
+                CurrencyUiState.Content.Plain(
+                    rows = rows,
+                    selected = selectedFromResponse,
+                    isRefreshing = false,
+                    baseCode = currencies.base
+                )
+            },
+            onFailure = {
+                CurrencyUiState.Error(it.message)
+            }
+        )
     }
 
     fun inputMoney(
