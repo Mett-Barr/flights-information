@@ -66,7 +66,12 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
 
                     NavRoute.Currency -> {
                         val state by currencyViewModel.state.collectAsStateWithLifecycle()
-                        CurrencyScreen(state, modifier, innerPadding)
+                        CurrencyScreen(
+                            state = state,
+                            onRefresh = currencyViewModel::getCurrencies,
+                            modifier = modifier,
+                            innerPadding = innerPadding
+                        )
                     }
                 }
             }

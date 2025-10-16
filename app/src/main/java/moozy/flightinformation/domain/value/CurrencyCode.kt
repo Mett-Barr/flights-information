@@ -1,4 +1,4 @@
-package moozy.flightinformation.domain.model.currency
+package moozy.flightinformation.domain.value
 
 enum class CurrencyCode(
     override val code: String,

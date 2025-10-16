@@ -2,19 +2,34 @@ package moozy.flightinformation.presentation.state.currency
 
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentSetOf
-import moozy.flightinformation.domain.model.currency.Currencies
-import moozy.flightinformation.domain.model.currency.CurrencyCode
+import moozy.flightinformation.domain.value.CurrencyCode
+import moozy.flightinformation.presentation.model.currency.CurrencyRow
+import java.math.BigDecimal
 
 sealed class CurrencyUiState {
     data object Loading : CurrencyUiState()
 
-    data class Success(
-        val currencies: Currencies,
-        val selected: PersistentSet<CurrencyCode> = persistentSetOf(),
-        val isRefreshing: Boolean = false,
-        val error: String? = null
-    ) : CurrencyUiState()
+    sealed class Content : CurrencyUiState() {
+        abstract val rows: List<CurrencyRow>
+        abstract val selected: PersistentSet<CurrencyCode>
+        abstract val isRefreshing: Boolean
 
+        /** 無使用者輸入的基底金額/貨幣 */
+        data class Plain(
+            override val rows: List<CurrencyRow>,
+            override val selected: PersistentSet<CurrencyCode> = persistentSetOf(),
+            override val isRefreshing: Boolean = false
+        ) : Content()
+
+        /** 有使用者輸入的基底金額/貨幣（用於換算展示） */
+        data class WithConversion(
+            override val rows: List<CurrencyRow>,
+            val baseAmount: BigDecimal,
+            val baseCode: CurrencyCode,
+            override val selected: PersistentSet<CurrencyCode> = persistentSetOf(),
+            override val isRefreshing: Boolean = false
+        ) : Content()
+    }
     data class Error(val message: String?) : CurrencyUiState()
 }
 

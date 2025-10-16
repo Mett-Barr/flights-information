@@ -4,7 +4,7 @@ import moozy.flightinformation.data.datasource.currency.CurrencyDataSource
 import moozy.flightinformation.data.datasource.currency.CurrencyNetworkDataSource
 import moozy.flightinformation.data.datasource.currency.dto.toCurrencies
 import moozy.flightinformation.domain.model.currency.Currencies
-import moozy.flightinformation.domain.model.currency.CurrencyCode
+import moozy.flightinformation.domain.value.CurrencyCode
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,7 +21,7 @@ class CurrencyRepositoryImpl @Inject constructor(
             return Result.failure(IllegalArgumentException("At least one currency code is required"))
         }
         val currenciesCsv = codes.toCsv()
-        return networkDataSource.fetchLatest(base?.code, currenciesCsv).mapCatching { it.toCurrencies() }
+        return networkDataSource.fetchLatest(base?.code, currenciesCsv).mapCatching { it.toCurrencies(base ?: CurrencyCode.USD) }
     }
 
     private fun Iterable<CurrencyCode>.toCsv(): String =

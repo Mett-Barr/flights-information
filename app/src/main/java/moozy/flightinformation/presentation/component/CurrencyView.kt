@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
-import moozy.flightinformation.domain.model.currency.CurrencyCode
+import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.presentation.state.currency.CurrencyModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
