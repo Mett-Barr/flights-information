@@ -26,7 +26,7 @@ import moozy.flightinformation.presentation.viewmodel.FlightsViewModel
 @Composable
 fun AppNavDisplay(modifier: Modifier = Modifier) {
     var root by rememberSaveable {
-        mutableStateOf(NavRoute.Flights)
+        mutableStateOf(NavRoute.Currency)
     }
     // 先放這邊管，原本想用 Nav3 但是太不適合只好自己控導航
     val flightsViewModel = hiltViewModel<FlightsViewModel>()
@@ -40,7 +40,8 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                     root = it
                 }
             )
-        }
+        },
+
     ) { innerPadding ->
         // 確保切換頁面狀態可保持
         rememberSaveableStateHolder().SaveableStateProvider(root) {

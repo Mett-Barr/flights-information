@@ -24,7 +24,7 @@ class CurrencyViewModel @Inject constructor(
     val state: StateFlow<CurrencyUiState> = _state.asStateFlow()
 
     init {
-//        getCurrencies()
+        getCurrencies()
     }
 
     fun onCurrencySelected(currencyCode: CurrencyCode) {

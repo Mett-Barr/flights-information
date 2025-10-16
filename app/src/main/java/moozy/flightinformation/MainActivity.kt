@@ -9,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import moozy.flightinformation.presentation.screen.CurrencyScreen
 import moozy.flightinformation.presentation.viewmodel.FlightsViewModel
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
 

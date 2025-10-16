@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -65,34 +66,42 @@ fun CurrencySuccess(
     state: CurrencyUiState.Success,
     modifier: Modifier = Modifier
 ) {
-    var showDialog by remember { mutableStateOf(true) }
+    Box(modifier) {
+        var showDialog by remember { mutableStateOf(false) }
 
 
-    Button({ showDialog = !showDialog }) {
+        Button({ showDialog = !showDialog }) {
 
-    }
-
-    Button({ showDialog = !showDialog }) {
-
-    }
-
-    state.currencies.list.forEach {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(it.code)
-            Text(it.rate.toString())
         }
-    }
 
-    if (showDialog) {
-        Dialog(
-            { showDialog = false }
-        ) {
-            LazyColumn {
-                items(CurrencyCode.entries) {
+        Button({ showDialog = !showDialog }) {
+
+        }
+
+        Column {
+            state.currencies.list.forEach {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     Text(it.code)
-                    Text(it.name)
+                    Text(it.rate.toString())
+                }
+            }
+        }
+
+        FloatingActionButton({}, modifier = Modifier.align(Alignment.BottomEnd)) {
+
+        }
+
+        if (showDialog) {
+            Dialog(
+                { showDialog = false }
+            ) {
+                LazyColumn {
+                    items(CurrencyCode.entries) {
+                        Text(it.code)
+                        Text(it.name)
+                    }
                 }
             }
         }
