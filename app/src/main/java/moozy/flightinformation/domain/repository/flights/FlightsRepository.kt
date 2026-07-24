@@ -1,7 +1,7 @@
 package moozy.flightinformation.domain.repository.flights
 
-import moozy.flightinformation.data.datasource.flights.dto.InstantScheduleDomesticArrivalDto
+import moozy.flightinformation.domain.model.flights.FlightArrival
 
 interface FlightsRepository {
-    suspend fun fetchArrivals(): Result<List<InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem>>
+    suspend fun fetchArrivals(): Result<List<FlightArrival>>
 }
