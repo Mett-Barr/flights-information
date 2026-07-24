@@ -18,12 +18,12 @@ val freeExchangeApiKet = localProps.getProperty("free_currency_api_key") ?: ""
 
 android {
     namespace = "moozy.flightinformation"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "moozy.flightinformation"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -103,7 +103,8 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
 
     testImplementation(libs.junit)
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
