@@ -27,10 +27,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -116,7 +115,7 @@ fun CurrencyLoading() {
     CircularProgressIndicator()
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun CurrencyContent(
     state: CurrencyUiState.Content,
@@ -265,18 +264,21 @@ fun CurrencyContent(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(CurrencyCode.entries) { currencyCode ->
-                                ToggleButton(
-                                    checked = if (isStage1) state.selected.any { it.code == currencyCode.code } else state.selectedBaseCurrency == currencyCode,
-                                    onCheckedChange = {
+                                FilterChip(
+                                    selected = if (isStage1) {
+                                        state.selected.any { it.code == currencyCode.code }
+                                    } else {
+                                        state.selectedBaseCurrency == currencyCode
+                                    },
+                                    onClick = {
                                         if (isStage1) {
                                             onCurrencySelect(currencyCode)
                                         } else {
                                             onBaseCurrencySelect(currencyCode)
                                         }
-                                    }
-                                ) {
-                                    Text(currencyCode.code)
-                                }
+                                    },
+                                    label = { Text(currencyCode.code) }
+                                )
                             }
                         }
 

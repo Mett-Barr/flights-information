@@ -18,12 +18,12 @@ val freeExchangeApiKet = localProps.getProperty("free_currency_api_key") ?: ""
 
 android {
     namespace = "moozy.flightinformation"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "moozy.flightinformation"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -79,28 +79,18 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-    implementation(libs.androidx.material3.adaptive.navigation3)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
 
-    implementation("androidx.compose.animation:animation:1.10.0-alpha04")
-    implementation("androidx.compose.foundation:foundation:1.10.0-alpha04")
-    implementation("androidx.compose.material:material:1.10.0-alpha04")
-    implementation("androidx.compose.runtime:runtime:1.10.0-alpha04")
-    implementation("androidx.compose.ui:ui:1.10.0-alpha04")
+    // Versions come from the Compose BOM declared above.
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material:material")
 
 
-    implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
-    implementation("androidx.compose.material3.adaptive:adaptive:1.3.0-alpha01")
-    implementation("androidx.compose.material3.adaptive:adaptive-layout:1.3.0-alpha01")
-    implementation("androidx.compose.material3.adaptive:adaptive-navigation:1.3.0-alpha01")
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.5.0-alpha06")
-    implementation("androidx.window:window:1.5.0")
-    implementation("androidx.window:window-core:1.5.0")
+    implementation(libs.androidx.material3.adaptive)
+    implementation(libs.androidx.material3.adaptive.navigation.suite)
 
 
 
@@ -113,7 +103,8 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
 
     testImplementation(libs.junit)
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
