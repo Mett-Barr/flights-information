@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
 }
 
 val localProps = Properties().apply {
@@ -51,9 +51,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true // Enable BuildConfig
-    }
-    kapt {
-        correctErrorTypes = true
     }
 }
 
@@ -106,7 +103,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     implementation(libs.androidx.compose.runtime)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
 
