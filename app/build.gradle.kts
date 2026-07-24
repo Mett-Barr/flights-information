@@ -87,11 +87,10 @@ dependencies {
     implementation(libs.coil.network.okhttp)
 
 
-    implementation("androidx.compose.animation:animation:1.10.0-alpha04")
-    implementation("androidx.compose.foundation:foundation:1.10.0-alpha04")
-    implementation("androidx.compose.material:material:1.10.0-alpha04")
-    implementation("androidx.compose.runtime:runtime:1.10.0-alpha04")
-    implementation("androidx.compose.ui:ui:1.10.0-alpha04")
+    // Versions come from the Compose BOM declared above.
+    implementation("androidx.compose.animation:animation")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material:material")
 
 
     implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
