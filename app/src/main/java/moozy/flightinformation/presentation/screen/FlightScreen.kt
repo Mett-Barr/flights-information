@@ -43,6 +43,9 @@ import moozy.flightinformation.presentation.mapper.messageRes
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
 import moozy.flightinformation.presentation.state.flights.fakeFlightArrivalItem
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
+import java.time.format.DateTimeFormatter
+
+private val lastUpdatedTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
 @Composable
 fun FlightsScreen(
@@ -96,12 +99,17 @@ private fun FlightsContent(
     onRefresh: () -> Unit,
     innerPadding: PaddingValues
 ) {
+    val lastUpdated = flightArrivalsUiState.updatedAt.format(lastUpdatedTimeFormatter)
+
     if (flightArrivalsUiState.items.isEmpty()) {
-        Text(
-            text = stringResource(R.string.flights_empty),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(16.dp)
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = stringResource(R.string.flights_last_updated, lastUpdated))
+            Text(
+                text = stringResource(R.string.flights_empty),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
     } else {
         val isRefreshing = flightArrivalsUiState.isRefreshing
         val lazyListState = rememberLazyListState()
@@ -124,6 +132,10 @@ private fun FlightsContent(
                 contentPadding = innerPadding,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                item {
+                    Text(text = stringResource(R.string.flights_last_updated, lastUpdated))
+                }
+
                 items(flightArrivalsUiState.items) { item ->
                     FlightArrivalItem(item = item)
                 }
@@ -179,7 +191,10 @@ fun CoilSimpleTest(
 @Composable
 fun FlightScreenEmptyPreview() {
     FlightInformationTheme {
-        val emptyUiState = FlightArrivalsUiState.Content(items = emptyList())
+        val emptyUiState = FlightArrivalsUiState.Content(
+            items = emptyList(),
+            updatedAt = java.time.LocalDateTime.of(2026, 7, 26, 10, 11, 12),
+        )
         FlightsScreen(flightArrivalsUiState = emptyUiState)
     }
 }

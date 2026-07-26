@@ -15,6 +15,7 @@ import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.flights.FlightsRepository
 import moozy.flightinformation.presentation.mapper.toUiModels
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 /**
@@ -28,9 +29,13 @@ import javax.inject.Inject
  * 又不想用取消協程來重啟的計時器；換成狀態模型後那個需求就消失了。
  */
 @HiltViewModel
-class FlightsViewModel @Inject constructor(
-    private val flightsRepository: FlightsRepository
+class FlightsViewModel(
+    private val flightsRepository: FlightsRepository,
+    private val clock: () -> LocalDateTime = LocalDateTime::now,
 ) : ViewModel() {
+
+    @Inject
+    constructor(flightsRepository: FlightsRepository) : this(flightsRepository, LocalDateTime::now)
 
     /** 使用者宣告手上的資料已不可信。CONFLATED：連按只算一次。 */
     private val invalidated = Channel<Unit>(Channel.CONFLATED)
@@ -65,7 +70,11 @@ class FlightsViewModel @Inject constructor(
             .mapCatching { it.toUiModels() }
             .fold(
                 onSuccess = { items ->
-                    FlightArrivalsUiState.Content(items = items, isRefreshing = false)
+                    FlightArrivalsUiState.Content(
+                        items = items,
+                        updatedAt = clock(),
+                        isRefreshing = false,
+                    )
                 },
                 onFailure = { error ->
                     // 刷新失敗時寧可留著舊資料，也不要把畫面清空；

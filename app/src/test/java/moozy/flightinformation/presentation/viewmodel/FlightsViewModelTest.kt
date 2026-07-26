@@ -12,6 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
+import java.time.LocalDateTime
 
 /**
  * 抓取的不變式是「有需求 ∧ 資料失效」：
@@ -170,6 +171,65 @@ class FlightsViewModelTest {
             assertTrue(afterFailure is FlightArrivalsUiState.Content)
             assertEquals(loaded.items, (afterFailure as FlightArrivalsUiState.Content).items)
 
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `successful load records the injected clock time`() = runTest {
+        val updatedAt = LocalDateTime.of(2026, 7, 26, 10, 11, 12)
+        val viewModel = FlightsViewModel(
+            flightsRepository = FakeFlightsRepository(),
+            clock = { updatedAt },
+        )
+
+        viewModel.state.test {
+            val content = expectMostRecentItem() as FlightArrivalsUiState.Content
+
+            assertEquals(updatedAt, content.updatedAt)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `stale data reload records a new clock time`() = runTest {
+        var updatedAt = LocalDateTime.of(2026, 7, 26, 10, 11, 12)
+        val viewModel = FlightsViewModel(
+            flightsRepository = FakeFlightsRepository(),
+            clock = { updatedAt },
+        )
+
+        viewModel.state.test {
+            val first = expectMostRecentItem() as FlightArrivalsUiState.Content
+            updatedAt = updatedAt.plusSeconds(10)
+
+            advanceTimeBy(TTL_MILLIS + 1)
+
+            val refreshed = viewModel.state.value as FlightArrivalsUiState.Content
+            assertEquals(updatedAt, refreshed.updatedAt)
+            assertTrue(first.updatedAt != refreshed.updatedAt)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `failed refresh keeps the previous data time`() = runTest {
+        var updatedAt = LocalDateTime.of(2026, 7, 26, 10, 11, 12)
+        val repository = FakeFlightsRepository()
+        val viewModel = FlightsViewModel(
+            flightsRepository = repository,
+            clock = { updatedAt },
+        )
+
+        viewModel.state.test {
+            val loaded = expectMostRecentItem() as FlightArrivalsUiState.Content
+            repository.result = Result.failure(IOException("offline"))
+            updatedAt = updatedAt.plusSeconds(10)
+
+            viewModel.refresh()
+
+            val afterFailure = viewModel.state.value as FlightArrivalsUiState.Content
+            assertEquals(loaded.updatedAt, afterFailure.updatedAt)
             cancelAndIgnoreRemainingEvents()
         }
     }

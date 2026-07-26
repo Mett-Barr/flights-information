@@ -15,6 +15,7 @@ import moozy.flightinformation.presentation.state.flights.fakeFlightArrivalItem
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
 import org.junit.Rule
 import org.junit.Test
+import java.time.LocalDateTime
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
@@ -34,7 +35,10 @@ class FlightsScreenTest {
     @Test
     fun contentState_showsFlightArrivalDetails() {
         setFlightsScreenContent(
-            FlightArrivalsUiState.Content(items = listOf(fakeFlightArrivalItem))
+            FlightArrivalsUiState.Content(
+                items = listOf(fakeFlightArrivalItem),
+                updatedAt = LocalDateTime.of(2026, 7, 26, 10, 11, 12),
+            )
         )
 
         composeTestRule.onNodeWithText(fakeFlightArrivalItem.carrierLineText).assertIsDisplayed()
@@ -51,7 +55,12 @@ class FlightsScreenTest {
 
     @Test
     fun emptyContent_showsEmptyStateMessage() {
-        setFlightsScreenContent(FlightArrivalsUiState.Content(items = emptyList()))
+        setFlightsScreenContent(
+            FlightArrivalsUiState.Content(
+                items = emptyList(),
+                updatedAt = LocalDateTime.of(2026, 7, 26, 10, 11, 12),
+            )
+        )
 
         composeTestRule.onNodeWithText(string(R.string.flights_empty)).assertIsDisplayed()
     }

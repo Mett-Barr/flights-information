@@ -5,6 +5,7 @@
     <string name="error_timeout">The request timed out. Please try again.</string>
     <string name="error_server">The flight information service is temporarily unavailable.</string>
     <string name="flights_empty">No flight information available.</string>
+    <string name="flights_last_updated">Last updated: %1$s</string>
 
     <string name="error_generic">Couldn\'t load flight information. Please try again.</string>
 </resources>
