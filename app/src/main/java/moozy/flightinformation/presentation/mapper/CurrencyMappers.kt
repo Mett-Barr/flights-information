@@ -129,8 +129,8 @@ fun nextContent(
 
     val denom: BigDecimal? = baseCode?.let { rateIndex[it.code] }
 
-    val valid = baseCode != null && baseAmount != null && denom != null && denom.signum() != 0
-    if (!valid) {
+    // baseAmount 在上面的 early return 已排除 null，這裡只需檢查 base 幣別與其匯率。
+    if (baseCode == null || denom == null || denom.signum() == 0) {
         val plainRows: List<CurrencyRowPlain> = rows.map { r ->
             CurrencyRowPlain(code = r.code, name = r.name, symbol = r.symbol, rate = r.rate)
         }
@@ -142,13 +142,9 @@ fun nextContent(
         )
     }
 
-    val bc = baseCode!!
-    val amt = baseAmount!!
-    val d = denom!!
-
     val withRows: List<CurrencyRowWithConversion> = rows.map { r ->
-        val raw = if (r.code == bc.code) amt
-        else amt.multiply(rateIndex[r.code]!!).divide(d, scale, rounding)
+        val raw = if (r.code == baseCode.code) baseAmount
+        else baseAmount.multiply(rateIndex[r.code]!!).divide(denom, scale, rounding)
         val converted = raw.atMostScale(maxDecimals, rounding)   // ★ 關鍵：最多三位小數
         CurrencyRowWithConversion(
             code = r.code,
@@ -156,14 +152,14 @@ fun nextContent(
             symbol = r.symbol,
             rate = r.rate,
             convertedAmount = converted,
-            baseAmount = amt,                 // 如也想限制它：amt.atMostScale(maxDecimals, rounding)
+            baseAmount = baseAmount,
             baseCode = content.baseCode.code
         )
     }
 
     return CurrencyUiState.Content.WithConversion(
         rows = withRows,
-        baseAmount = amt,                     // 如也想限制它：amt.atMostScale(maxDecimals, rounding)
+        baseAmount = baseAmount,
         baseCode = content.baseCode,
         selected = selectedSet,
         isRefreshing = isRefreshing,
