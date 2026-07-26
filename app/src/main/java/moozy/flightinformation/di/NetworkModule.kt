@@ -5,6 +5,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
 import kotlinx.serialization.json.Json
@@ -40,7 +42,7 @@ object NetworkModule {
     @Singleton
     @Named("FlightsClient")
     fun provideFlightsClient(): HttpClient = HttpClient {
-        // 這裡不放 header，可能只要基本設定
+        installTimeout()
     }
 
     // --- Currency HttpClient ---
@@ -48,6 +50,7 @@ object NetworkModule {
     @Singleton
     @Named("CurrencyClient")
     fun provideCurrencyClient(): HttpClient = HttpClient {
+        installTimeout()
         defaultRequest {
             url("https://api.freecurrencyapi.com/v1/")
             header("apikey", BuildConfig.FREE_CURRENCY_API_KEY)
@@ -72,3 +75,17 @@ object NetworkModule {
         @Named("ApiJson") json: Json
     ): KtorHttpRequester = KtorHttpRequesterImpl(client, json)
 }
+
+/**
+ * Ktor 預設不設逾時，一個沒回應的請求會無限等下去。
+ * 上限取一個新鮮期：等超過那麼久，資料本來就該重抓了。
+ */
+private fun HttpClientConfig<*>.installTimeout() {
+    install(HttpTimeout) {
+        requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
+        connectTimeoutMillis = REQUEST_TIMEOUT_MILLIS
+        socketTimeoutMillis = REQUEST_TIMEOUT_MILLIS
+    }
+}
+
+private const val REQUEST_TIMEOUT_MILLIS = 10_000L

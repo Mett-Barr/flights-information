@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withTimeoutOrNull
+import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.flights.FlightsRepository
 import moozy.flightinformation.presentation.mapper.toUiModels
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
@@ -70,7 +71,7 @@ class FlightsViewModel @Inject constructor(
                     // 刷新失敗時寧可留著舊資料，也不要把畫面清空；
                     // 只有從頭就沒東西可顯示時才進錯誤畫面。
                     if (previous is FlightArrivalsUiState.Content) previous
-                    else FlightArrivalsUiState.Error(error.message ?: "Unknown error")
+                    else FlightArrivalsUiState.Error(error.asLoadError())
                 },
             )
 
@@ -81,3 +82,7 @@ class FlightsViewModel @Inject constructor(
         const val SUBSCRIPTION_GRACE_MILLIS = 5_000L
     }
 }
+
+/** repository 之下的每一層都已把失敗收斂成 [LoadError]；這裡只是兜底。 */
+private fun Throwable.asLoadError(): LoadError =
+    this as? LoadError ?: LoadError.Unknown(message)

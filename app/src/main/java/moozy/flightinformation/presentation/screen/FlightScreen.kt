@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,8 @@ import coil3.compose.AsyncImage
 import kotlinx.coroutines.flow.SharedFlow
 import moozy.flightinformation.presentation.component.FlightArrivalCard
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
+import moozy.flightinformation.domain.error.LoadError
+import moozy.flightinformation.presentation.mapper.messageRes
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
 import moozy.flightinformation.presentation.state.flights.fakeFlightArrivalItem
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
@@ -69,7 +72,7 @@ fun FlightsScreen(
                 is FlightArrivalsUiState.Error -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            text = it.message,
+                            text = stringResource(it.error.messageRes()),
                             color = MaterialTheme.colorScheme.error,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(16.dp)
@@ -184,9 +187,7 @@ fun FlightScreenEmptyPreview() {
 @Composable
 fun FlightScreenErrorPreview() {
     FlightInformationTheme {
-        val errorUiState = FlightArrivalsUiState.Error(
-            message = "Failed to load flight information. Please try again later."
-        )
+        val errorUiState = FlightArrivalsUiState.Error(LoadError.NoNetwork)
         FlightsScreen(flightArrivalsUiState = errorUiState)
     }
 }
