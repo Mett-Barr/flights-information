@@ -104,9 +104,8 @@ fun nextContent(
     val rateIndex: Map<String, BigDecimal> = rows.associate { it.code to it.rate }
 
     val baseFromChosen: CurrencyCode? = chosenBase?.takeIf { rateIndex.containsKey(it.code) }
-    val baseFromOld: CurrencyCode? =
-        (content as? CurrencyUiState.Content.WithConversion)?.baseCode
-            ?.takeIf { bc -> rateIndex.containsKey(bc.code) }
+    val baseFromOld: CurrencyCode? = content.baseCode
+        .takeIf { bc -> rateIndex.containsKey(bc.code) }
     val baseFromRows: CurrencyCode? = rows.asSequence()
         .mapNotNull { r -> CurrencyCode.entries.firstOrNull { it.code == r.code } }
         .firstOrNull()
