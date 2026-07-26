@@ -155,12 +155,11 @@ class CurrencyViewModel @Inject constructor(
     }
 
     fun inputMoney(
-        content: CurrencyUiState.Content,                 // ① 當前 Content（必填）
-        chosenBase: CurrencyCode?,                        // ② 當前選中的 Currency（可為 null；需存在於 rows）
+        content: CurrencyUiState.Content,
         amountText: String?
     ) {
         viewModelScope.launch {
-            val r = nextContent(content, chosenBase, amountText)
+            val r = nextContent(content, content.selectedBaseCurrency, amountText)
             _state.value = r
         }
     }

@@ -61,8 +61,7 @@ fun CurrencyScreen(
     onCalculatorShow: () -> Unit,
     onCalculatorDismiss: () -> Unit,
     onMoneyInput: (
-        content: CurrencyUiState.Content,                 // ① 當前 Content（必填）
-        chosenBase: CurrencyCode?,                        // ② 當前選中的 Currency（可為 null；需存在於 rows）
+        content: CurrencyUiState.Content,
         amountText: String?,
     ) -> Unit,
     onCurrencyClick: (String) -> Unit,
@@ -122,8 +121,7 @@ fun CurrencyContent(
     onCalculatorShow: () -> Unit,
     onCalculatorDismiss: () -> Unit,
     onMoneyInput: (
-        content: CurrencyUiState.Content,                 // ① 當前 Content（必填）
-        chosenBase: CurrencyCode?,                        // ② 當前選中的 Currency（可為 null；需存在於 rows）
+        content: CurrencyUiState.Content,
         amountText: String?,
     ) -> Unit,
     onCurrencyClick: (String) -> Unit,
@@ -136,7 +134,6 @@ fun CurrencyContent(
     val state by rememberUpdatedState(state)
     val calculator = remember { Calculator() }
     var showCalculator by remember { mutableStateOf(false) }
-    var chosenBase by remember { mutableStateOf<CurrencyCode?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -145,7 +142,7 @@ fun CurrencyContent(
         snapshotFlow { calculator.equal }.collect {
             if (it != null) {
                 Log.d("!!!", "calculator.equal $it")
-                onMoneyInput(state, chosenBase, it.toString())
+                onMoneyInput(state, it.toString())
             }
         }
     }
@@ -169,8 +166,6 @@ fun CurrencyContent(
                                 is CurrencyRowPlain -> CurrencyRateItem(
                                     plain = row,
                                     onClick = {
-                                        chosenBase =
-                                            CurrencyCode.entries.find { it.code == row.code }
                                         onCalculatorShow()
                                         showCalculator = true
                                         onCurrencyClick(row.code)
@@ -186,8 +181,6 @@ fun CurrencyContent(
                                 is CurrencyRowWithConversion -> CurrencyConversionItem(
                                     plain = row,
                                     onClick = {
-                                        chosenBase =
-                                            CurrencyCode.entries.find { it.code == row.code }
                                         onCalculatorShow()
                                         showCalculator = true
                                         onCurrencyClick(row.code)

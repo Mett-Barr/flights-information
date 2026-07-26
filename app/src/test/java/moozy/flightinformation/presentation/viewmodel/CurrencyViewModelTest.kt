@@ -124,7 +124,41 @@ class CurrencyViewModelTest {
         val selected = viewModel.state.value as CurrencyUiState.Content.Plain
         assertEquals(CurrencyCode.EUR, selected.selectedBaseCurrency)
 
-        viewModel.inputMoney(selected, selected.selectedBaseCurrency, "10")
+        viewModel.inputMoney(selected, "10")
+        advanceUntilIdle()
+
+        val converted = viewModel.state.value as CurrencyUiState.Content.WithConversion
+        val eur = converted.rows.single { it.code == "EUR" } as CurrencyRowWithConversion
+        assertEquals(0, BigDecimal("10").compareTo(eur.convertedAmount))
+    }
+
+    @Test
+    fun `money input uses the selected base currency from content`() = runTest {
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        viewModel.load()
+        advanceUntilIdle()
+
+        viewModel.onBaseCurrencySelect(CurrencyCode.EUR)
+        val content = viewModel.state.value as CurrencyUiState.Content
+
+        viewModel.inputMoney(content, "10")
+        advanceUntilIdle()
+
+        val converted = viewModel.state.value as CurrencyUiState.Content.WithConversion
+        val eur = converted.rows.single { it.code == "EUR" } as CurrencyRowWithConversion
+        assertEquals(0, BigDecimal("10").compareTo(eur.convertedAmount))
+    }
+
+    @Test
+    fun `money input keeps the selected base after reading state again`() = runTest {
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        viewModel.load()
+        advanceUntilIdle()
+
+        viewModel.onBaseCurrencySelect(CurrencyCode.EUR)
+        val contentAfterRecreation = viewModel.state.value as CurrencyUiState.Content
+
+        viewModel.inputMoney(contentAfterRecreation, "10")
         advanceUntilIdle()
 
         val converted = viewModel.state.value as CurrencyUiState.Content.WithConversion
