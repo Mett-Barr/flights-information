@@ -7,16 +7,16 @@
 
 ### 關於資料來源網址
 
-指定的網址是 `…/API/InstantSchedule.ashx?AirFlyLine=2&AirFlyIO=2`，但它現在回傳的不是 JSON，而是一頁**用 JavaScript 轉址的 HTML**：
+題目給的是 `…/API/InstantSchedule.ashx?AirFlyLine=2&AirFlyIO=2`，本專案請求的是 `…/Announce/NewsArea/InstantSchedule_DOMARR.json`。兩者指向同一份資料：前者目前回傳的是一頁以 JavaScript 轉址的 HTML，其對應規則為
 
 ```js
 if (line === "2" && io === "2") target = "InstantSchedule_DOMARR.json";
 window.location.href = "/Announce/NewsArea/" + target
 ```
 
-轉址發生在瀏覽器執行 JS 之後，不是 HTTP 3xx，所以 HTTP client 跟隨不了——照原網址請求只會拿到這段 HTML，然後在反序列化時失敗。因此本專案直接請求轉址的目標 `InstantSchedule_DOMARR.json`（`AirFlyLine=2` 為國內線、`AirFlyIO=2` 為到達，與題目參數等價）。
+`AirFlyLine=2` 為國內線、`AirFlyIO=2` 為到達，因此對應到的正是本專案請求的檔案。由於轉址發生在瀏覽器執行 JS 之後、而非 HTTP 3xx，HTTP client 無法跟隨，直接請求目標檔案是唯一可行的方式。
 
-另外，題目文字寫「桃園機場」，但網址屬高雄航空站（`kia.gov.tw`），此處以端點為準。
+題目文字寫「桃園機場」，但網址屬高雄航空站（`kia.gov.tw`），此處以端點為準。
 
 ## 執行
 
