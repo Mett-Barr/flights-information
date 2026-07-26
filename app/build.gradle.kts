@@ -13,8 +13,8 @@ val localProps = Properties().apply {
     val f = rootProject.file("local.properties")
     if (f.exists()) load(f.inputStream())
 }
-val flightApiKey = localProps.getProperty("flight_api_key") ?: ""
-val freeExchangeApiKet = localProps.getProperty("free_currency_api_key") ?: ""
+// 只有匯率 API 需要金鑰；航班那支是公開端點。
+val freeCurrencyApiKey = localProps.getProperty("free_currency_api_key") ?: ""
 
 android {
     namespace = "moozy.flightinformation"
@@ -29,9 +29,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-
-        buildConfigField("String", "FLIGHT_API_KEY", "\"$flightApiKey\"")
-        buildConfigField("String", "FREE_CURRENCY_API_KEY", "\"$freeExchangeApiKet\"")
+        buildConfigField("String", "FREE_CURRENCY_API_KEY", "\"$freeCurrencyApiKey\"")
     }
 
     buildTypes {
