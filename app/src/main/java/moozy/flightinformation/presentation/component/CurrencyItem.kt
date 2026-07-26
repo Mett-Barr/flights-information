@@ -97,16 +97,6 @@ fun CurrencyRateItem(
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun CurrencyRateItemPreview() {
-//    CurrencyRateItem(
-//        symbol = "€",
-//        code = "EUR",
-//        rate = "0.93"
-//    )
-//}
-
 @Composable
 fun CurrencyConversionItem(
     plain: CurrencyRowWithConversion,
@@ -288,4 +278,3 @@ fun CurrencyItemSwitchPreview() {
         }
     }
 }
-

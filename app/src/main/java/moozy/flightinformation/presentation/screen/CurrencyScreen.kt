@@ -71,11 +71,6 @@ fun CurrencyScreen(
     modifier: Modifier = Modifier,
     innerPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-//    AnimatedContent(
-//        targetState = state,
-//        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
-//    ) {
-//    }
     when (val currentState = state) {
         is CurrencyUiState.Error -> CurrencyError(modifier)
         CurrencyUiState.Loading -> {
