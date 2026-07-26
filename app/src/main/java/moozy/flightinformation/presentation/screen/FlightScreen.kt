@@ -45,16 +45,11 @@ fun FlightsScreen(
     flightArrivalsUiState: FlightArrivalsUiState,
     modifier: Modifier = Modifier,
     onRefresh: () -> Unit = {},
-    onScreenVisible: () -> Unit = {},
-    onScreenHidden: () -> Unit = {},
     refreshEvent: SharedFlow<Unit>? = null,
     innerPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-    DisposableEffect(Unit) {
-        onScreenVisible()
-        onDispose { onScreenHidden() }
-    }
-
+    // 不需要通知 ViewModel「畫面出現/離開」：收集 state 本身就是需求訊號，
+    // WhileSubscribed 會據此決定要不要繼續抓資料。
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

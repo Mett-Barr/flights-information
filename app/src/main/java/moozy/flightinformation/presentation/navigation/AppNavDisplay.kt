@@ -64,8 +64,6 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                             flightArrivalsUiState = state,
                             modifier = modifier,
                             onRefresh = flightsViewModel::refresh,
-                            onScreenVisible = flightsViewModel::enableAutoRefresh,
-                            onScreenHidden = flightsViewModel::disableAutoRefresh,
                             refreshEvent = flightsViewModel.refreshEvent,
                             innerPadding = innerPadding
                         )
