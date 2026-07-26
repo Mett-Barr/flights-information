@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.currency.CurrencyRepository
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.MoneyCode
@@ -34,7 +35,7 @@ class CurrencyViewModel @Inject constructor(
      * This remains separate from [_state] because later user actions update that state directly.
      */
     fun load() {
-        if (hasLoaded) return
+        if (hasLoaded && _state.value !is CurrencyUiState.Error) return
         hasLoaded = true
 
         viewModelScope.launch {
@@ -149,7 +150,7 @@ class CurrencyViewModel @Inject constructor(
                 )
             },
             onFailure = {
-                CurrencyUiState.Error(it.message)
+                CurrencyUiState.Error(it.asLoadError())
             }
         )
     }
@@ -164,3 +165,7 @@ class CurrencyViewModel @Inject constructor(
         }
     }
 }
+
+/** repository 之下的每一層都已把失敗收斂成 [LoadError]；這裡只是兜底。 */
+private fun Throwable.asLoadError(): LoadError =
+    this as? LoadError ?: LoadError.Unknown(message)

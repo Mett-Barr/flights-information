@@ -42,10 +42,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.launch
 import moozy.flightinformation.domain.value.CurrencyCode
+import moozy.flightinformation.domain.error.LoadError
+import moozy.flightinformation.R
 import moozy.flightinformation.feature.calculator.Calculator
 import moozy.flightinformation.presentation.component.BUTTON_FONT_SIZE
 import moozy.flightinformation.presentation.component.CalculatorKeyboard
@@ -53,6 +57,7 @@ import moozy.flightinformation.presentation.component.CurrencyConversionItem
 import moozy.flightinformation.presentation.component.CurrencyRateItem
 import moozy.flightinformation.presentation.model.currency.CurrencyRowPlain
 import moozy.flightinformation.presentation.model.currency.CurrencyRowWithConversion
+import moozy.flightinformation.presentation.mapper.messageRes
 import moozy.flightinformation.presentation.state.currency.CurrencyUiState
 
 @Composable
@@ -68,16 +73,18 @@ fun CurrencyScreen(
     onCurrencySelect: (CurrencyCode) -> Unit,
     onSearch: (CurrencyUiState.Content) -> Unit,
     onBaseCurrencySelect: (CurrencyCode) -> Unit,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     innerPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     when (val currentState = state) {
-        is CurrencyUiState.Error -> CurrencyError(modifier)
-        CurrencyUiState.Loading -> {
-            Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CurrencyLoading()
-            }
-        }
+        is CurrencyUiState.Error -> CurrencyError(
+            error = currentState.error,
+            onRetry = onRetry,
+            modifier = modifier,
+            innerPadding = innerPadding,
+        )
+        CurrencyUiState.Loading -> CurrencyLoading(modifier, innerPadding)
 
         is CurrencyUiState.Content -> CurrencyContent(
             state = currentState,
@@ -95,18 +102,40 @@ fun CurrencyScreen(
 }
 
 @Composable
-fun CurrencyError(modifier: Modifier = Modifier) {
+fun CurrencyError(
+    error: LoadError,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+    innerPadding: PaddingValues = PaddingValues(0.dp),
+) {
     Box(
-        modifier = modifier,
+        modifier = modifier.fillMaxSize().padding(innerPadding),
         contentAlignment = Alignment.Center,
     ) {
-        Text("Error")
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(16.dp),
+        ) {
+            Text(stringResource(error.messageRes()))
+            Button(onClick = onRetry, modifier = Modifier.testTag("currency_retry")) {
+                Text(stringResource(R.string.action_retry))
+            }
+        }
     }
 }
 
 @Composable
-fun CurrencyLoading() {
-    CircularProgressIndicator()
+fun CurrencyLoading(
+    modifier: Modifier = Modifier,
+    innerPadding: PaddingValues = PaddingValues(0.dp),
+) {
+    Box(
+        modifier = modifier.fillMaxSize().padding(innerPadding),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
+    }
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)

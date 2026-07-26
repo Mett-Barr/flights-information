@@ -7,8 +7,12 @@ import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import moozy.flightinformation.R
+import moozy.flightinformation.domain.error.LoadError
 import java.math.BigDecimal
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.presentation.model.currency.CurrencyRowPlain
@@ -35,10 +39,25 @@ class CurrencyScreenTest {
     }
 
     @Test
-    fun errorState_showsErrorMessage() {
-        setCurrencyScreenContent(CurrencyUiState.Error(message = "Request failed"))
+    fun noNetworkError_showsCategorizedMessage() {
+        setCurrencyScreenContent(CurrencyUiState.Error(LoadError.NoNetwork))
 
-        composeTestRule.onNodeWithText("Error").assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText(string(R.string.error_no_network))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun errorState_retry_callsRetryCallback() {
+        var retries = 0
+        setCurrencyScreenContent(
+            state = CurrencyUiState.Error(LoadError.NoNetwork),
+            onRetry = { retries++ },
+        )
+
+        composeTestRule.onNodeWithTag("currency_retry").performClick()
+
+        assertEquals(1, retries)
     }
 
     @Test
@@ -110,10 +129,15 @@ class CurrencyScreenTest {
             selectedBaseCurrency = selectedBaseCurrency,
         )
 
+    /** 從資源讀取，才不會在測試裡再抄一份文案。 */
+    private fun string(id: Int): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
+
     private fun setCurrencyScreenContent(
         state: CurrencyUiState,
         onCurrencySelect: (CurrencyCode) -> Unit = {},
         onBaseCurrencySelect: (CurrencyCode) -> Unit = {},
+        onRetry: () -> Unit = {},
     ) {
         composeTestRule.setContent {
             FlightInformationTheme {
@@ -126,6 +150,7 @@ class CurrencyScreenTest {
                     onCurrencySelect = onCurrencySelect,
                     onSearch = {},
                     onBaseCurrencySelect = onBaseCurrencySelect,
+                    onRetry = onRetry,
                 )
             }
         }

@@ -8,4 +8,5 @@
     <string name="flights_last_updated">Last updated: %1$s</string>
 
     <string name="error_generic">Couldn\'t load flight information. Please try again.</string>
+    <string name="action_retry">Retry</string>
 </resources>

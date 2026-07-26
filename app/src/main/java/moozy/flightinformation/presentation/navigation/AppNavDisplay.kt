@@ -92,6 +92,7 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                             onCurrencySelect = currencyViewModel::onCurrencySelect,
                             onSearch = currencyViewModel::getCurrencies,
                             onBaseCurrencySelect = currencyViewModel::onBaseCurrencySelect,
+                            onRetry = currencyViewModel::load,
                             modifier = modifier,
                             innerPadding = innerPadding
                         )

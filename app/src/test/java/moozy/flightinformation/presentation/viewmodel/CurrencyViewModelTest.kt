@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import moozy.flightinformation.domain.model.currency.Currencies
 import moozy.flightinformation.domain.model.currency.CurrencyRate
+import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.currency.CurrencyRepository
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.MoneyCode
@@ -67,7 +68,8 @@ class CurrencyViewModelTest {
         viewModel.load()
         advanceUntilIdle()
 
-        assertTrue(viewModel.state.value is CurrencyUiState.Error)
+        val state = viewModel.state.value as CurrencyUiState.Error
+        assertEquals(LoadError.Unknown("offline"), state.error)
     }
 
     @Test
