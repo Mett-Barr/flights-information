@@ -1,5 +1,6 @@
 package moozy.flightinformation.testing
 
+import kotlinx.coroutines.delay
 import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
 import moozy.flightinformation.domain.repository.flights.FlightsRepository
@@ -11,6 +12,7 @@ import java.time.LocalTime
  */
 class FakeFlightsRepository(
     var result: Result<List<FlightArrival>> = Result.success(listOf(anArrival())),
+    var responseDelayMillis: Long = 0,
 ) : FlightsRepository {
 
     var callCount = 0
@@ -18,6 +20,7 @@ class FakeFlightsRepository(
 
     override suspend fun fetchArrivals(): Result<List<FlightArrival>> {
         callCount++
+        delay(responseDelayMillis)
         return result
     }
 

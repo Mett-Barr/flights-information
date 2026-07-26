@@ -128,6 +128,50 @@ class FlightsViewModelTest {
     }
 
     @Test
+    fun `manual refresh shows its indicator until the reload completes`() = runTest {
+        val repository = FakeFlightsRepository(responseDelayMillis = 1)
+        val viewModel = FlightsViewModel(repository)
+
+        viewModel.state.test {
+            assertTrue(awaitItem() is FlightArrivalsUiState.Loading)
+            advanceTimeBy(1)
+            assertTrue(awaitItem() is FlightArrivalsUiState.Content)
+
+            repository.responseDelayMillis = 1_000
+            viewModel.refresh()
+
+            val refreshing = awaitItem() as FlightArrivalsUiState.Content
+            assertTrue(refreshing.isRefreshing)
+
+            advanceTimeBy(1_000)
+            val completed = awaitItem() as FlightArrivalsUiState.Content
+            assertTrue(!completed.isRefreshing)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `freshness expiry reload does not show a refresh indicator`() = runTest {
+        val repository = FakeFlightsRepository(responseDelayMillis = 1)
+        val viewModel = FlightsViewModel(repository)
+
+        viewModel.state.test {
+            assertTrue(awaitItem() is FlightArrivalsUiState.Loading)
+            advanceTimeBy(1)
+            assertTrue(awaitItem() is FlightArrivalsUiState.Content)
+
+            repository.responseDelayMillis = 1_000
+            advanceTimeBy(TTL_MILLIS)
+            expectNoEvents()
+
+            advanceTimeBy(1_000)
+            val reloaded = awaitItem() as FlightArrivalsUiState.Content
+            assertTrue(!reloaded.isRefreshing)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `stops fetching once nothing is collecting`() = runTest {
         val repository = FakeFlightsRepository()
         val viewModel = FlightsViewModel(repository)

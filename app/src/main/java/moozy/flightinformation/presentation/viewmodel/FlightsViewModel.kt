@@ -45,14 +45,20 @@ class FlightsViewModel(
 
     val state: StateFlow<FlightArrivalsUiState> = flow {
         var current: FlightArrivalsUiState = FlightArrivalsUiState.Loading
+        var refreshWasUserInitiated = false
         while (true) {
+            if (refreshWasUserInitiated && current is FlightArrivalsUiState.Content) {
+                current = current.copy(isRefreshing = true)
+                emit(current)
+            }
             current = load(current)
             emit(current)
             if (current is FlightArrivalsUiState.Content) _refreshEvent.emit(Unit)
 
             // 等使用者作廢資料，最多等一個新鮮期。兩條路都是「資料失效了」，
-            // 所以回傳值用不上：醒來就回到迴圈頂端重抓。
-            withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
+            // 但回傳值區分刷新來源，只有使用者主動刷新才顯示指示器。
+            refreshWasUserInitiated =
+                withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() } != null
         }
     }.stateIn(
         scope = viewModelScope,
@@ -79,7 +85,7 @@ class FlightsViewModel(
                 onFailure = { error ->
                     // 刷新失敗時寧可留著舊資料，也不要把畫面清空；
                     // 只有從頭就沒東西可顯示時才進錯誤畫面。
-                    if (previous is FlightArrivalsUiState.Content) previous
+                    if (previous is FlightArrivalsUiState.Content) previous.copy(isRefreshing = false)
                     else FlightArrivalsUiState.Error(error.asLoadError())
                 },
             )
