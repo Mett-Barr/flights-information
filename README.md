@@ -5,7 +5,18 @@
 - **Demo 影片**：https://www.youtube.com/watch?v=n8gBh9hrWUc
 - **資料來源**：[高雄航空站即時時刻表](https://www.kia.gov.tw/Announce/NewsArea/InstantSchedule_DOMARR.json)、[freecurrencyapi](https://freecurrencyapi.com/)
 
-> 題目文字寫「桃園機場」，但指定的 API 端點屬高雄航空站（`kia.gov.tw`），此處以端點為準。
+### 關於資料來源網址
+
+指定的網址是 `…/API/InstantSchedule.ashx?AirFlyLine=2&AirFlyIO=2`，但它現在回傳的不是 JSON，而是一頁**用 JavaScript 轉址的 HTML**：
+
+```js
+if (line === "2" && io === "2") target = "InstantSchedule_DOMARR.json";
+window.location.href = "/Announce/NewsArea/" + target
+```
+
+轉址發生在瀏覽器執行 JS 之後，不是 HTTP 3xx，所以 HTTP client 跟隨不了——照原網址請求只會拿到這段 HTML，然後在反序列化時失敗。因此本專案直接請求轉址的目標 `InstantSchedule_DOMARR.json`（`AirFlyLine=2` 為國內線、`AirFlyIO=2` 為到達，與題目參數等價）。
+
+另外，題目文字寫「桃園機場」，但網址屬高雄航空站（`kia.gov.tw`），此處以端點為準。
 
 ## 執行
 
