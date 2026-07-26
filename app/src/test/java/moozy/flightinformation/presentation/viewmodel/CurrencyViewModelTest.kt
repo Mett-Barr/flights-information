@@ -13,6 +13,7 @@ import moozy.flightinformation.presentation.model.currency.CurrencyRowWithConver
 import moozy.flightinformation.presentation.state.currency.CurrencyUiState
 import moozy.flightinformation.testing.MainDispatcherRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -79,6 +80,21 @@ class CurrencyViewModelTest {
         advanceUntilIdle()
 
         assertEquals(1, repository.callCount)
+    }
+
+    @Test
+    fun `refresh completes without consuming virtual time`() = runTest {
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        viewModel.load()
+        advanceUntilIdle()
+        val content = viewModel.state.value as CurrencyUiState.Content
+
+        viewModel.getCurrencies(content)
+        advanceUntilIdle()
+
+        assertEquals(0L, testScheduler.currentTime)
+        val refreshed = viewModel.state.value as CurrencyUiState.Content
+        assertFalse(refreshed.isRefreshing)
     }
 
     @Test

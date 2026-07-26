@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toPersistentSet
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -118,9 +117,6 @@ class CurrencyViewModel @Inject constructor(
                 is CurrencyUiState.Content.Plain -> state.copy(isRefreshing = true)
                 is CurrencyUiState.Content.WithConversion -> state.copy(isRefreshing = true)
             }
-
-            // 演示動畫效果
-            delay(1500)
 
             getLatestCurrencies(state.selectedBaseCurrency, state.selected)
         }
