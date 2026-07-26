@@ -122,7 +122,8 @@ fun nextContent(
             rows = plainRows,
             selected = selectedSet,
             isRefreshing = isRefreshing,
-            baseCode = content.baseCode
+            baseCode = content.baseCode,
+            selectedBaseCurrency = content.selectedBaseCurrency
         )
     }
 
@@ -137,7 +138,8 @@ fun nextContent(
             rows = plainRows,
             selected = selectedSet,
             isRefreshing = isRefreshing,
-            baseCode = content.baseCode
+            baseCode = content.baseCode,
+            selectedBaseCurrency = content.selectedBaseCurrency
         )
     }
 
@@ -162,5 +164,6 @@ fun nextContent(
         baseCode = content.baseCode,
         selected = selectedSet,
         isRefreshing = isRefreshing,
+        selectedBaseCurrency = content.selectedBaseCurrency,
     )
 }

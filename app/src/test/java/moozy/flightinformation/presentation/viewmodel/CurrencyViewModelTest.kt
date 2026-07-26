@@ -91,6 +91,11 @@ class CurrencyViewModelTest {
 
         val content = viewModel.state.value as CurrencyUiState.Content.Plain
         assertEquals(persistentSetOf(CurrencyCode.USD), content.selected)
+
+        viewModel.onCurrencySelect(CurrencyCode.EUR)
+
+        val selectedAgain = viewModel.state.value as CurrencyUiState.Content.Plain
+        assertEquals(persistentSetOf(CurrencyCode.USD, CurrencyCode.EUR), selectedAgain.selected)
     }
 
     @Test

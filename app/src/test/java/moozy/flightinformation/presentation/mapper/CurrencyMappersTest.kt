@@ -24,10 +24,12 @@ class CurrencyMappersTest {
     private fun content(
         rows: List<CurrencyRow> = listOf(row("EUR", "0.8"), row("USD", "1.0")),
         baseCode: CurrencyCode = CurrencyCode.USD,
+        selectedBaseCurrency: CurrencyCode? = null,
     ) = CurrencyUiState.Content.Plain(
         rows = rows,
         selected = persistentSetOf(CurrencyCode.EUR),
         baseCode = baseCode,
+        selectedBaseCurrency = selectedBaseCurrency,
     )
 
     @Test
@@ -66,6 +68,28 @@ class CurrencyMappersTest {
     }
 
     @Test
+    fun `keeps selected base currency when converting`() {
+        val result = nextContent(
+            content(selectedBaseCurrency = CurrencyCode.EUR),
+            CurrencyCode.EUR,
+            "12.5",
+        ) as CurrencyUiState.Content.WithConversion
+
+        assertEquals(CurrencyCode.EUR, result.selectedBaseCurrency)
+    }
+
+    @Test
+    fun `keeps selected base currency for a blank amount`() {
+        val result = nextContent(
+            content(selectedBaseCurrency = CurrencyCode.EUR),
+            CurrencyCode.EUR,
+            "",
+        ) as CurrencyUiState.Content.Plain
+
+        assertEquals(CurrencyCode.EUR, result.selectedBaseCurrency)
+    }
+
+    @Test
     fun `returns plain rows when the chosen base rate is zero`() {
         val result = nextContent(
             content(listOf(row("USD", "0"), row("EUR", "0.8"))),
@@ -74,6 +98,20 @@ class CurrencyMappersTest {
         )
 
         assertTrue(result is CurrencyUiState.Content.Plain)
+    }
+
+    @Test
+    fun `keeps selected base currency when the base rate is zero`() {
+        val result = nextContent(
+            content(
+                rows = listOf(row("USD", "0"), row("EUR", "0.8")),
+                selectedBaseCurrency = CurrencyCode.EUR,
+            ),
+            CurrencyCode.USD,
+            "10",
+        ) as CurrencyUiState.Content.Plain
+
+        assertEquals(CurrencyCode.EUR, result.selectedBaseCurrency)
     }
 
     @Test
