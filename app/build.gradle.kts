@@ -58,6 +58,8 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
+        // 警告不該累積：一旦容忍，新的就淹沒在舊的裡面，直到沒人再讀它們。
+        allWarningsAsErrors = true
     }
 }
 
