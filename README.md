@@ -1,110 +1,149 @@
-專案架構：
-data/                                      ← 資料層：I/O、DTO、Repo 實作（不讓 DTO 外洩）   
-├─ datasource/                              ← 存取外部來源（HTTP 等）；只做取得與最小轉換  
-│  ├─ currency/  
-│  │  ├─ api/                               ← 調用端點（Ktor 請求入口）    
-│  │  ├─ dto/                               ← 遠端傳輸格式（只在 data 層存在）  
-│  │  └─ url/                               ← 端點常數與路徑  
-│  └─ flights/  
-│     ├─ api/  
-│     ├─ dto/  
-│     └─ url/  
-├─ network/                                 ← HttpClient/序列化/攔截器與 Requester 封裝  
-└─ repository/                              ← Repository 實作：聚合來源、DTO→domain 映射、回傳 Result<domain>  
-├─ currency/  
-└─ flights/  
-  
-di/                                        ← 依賴注入（Hilt/Koin 綁定 HttpClient/DataSource/Repo/VM）  
+# 航班資訊
 
-domain/                                    ← 網域層：純模型與介面；不依賴 data/presentation  
-├─ model/                                   ← 業務語彙模型（不可見 DTO、UI 細節）  
-│  └─ currency/  
-├─ repository/                              ← Repository 介面（穩定邊界，供 VM 依賴）  
-│  ├─ currency/  
-│  └─ flights/  
-└─ value/                                   ← 值物件/型別別名（不可變、型別安全）  
-  
-feature/                                    ← 功能切片（獨立演進，利於抽取與重用）  
-└─ calculator/                              ← 計算器子域（示例；可比照匯率/航班收斂為 feature）  
-  
-presentation/                               ← 展示層：UI/狀態/導航/VM；單向資料流  
-├─ component/                               ← 可重用 UI 元件（含 modifier/）  
-│  └─ modifier/                             ← 修飾器擴充（骨架、陰影、shimmer 等）  
-├─ mapper/                                  ← domain → UI 的最後轉換（避免 UI 知道 domain 細節）  
-├─ model/                                   ← UI 專屬模型（貼近畫面需求）  
-│  └─ currency/  
-├─ navigation/                              ← Route/Graph 定義（頁面切換邏輯）  
-├─ screen/                                  ← 頁面組合（觀察 UiState 呈現）  
-├─ state/                                   ← UiState/事件結果（少布林、以 sealed/資料類表達）  
-│  ├─ currency/  
-│  └─ flights/  
-├─ theme/                                   ← 色彩/字體/形狀與密度  
-└─ viewmodel/                               ← 協調 UI 與 domain；觸發使用案例/副作用（如輪詢）  
-  
-util/                                       ← 純工具（不得依賴上層；可在任何層安全使用）  
-├─ collection/                              ← 集合操作與擴充（去重、分組、持久集合輔助）  
-├─ number/                                  ← 數值工具（BigDecimal 轉換/格式化/保留位數）  
-└─ time/                                    ← 時間工具（解析/格式化/區時/間隔計算）  
-  
-花三四天左右處理的，到後面真的很趕沒法弄得很完整  
-不過整個思路有出來，很久沒有這樣從零開始設計一個專案了，蠻有趣的  
+高雄國際航空站的國內線到達看板，附即時匯率換算與計算機。
 
-首先是想法，我參考 Now in Android(nia) 和六角形(應該算)設計層級與依賴  
-nia 的範例還蠻有趣的，之前有人還跟官方吵過很不 clean code，因為 domain 依賴 data layer  
-原因是官方覺得 domain 存在的前提是業務足夠複雜，不然本身是可選的(data ui 兩層直通)  
-我後來還是決定把 repo 丟給 domain 就是了，畢竟 repo 本身就是開純業務面的 model 了沒道理不放 domain  
+- **Demo 影片**：https://www.youtube.com/watch?v=n8gBh9hrWUc
+- **資料來源**：[高雄航空站即時時刻表](https://www.kia.gov.tw/Announce/NewsArea/InstantSchedule_DOMARR.json)、[freecurrencyapi](https://freecurrencyapi.com/)
 
-再來講講架構，算是 MVVM 跟 MVI 都有沾邊  
-我自己對 MVVM 的定義是 View/Composable 持有 VM 才算  
-我是包成 UiState 了，callback 也都是 Composable 的獨立參數   
-MVI 的重點則是單向數據流與唯一可信數據源，這兩點我算是高度遵守(當然有些太趕的真的來不及弄)  
-有人會覺得一定要包 sealed class Intent 才算，我自己是覺得不算  
-官方本身都沒這麼做，再來 callback 和 intent instance 差異只在 call 本身是否可以傳遞與儲存  
-大多數時候純 callback 已經足夠了，只有需要紀錄或回朔操作的場景我才會轉 intent instance 來用  
-UiState 用 sealed class 設計區隔每種狀態  
+> 題目文字寫「桃園機場」，但指定的 API 端點屬高雄航空站（`kia.gov.tw`），此處以端點為準。
 
-導航的部分因為只有兩頁所以沒用庫  
-我原本很想用 Nav3 的，因為 Nav2 真的太醜了，什麼 type-safe 也都講假的實際上根本沒有  
-但 Nav3 沒有直接保存狀態的機制所以很難用，最耗只好自己控  
-還有用上 Adaptive Layout 元件，比較好控制方向和 window insert 之類的  
-但是新的庫真的感覺有點差，連 inner padding 都沒有害我自己刻  
-現在要弄 edge-to-edge 真的不少工要弄  
-不過也讓旋轉畫面任一一邊都不會切割到內容  
-出了大量的動畫還配上 SharedTransition  
-不過真的有點太新了，不是很熟
+## 執行
 
-DI 用 Hilt，老實說很久沒用 DI 了，之前也是自己的專案練習過而已  
-不過還蠻好玩的，可惜測試的地方還沒用上，沒發揮全部能力  
+需要 JDK 17 與 Android SDK 37。
 
-測試現在還沒寫，時間真的不夠  
-不過我現在主要也是用 prompt 生，訂好規格後都還蠻準的  
-看接下來幾天有沒有時間補  
+匯率 API 需要金鑰，請在專案根目錄的 `local.properties` 加入：
 
-這次有兩部分我覺得比較有趣  
-一個是飛航每 10 秒刷新一次，另一個是計算機  
+```properties
+free_currency_api_key=你的金鑰
+```
 
-10 秒刷新我用了自己寫的重啟計時器 ReTimer，我不是直接用 delay 來做  
-首先我對 10 秒刷新的理解是"只要資料超過 10 秒未更新則自動更新"  
-所以他有兩種情況  
-1. 手動頻繁更新的話，10 秒倒數必須重來  
-2. 若超過 10 秒但已不在頁面上，此次更新應該取消直到重返頁面
+金鑰可於 [freecurrencyapi.com](https://freecurrencyapi.com/) 免費註冊取得。未填仍可建置與執行，但匯率頁會顯示錯誤（航班頁不受影響，該 API 不需金鑰）。
 
-所以這個場景實際上更複雜一點，同時我又要求 UI 不該直接進行網路請求等等操作，而且更新控制本就該交給 VM  
-但我也不希望讓 VM 直接持有 UI 自身的狀態(非 UiState)，導致設計上調整不少  
-再來是可重啟計時器 ReTimer 的設計  
-因為 delay 方案在高頻下需要一直取消協程，我不太想要這種額外開銷所以改成了 delay 結束後重新判斷的方案  
-但同時要考慮多執行緒狀態競爭問題，原本是用 atomic 旗標方案，但還是很不好維護  
-後來改成 Channel 的設計，保證線程安全同時低開銷，也算是花了點時間想  
+```bash
+./gradlew assembleDebug   # 建置
+./gradlew test            # 單元測試
+```
 
-計算機我拿以前做過的出來用  
-但那真的很久以前了，差點修不好，好險結果是好的  
-這個計算機特別的點在於它是狀態驅動，而不是純字串每次更新轉換  
-也就是說我可以直接觀察當前的輸入，判斷接下來是合法非法  
-等於不可能產生無法計算的非法狀態，但真的有點久了，裡面的 code 很髒  
+## 需求對照
 
-YouTube:
-https://www.youtube.com/watch?v=n8gBh9hrWUc
+**基本**
 
-失敗案例測試圖：
-<img width="1344" height="2992" alt="Screenshot_20251017_065840" src="https://github.com/user-attachments/assets/0384ebda-90e0-48cd-9e73-32efad45063f" />
-<img width="1344" height="2992" alt="Screenshot_20251017_064636" src="https://github.com/user-attachments/assets/ecede3d4-3944-4cf2-aaf8-3543ba39850d" />
+- [x] 使用 Kotlin
+- [x] MVVM
+- [x] 專案上傳至 GitHub 並公開
+- [x] 螢幕錄製上傳 YouTube（非 Shorts、非公開）
+
+**必要**
+
+- [x] 顯示航班資訊、狀態、時間
+- [x] 每十秒更新一次
+- [x] 錯誤處理
+- [x] 顯示六種以上幣別匯率並預設某種幣別
+
+**加分**
+
+- [x] Coding Style 與架構分層
+- [x] 客製化計算機：點選幣別開啟，輸入金額後即時換算並在清單同步更新
+- [x] UI/UX：Material 3、共享元素轉場、下拉刷新、骨架載入
+- [x] 滑動動畫與畫面特效
+- [x] 使用第三方 library
+- [x] 單元測試（27 項）
+- [x] 支援螢幕轉向與深色模式
+
+## 架構
+
+三層，依賴指向內層，DTO 不越過資料層。
+
+```
+presentation/                UI、UiState、ViewModel
+├─ screen/ component/        Composable
+├─ state/                    UiState（sealed）與 UI model
+├─ mapper/                   domain → UI：格式化、文案、顏色
+├─ viewmodel/
+├─ navigation/               兩頁的切換與狀態保存
+└─ theme/
+
+domain/                      業務語彙，不依賴任何外層
+├─ model/                    FlightArrival、FlightStatus、Currencies
+├─ repository/               Repository 介面（實作在 data）
+├─ error/                    LoadError
+└─ value/                    值物件與型別別名
+
+data/                        I/O 與格式收斂
+├─ datasource/               單一來源存取（api / dto / url）
+├─ network/                  HttpClient 封裝與錯誤分類
+└─ repository/               DTO → domain 映射
+
+feature/calculator/          狀態驅動的運算式計算機
+di/                          Hilt 綁定
+util/                        純工具
+```
+
+**資料流**
+
+```
+DTO ──(data mapper)──▶ domain model ──(presentation mapper)──▶ UI model
+   狀態正規化                 業務事實              格式化、文案、顏色
+```
+
+`airFlyStatus` 回傳的是中英混雜的字串（`"抵達"`、`"ARRIVED"`、`"延誤"`…），在資料層收斂成 `FlightStatus` 這個封閉集合，未知值以 `Unknown(raw)` 保留原文而非丟棄。時間欄位為 `LocalTime?`：來源只給 `"HH:mm"`、不帶日期與時區，而看板顯示的本就是機場當地時間，不做換算。
+
+### 抓取時機
+
+抓取由一個條件決定，而非由事件觸發：
+
+> **有人在看 ∧ 資料已失效**
+
+```kotlin
+val state = flow {
+    while (true) {
+        emit(load())
+        withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
+    }
+}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Loading)
+```
+
+`WhileSubscribed` 表達「有人在看」——收集停止就不再抓，所以 app 進入背景會自動停止輪詢、回到前景自動恢復，兩者都不需要額外處理。迴圈內的等待表達「已失效」：新鮮期屆滿，或使用者主動下拉刷新。手動刷新後重新計時是迴圈重新進入的自然結果。
+
+### 錯誤處理
+
+失敗在資料層就收斂成 `LoadError`（`NoNetwork` / `Timeout` / `Server(code)` / `Malformed` / `Unknown`）。狀態碼會顯式檢查，因為錯誤回應也可能帶著合法 JSON——例如金鑰失效時 freecurrencyapi 回的就是；只靠「解析失敗」判斷會把它當成資料。原始例外不會流到畫面上，文案由 presentation 依錯誤類別對應字串資源。
+
+刷新失敗時保留既有內容而非清空畫面，只有從頭就無資料可顯示時才進入錯誤畫面。
+
+### 計算機
+
+以狀態機驅動而非字串比對。`canInput(key)` 讓 UI 直接得知每顆按鍵當下是否可按，非法輸入在進入前就被擋下，因此不會產生無法計算的運算式。運算採中綴轉後綴（Shunting-yard），支援四則運算、優先序、括號巢狀與負號。
+
+## 測試
+
+27 項單元測試，皆不觸及網路，毫秒級完成。
+
+| 範圍 | 內容 |
+|---|---|
+| `KtorHttpRequesterImplTest` | 錯誤分類；含「4xx 但 body 可解析」的迴歸測試，以及「原始例外不得外洩」的契約測試 |
+| `FlightsRepositoryImplTest` | DTO → domain 映射、狀態正規化、空值與無法解析的時間 |
+| `FlightsViewModelTest` | 抓取條件：無人收集時不抓、新鮮期內不重抓、手動刷新重新計時、收集停止即停 |
+| DTO 測試 | 反序列化 |
+
+測試以 fake 而非 mock 驅動，斷言的是行為契約而非特定實作，因此更換計時或載入方式時不需要改測試。
+
+編譯器警告視為錯誤（`allWarningsAsErrors`），CI 於每次推送與 PR 執行建置與測試。
+
+## 技術
+
+| 分類 | 使用 |
+|---|---|
+| 語言／建置 | Kotlin 2.3.21、AGP 9.3.1、Gradle 9.6.1、JDK 17 |
+| UI | Jetpack Compose（BOM 2026.06.01）、Material 3、Adaptive |
+| 非同步 | Coroutines、Flow |
+| 網路 | Ktor 3.5.1（OkHttp 引擎）、kotlinx.serialization |
+| DI | Hilt 2.60.1（KSP） |
+| 圖片 | Coil 3 |
+| 測試 | JUnit4、kotlinx-coroutines-test、Turbine、Ktor MockEngine |
+
+所有依賴皆為穩定版，無 alpha、beta 或 rc。
+
+## 決策紀錄
+
+架構上的取捨記於 [`docs/adr/`](docs/adr/)。
