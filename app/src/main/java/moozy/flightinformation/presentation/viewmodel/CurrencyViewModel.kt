@@ -1,6 +1,5 @@
 package moozy.flightinformation.presentation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -166,7 +165,6 @@ class CurrencyViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             val r = nextContent(content, chosenBase, amountText)
-            Log.d("!!!", "nextContent: $r")
             _state.value = r
         }
     }
