@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import moozy.flightinformation.R
 import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
 import moozy.flightinformation.presentation.state.flights.fakeFlightArrivalItem
@@ -43,7 +45,7 @@ class FlightsScreenTest {
         setFlightsScreenContent(FlightArrivalsUiState.Error(LoadError.NoNetwork))
 
         composeTestRule
-            .onNodeWithText("No internet connection. Check your connection and try again.")
+            .onNodeWithText(string(R.string.error_no_network))
             .assertIsDisplayed()
     }
 
@@ -51,8 +53,12 @@ class FlightsScreenTest {
     fun emptyContent_showsEmptyStateMessage() {
         setFlightsScreenContent(FlightArrivalsUiState.Content(items = emptyList()))
 
-        composeTestRule.onNodeWithText("No flight information available.").assertIsDisplayed()
+        composeTestRule.onNodeWithText(string(R.string.flights_empty)).assertIsDisplayed()
     }
+
+    /** 從資源讀取，才不會在測試裡再抄一份文案。 */
+    private fun string(id: Int): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
 
     private fun setFlightsScreenContent(uiState: FlightArrivalsUiState) {
         composeTestRule.setContent {
