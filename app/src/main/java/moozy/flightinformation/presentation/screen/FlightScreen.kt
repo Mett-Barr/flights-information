@@ -37,6 +37,7 @@ import coil3.compose.AsyncImage
 import kotlinx.coroutines.flow.SharedFlow
 import moozy.flightinformation.presentation.component.FlightArrivalCard
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
+import moozy.flightinformation.R
 import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.presentation.mapper.messageRes
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
@@ -97,7 +98,7 @@ private fun FlightsContent(
 ) {
     if (flightArrivalsUiState.items.isEmpty()) {
         Text(
-            text = "No flight information available.",
+            text = stringResource(R.string.flights_empty),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(16.dp)
         )
