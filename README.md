@@ -47,7 +47,7 @@ free_currency_api_key=你的金鑰
 - [x] UI/UX：Material 3、共享元素轉場、下拉刷新、骨架載入
 - [x] 滑動動畫與畫面特效
 - [x] 使用第三方 library
-- [x] 單元測試（52 項）與 UI 測試（4 項）
+- [x] 單元測試（59 項）與 UI 測試（4 項）
 - [x] 支援螢幕轉向與深色模式
 
 ## 架構
@@ -98,12 +98,16 @@ DTO ──(data mapper)──▶ domain model ──(presentation mapper)──�
 val state = flow {
     while (true) {
         emit(load())
-        withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
+        userInitiated = withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() } != null
     }
 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Loading)
 ```
 
 `WhileSubscribed` 表達「有人在看」——收集停止就不再抓，所以 app 進入背景會自動停止輪詢、回到前景自動恢復，兩者都不需要額外處理。迴圈內的等待表達「已失效」：新鮮期屆滿，或使用者主動下拉刷新。手動刷新後重新計時是迴圈重新進入的自然結果。
+
+等待的回傳值還帶著第二個訊息：是誰讓資料失效的。使用者下拉時顯示刷新指示器，十秒一次的自動更新則安靜進行——否則指示器會固定閃爍，反而變成雜訊。
+
+畫面另外顯示這批資料的抓取時刻。刷新失敗時保留的是舊內容，時刻也維持舊值，使用者因此分得出眼前是新資料還是上一次成功的結果。即時看板顯示過期資料卻不標示，比顯示不出來更糟。
 
 ### 錯誤處理
 
@@ -117,13 +121,13 @@ val state = flow {
 
 ## 測試
 
-52 項單元測試與 4 項 Compose UI 測試，皆不觸及網路，毫秒級完成。
+59 項單元測試與 4 項 Compose UI 測試，皆不觸及網路，毫秒級完成。
 
 | 範圍 | 內容 |
 |---|---|
 | `KtorHttpRequesterImplTest` | 錯誤分類；含「4xx 但 body 可解析」的迴歸測試，以及「原始例外不得外洩」的契約測試 |
 | `FlightsRepositoryImplTest` | DTO → domain 映射、狀態正規化、空值與無法解析的時間 |
-| `FlightsViewModelTest` | 抓取條件：無人收集時不抓、新鮮期內不重抓、手動刷新重新計時、收集停止即停 |
+| `FlightsViewModelTest` | 抓取條件：無人收集時不抓、新鮮期內不重抓、手動刷新重新計時、收集停止即停；資料時刻的更新與保留；指示器只在手動刷新時出現 |
 | `CurrencyRepositoryImplTest` | 空幣別清單不發請求、CSV 組裝、base 預設值、未知幣別與無法解析的匯率 |
 | `CurrencyMappersTest` | 換算公式、基準幣別的優先序、除以零與缺匯率的退場、小數位上限與進位 |
 | `CurrencyViewModelTest` | 載入與失敗的狀態轉換、重複載入只請求一次、選取切換、刷新不引入人為延遲 |
@@ -132,7 +136,7 @@ val state = flow {
 
 測試以 fake 而非 mock 驅動，斷言的是行為契約而非特定實作，因此更換計時或載入方式時不需要改測試。
 
-有幾條斷言是刻意挑的。`CurrencyViewModelTest` 用 `testScheduler.currentTime == 0` 斷言刷新不消耗虛擬時間——比檢查「原始碼裡沒有 `delay`」可靠，因為它管的是行為而非寫法。`CurrencyMappersTest` 斷言基準幣別在多次輸入之間存活，這條抓出過一個真實缺陷：狀態物件是重建而非 `copy()`，漏寫的欄位會靜默退回預設值 `null`，而編譯器不會有任何抱怨。
+有幾條斷言是刻意挑的。`CurrencyViewModelTest` 用 `testScheduler.currentTime == 0` 斷言刷新不消耗虛擬時間——比檢查「原始碼裡沒有 `delay`」可靠，因為它管的是行為而非寫法。`CurrencyMappersTest` 斷言基準幣別在多次輸入之間存活，這條抓出過一個真實缺陷：狀態物件是重建而非 `copy()`，漏寫的欄位會靜默退回預設值 `null`，而編譯器不會有任何抱怨。「自動更新不顯示指示器」則是用 `expectNoEvents()` 斷言請求飛行期間沒有任何中間狀態送出——只檢查最終值會漏掉閃爍。
 
 編譯器警告視為錯誤（`allWarningsAsErrors`），CI 於每次推送與 PR 執行建置與測試。
 
