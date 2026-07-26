@@ -1,6 +1,7 @@
 package moozy.flightinformation.presentation.viewmodel
 
 import app.cash.turbine.test
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
@@ -21,6 +22,7 @@ import java.io.IOException
  * 用 UnconfinedTestDispatcher：collector 立即啟動，不必手動泵送；
  * 時間仍由 advanceTimeBy 精準控制，足以驗證「不該發生的事沒發生」。
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class FlightsViewModelTest {
 
     @get:Rule
