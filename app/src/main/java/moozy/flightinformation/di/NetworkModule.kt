@@ -30,13 +30,6 @@ object NetworkModule {
     }
 
 
-    @Provides
-    @Singleton
-    fun provideHttpClient(): HttpClient = HttpClient {
-        // 通用設定，例如：
-        // install(ContentNegotiation) { json() }
-    }
-
     // --- Flight HttpClient ---
     @Provides
     @Singleton
