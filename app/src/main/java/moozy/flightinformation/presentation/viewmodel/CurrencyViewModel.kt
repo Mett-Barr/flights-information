@@ -28,10 +28,17 @@ class CurrencyViewModel @Inject constructor(
     private val _state: MutableStateFlow<CurrencyUiState> =
         MutableStateFlow(CurrencyUiState.Loading)
     val state: StateFlow<CurrencyUiState> = _state.asStateFlow()
+    private var hasLoaded = false
 
-    init {
-        // 雖然在 VM init 直接用 viewModelScope.launch 算反模式
-        // 但太累了改不動了下次再改
+    /**
+     * Starts the initial request when the currency screen is actually displayed.
+     *
+     * This remains separate from [_state] because later user actions update that state directly.
+     */
+    fun load() {
+        if (hasLoaded) return
+        hasLoaded = true
+
         viewModelScope.launch {
             getLatestCurrencies(
                 base = CurrencyCode.USD,

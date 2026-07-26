@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScope
 import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,6 +71,9 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                     }
 
                     NavRoute.Currency -> {
+                        LaunchedEffect(Unit) {
+                            currencyViewModel.load()
+                        }
                         val state by currencyViewModel.state.collectAsStateWithLifecycle()
                         CurrencyScreen(
                             state = state,
