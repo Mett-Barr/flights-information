@@ -38,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -157,8 +158,8 @@ fun CurrencyContent(
 ) {
     val state by rememberUpdatedState(state)
     val calculator = remember { Calculator() }
-    var showCalculator by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
+    var showCalculator by rememberSaveable { mutableStateOf(false) }
+    var showDialog by rememberSaveable { mutableStateOf(false) }
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -271,7 +272,7 @@ fun CurrencyContent(
                 { showDialog = false }
             ) {
                 Card {
-                    var isStage1 by remember {
+                    var isStage1 by rememberSaveable {
                         mutableStateOf(true)
                     }
                     Column(modifier = Modifier.padding(16.dp)) {
