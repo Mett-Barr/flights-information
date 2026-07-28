@@ -46,14 +46,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.launch
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.R
 import moozy.flightinformation.feature.calculator.Calculator
-import moozy.flightinformation.presentation.component.BUTTON_FONT_SIZE
-import moozy.flightinformation.presentation.component.CalculatorKeyboard
+import moozy.flightinformation.feature.calculator.CalculatorUI
 import moozy.flightinformation.presentation.component.CurrencyConversionItem
 import moozy.flightinformation.presentation.component.CurrencyRateItem
 import moozy.flightinformation.presentation.model.currency.CurrencyRowPlain
@@ -158,18 +159,28 @@ fun CurrencyContent(
 ) {
     val state by rememberUpdatedState(state)
     val calculator = remember { Calculator() }
+    // 導航列的 scaffoldState 是 rememberSaveable，這兩個旗標也要撐過旋轉才不會失去同步
     var showCalculator by rememberSaveable { mutableStateOf(false) }
     var showDialog by rememberSaveable { mutableStateOf(false) }
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        snapshotFlow { calculator.equal }.collect {
-            if (it != null) {
-                Log.d("!!!", "calculator.equal $it")
-                onMoneyInput(state, it.toString())
+        // 空輸入時金額是 0，snapshotFlow 的首次發射會把既有換算結果洗回 Plain，
+        // 所以使用者真的輸入前先把發射丟掉。
+        // （計算機起手 infix 就是 ["0"]，「還沒輸入」不能再用 infix 是否為空判斷。）
+        //
+        // 取 lastStableAmountText 而非 equal：那是計算機已依 fractionDigits 格式化好的
+        // 十進位字串，內部的 Double 不會以科學記號或二進位誤差外流。在這裡就轉成
+        // BigDecimal，匯率管線維持全程 BigDecimal。
+        snapshotFlow { calculator.lastStableAmountText.value.toBigDecimalOrNull() }
+            .dropWhile { amount -> amount == null || amount.signum() == 0 }
+            .collect { amount ->
+                if (amount != null) {
+                    Log.d("!!!", "calculator amount $amount")
+                    onMoneyInput(state, amount.toPlainString())
+                }
             }
-        }
     }
 
     Box(modifier) {
@@ -234,13 +245,16 @@ fun CurrencyContent(
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Text(
                                 text = infixString,
-                                fontSize = BUTTON_FONT_SIZE
+                                fontSize = 36.sp
                             )
                         }
                     }
-                    CalculatorKeyboard(
-                        calculator,
-                        Modifier.padding(bottom = 24.dp) // 直接 hardcode 了，太累了
+                    CalculatorUI(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                            .padding(bottom = 24.dp), // 直接 hardcode 了，太累了
+                        calculator = calculator,
                     )
                 }
             }
