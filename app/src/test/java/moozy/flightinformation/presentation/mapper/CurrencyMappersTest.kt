@@ -156,6 +156,34 @@ class CurrencyMappersTest {
     }
 
     @Test
+    fun `labels rows with the base the amounts were computed from`() {
+        // content 的 base 是 USD，實際拿來當分母的是使用者選的 EUR：
+        // 兩者不一致時，畫面會用 EUR 的金額掛上「1 USD = …」的說明。
+        val result = nextContent(content(), CurrencyCode.EUR, "10")
+            as CurrencyUiState.Content.WithConversion
+
+        assertEquals(CurrencyCode.EUR, result.baseCode)
+        assertEquals("EUR", result.row("EUR").baseCode)
+        assertEquals("EUR", result.row("USD").baseCode)
+    }
+
+    @Test
+    fun `labels rows with the fallback base when the content base is missing from the rows`() {
+        // 回應沒有帶上 base 那一列時（例如請求的幣別清單漏了它），
+        // 換算會退回第一個認得的幣別，標示也必須跟著換成同一個。
+        val result = nextContent(
+            content(listOf(row("EUR", "0.8"), row("JPY", "100")), CurrencyCode.USD),
+            chosenBase = null,
+            amountText = "10",
+        ) as CurrencyUiState.Content.WithConversion
+
+        assertEquals(CurrencyCode.EUR, result.baseCode)
+        assertEquals("EUR", result.row("JPY").baseCode)
+        assertAmount("10", result.row("EUR").convertedAmount)
+        assertAmount("1250", result.row("JPY").convertedAmount) // 10 * 100 / 0.8
+    }
+
+    @Test
     fun `rounds converted values to max decimals using half up`() {
         val result = nextContent(
             content(listOf(row("USD", "1"), row("EUR", "200"))),
