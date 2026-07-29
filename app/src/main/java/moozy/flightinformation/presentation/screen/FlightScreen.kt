@@ -89,6 +89,12 @@ import java.time.format.DateTimeFormatter
 private val ScreenHorizontalPadding = 16.dp
 
 /**
+ * 單欄時間軸的最大寬度。卡片內時間靠左、狀態靠右，兩者距離一拉開就不易對應；
+ * 600dp 讓橫向的行長貼近直向（約 411dp）的比例，超出的寬度留白而不是攤平卡片。
+ */
+private val TimelineContentMaxWidth = 600.dp
+
+/**
  * 軌道車道寬度。軌道線與節點都畫在這條車道的中線上，
  * 整點膠囊也以這條中線為中心。車道要夠寬，膠囊往左溢出時才不會被螢幕邊緣切掉。
  */
@@ -492,7 +498,10 @@ private fun TimelineContent(
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .widthIn(max = TimelineContentMaxWidth)
+                    .fillMaxSize(),
                 contentPadding = PaddingValues(bottom = bottomPadding + 24.dp)
             ) {
                 // 這裡刻意不給 verticalArrangement：格與格之間只要出現任何間隙，
