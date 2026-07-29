@@ -15,40 +15,56 @@ import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 
+/**
+ * App 的外殼：依視窗尺寸級距挑導覽元件，並把內容該自己補的 inset 算出來往下傳。
+ *
+ * 導覽元件的對照表就是 Material 的斷點表，唯一的差別是刻意不看長寬比，只看寬度——
+ * 手機轉橫向時寬度跨過 600dp 自然變成 Rail，不需要另外一條「橫向」規則。
+ */
 @Composable
 fun RotatableScaffold(
     navigationSuiteItems: NavigationSuiteScope.() -> Unit,
     state: NavigationSuiteScaffoldState = rememberNavigationSuiteScaffoldState(),
     content: @Composable (innerPadding: PaddingValues) -> Unit
 ) {
-    val wsc = currentWindowAdaptiveInfo().windowSizeClass
-    val isLandscapeAspect = wsc.minWidthDp > wsc.minHeightDp
+    val adaptiveInfo = currentWindowAdaptiveInfo()
+    val windowSizeClass = adaptiveInfo.windowSizeClass
 
-    // 作為保護：如果寬太窄／高太矮，不強制用 Rail，即使比率是橫向
-    val safeForRail = wsc.isWidthAtLeastBreakpoint(600)  // 給個 600dp 為基準
+    // Compact（<600dp）底部導覽列／Medium（600dp+）側邊 Rail／Expanded 以上（840dp+）常駐抽屜。
+    //
+    // 例外是桌上型姿態：折疊機半開、鉸鏈橫躺時畫面被切成上下兩半，側邊元件會壓在鉸鏈上，
+    // 這時不管寬度多少都退回底部導覽列。NavigationSuiteScaffold 自己的預設也是這樣判斷。
+    val layoutType = when {
+        adaptiveInfo.windowPosture.isTabletop -> NavigationSuiteType.NavigationBar
 
-    val layoutType = if (isLandscapeAspect && safeForRail) {
-        NavigationSuiteType.NavigationRail
-    } else {
-        NavigationSuiteType.NavigationBar
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) ->
+            NavigationSuiteType.NavigationDrawer
+
+        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) ->
+            NavigationSuiteType.NavigationRail
+
+        else -> NavigationSuiteType.NavigationBar
     }
 
     val insets = WindowInsets.safeDrawing.asPaddingValues()
     val layoutDirection = LocalLayoutDirection.current
 
-    // NavigationSuiteScaffold 沒 innerPadding 只能自己刻
+    // NavigationSuiteScaffold 只替內容消費「導覽元件佔住的那一邊」：底部列消費 bottom，
+    // Rail 與抽屜消費 start。它沒有 innerPadding 可拿，其餘幾邊得自己算出來往下傳，
+    // 否則 edge-to-edge 之下內容會壓在狀態列或手勢區底下。
+    val navigationAtBottom = layoutType == NavigationSuiteType.NavigationBar
+
     val innerPadding = PaddingValues(
-        start = if (layoutType == NavigationSuiteType.NavigationBar) insets.calculateStartPadding(
-            layoutDirection
-        ) else 0.dp,
+        start = if (navigationAtBottom) insets.calculateStartPadding(layoutDirection) else 0.dp,
         top = insets.calculateTopPadding(),
         end = insets.calculateEndPadding(layoutDirection),
-        bottom = if (layoutType == NavigationSuiteType.NavigationBar) 0.dp else insets.calculateBottomPadding()
+        bottom = if (navigationAtBottom) 0.dp else insets.calculateBottomPadding()
     )
 
     NavigationSuiteScaffold(
-        layoutType = layoutType, // 拿掉這行就交給官方預設自動切換
+        layoutType = layoutType,
         navigationSuiteItems = navigationSuiteItems,
         state = state,
         content = { content(innerPadding) }

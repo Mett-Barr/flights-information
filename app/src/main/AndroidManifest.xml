@@ -24,6 +24,21 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Deep link：flightinformation://flights 與 flightinformation://currency。
+                 scheme 與 DEEP_LINK_SCHEME 一致，host 的解析見 NavDeepLink.kt。 -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- Android 會對同一個 intent-filter 內所有 data 屬性做交叉組合，
+                     拆開寫語意相同但不會誤導（lint: IntentFilterUniqueDataAttributes）。 -->
+                <data android:scheme="flightinformation" />
+                <data android:host="flights" />
+                <data android:host="currency" />
+            </intent-filter>
         </activity>
     </application>
 

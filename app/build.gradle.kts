@@ -90,6 +90,10 @@ dependencies {
     implementation(libs.androidx.material3.adaptive)
     implementation(libs.androidx.material3.adaptive.navigation.suite)
 
+    // Navigation 3。back stack 的還原走 kotlinx.serialization，所以 NavKey 都要 @Serializable。
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+
 
 
     implementation(libs.hilt.android)
