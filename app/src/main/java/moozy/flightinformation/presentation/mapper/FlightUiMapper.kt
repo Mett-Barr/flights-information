@@ -1,8 +1,10 @@
 package moozy.flightinformation.presentation.mapper
 
+import moozy.flightinformation.R
 import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
+import moozy.flightinformation.presentation.state.flights.FlightStatusText
 import java.time.format.DateTimeFormatter
 
 private val DISPLAY_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -18,20 +20,22 @@ fun FlightArrival.toUiModel(): FlightArrivalItemUiModel {
     val headline = (actual ?: scheduled)?.format(DISPLAY_TIME) ?: NO_TIME
 
     val badge = when (status) {
-        FlightStatus.Arrived -> "Arrived"
-        FlightStatus.Departed -> "Departed"
-        FlightStatus.ScheduleChanged -> "Schedule change"
-        FlightStatus.Cancelled -> "Cancelled"
-        FlightStatus.Delayed -> "Delayed"
-        FlightStatus.OnTime -> "On time"
-        is FlightStatus.Unknown -> "Unknown"
+        FlightStatus.Arrived -> FlightStatusText.Resource(R.string.flight_status_arrived)
+        FlightStatus.Departed -> FlightStatusText.Resource(R.string.flight_status_departed)
+        FlightStatus.ScheduleChanged -> FlightStatusText.Resource(R.string.flight_status_schedule_change)
+        FlightStatus.Cancelled -> FlightStatusText.Resource(R.string.flight_status_cancelled)
+        FlightStatus.Delayed -> FlightStatusText.Resource(R.string.flight_status_delayed)
+        FlightStatus.OnTime -> FlightStatusText.Resource(R.string.flight_status_on_time)
+        is FlightStatus.Unknown -> FlightStatusText.Resource(R.string.flight_status_unknown)
     }
 
     // 綁進區域變數才能 smart cast：status 是別的模組的 public property，
     // 編譯器無法保證兩次讀取之間它沒被換掉。
     val statusLine = when (val current = status) {
-        FlightStatus.Delayed -> delayCause?.let { "Delayed · $it" } ?: "Delayed"
-        is FlightStatus.Unknown -> current.raw.ifBlank { "Status unknown" }
+        FlightStatus.Delayed -> delayCause?.let {
+            FlightStatusText.Resource(R.string.flight_status_delayed_with_cause, it)
+        } ?: badge
+        is FlightStatus.Unknown -> current.raw.takeIf { it.isNotBlank() }?.let(FlightStatusText::Raw) ?: badge
         else -> badge
     }
 
@@ -49,11 +53,11 @@ fun FlightArrival.toUiModel(): FlightArrivalItemUiModel {
 
     return FlightArrivalItemUiModel(
         headlineTimeText = headline,
-        expectedLabelText = "Expected $scheduledText",
+        scheduledTimeText = scheduledText,
         badgeText = badge,
         carrierLineText = carrier,
         departureText = departure,
-        gateText = "Gate ${gate ?: NO_VALUE}",
+        gate = gate,
         aircraftText = aircraftType ?: NO_VALUE,
         flightStatusText = statusLine,
         statusKey = status.uiKey,

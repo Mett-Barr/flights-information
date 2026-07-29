@@ -1,6 +1,7 @@
 package moozy.flightinformation.presentation.navigation
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import moozy.flightinformation.R
@@ -21,22 +22,24 @@ sealed interface NavRoute : NavKey {
     @get:DrawableRes
     val iconId: Int
 
-    val label: String
+    @get:StringRes
+    val labelResId: Int
 
-    val contentDescription: String
+    @get:StringRes
+    val contentDescriptionResId: Int
 
     @Serializable
     data object Flights : NavRoute {
         override val iconId: Int get() = R.drawable.ic_flight_land_24px
-        override val label: String get() = "Flights"
-        override val contentDescription: String get() = "Flights"
+        override val labelResId: Int get() = R.string.navigation_flights
+        override val contentDescriptionResId: Int get() = R.string.navigation_flights
     }
 
     @Serializable
     data object Currency : NavRoute {
         override val iconId: Int get() = R.drawable.ic_paid_24px
-        override val label: String get() = "Currency"
-        override val contentDescription: String get() = "Currency"
+        override val labelResId: Int get() = R.string.navigation_currency
+        override val contentDescriptionResId: Int get() = R.string.navigation_currency
     }
 
     companion object {

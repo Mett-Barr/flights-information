@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
@@ -129,11 +130,11 @@ private fun NavigationSuiteScope.navRouteItem(
             icon = {
                 Icon(
                     painterResource(it.iconId),
-                    contentDescription = it.contentDescription
+                    contentDescription = stringResource(it.contentDescriptionResId)
                 )
             },
             label = {
-                Text(it.label)
+                Text(stringResource(it.labelResId))
             }
         )
     }

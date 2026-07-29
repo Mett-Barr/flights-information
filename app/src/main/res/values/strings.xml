@@ -7,6 +7,10 @@
     <string name="flights_empty">No flight information available.</string>
     <string name="flights_last_updated">Last updated: %1$s</string>
     <string name="flights_unscheduled">Unscheduled</string>
+    <string name="flight_expected_time">Expected %1$s</string>
+    <string name="flight_gate">Gate %1$s</string>
+    <string name="navigation_flights">Flights</string>
+    <string name="navigation_currency">Currency</string>
     <string name="flights_summary">%1$d past · %2$d upcoming</string>
     <string name="flights_summary_next">%1$d past · %2$d upcoming · next %3$s</string>
     <string name="flights_summary_unscheduled">%1$d past · %2$d upcoming · %3$d unscheduled</string>
@@ -34,4 +38,13 @@
     <string name="currency_selected_description">%1$d selected.</string>
     <string name="flights_timeline_now">Now</string>
     <string name="flights_timeline_now_description">Current time, %1$s</string>
+    <string name="flight_status_arrived">Arrived</string>
+    <string name="flight_status_departed">Departed</string>
+    <string name="flight_status_schedule_change">Schedule change</string>
+    <string name="flight_status_cancelled">Cancelled</string>
+    <string name="flight_status_cancelled_with_cause">Cancelled · %1$s</string>
+    <string name="flight_status_delayed">Delayed</string>
+    <string name="flight_status_delayed_with_cause">Delayed · %1$s</string>
+    <string name="flight_status_on_time">On time</string>
+    <string name="flight_status_unknown">Unknown</string>
 </resources>

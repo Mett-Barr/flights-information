@@ -1,7 +1,9 @@
 package moozy.flightinformation.presentation.mapper
 
+import moozy.flightinformation.R
 import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
+import moozy.flightinformation.presentation.state.flights.FlightStatusText
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalTime
@@ -33,70 +35,79 @@ class FlightUiMapperTest {
     }
 
     @Test
-    fun `expected label always uses scheduled time`() {
+    fun `scheduled time is preserved when actual time differs`() {
         val result = flightArrival(
             scheduled = LocalTime.of(9, 5),
             actual = LocalTime.of(10, 1),
         ).toUiModel()
 
-        assertEquals("Expected 09:05", result.expectedLabelText)
+        assertEquals("09:05", result.scheduledTimeText)
     }
 
     @Test
-    fun `expected label uses placeholder when scheduled time is absent`() {
+    fun `scheduled time uses placeholder when absent`() {
         val result = flightArrival(scheduled = null, actual = LocalTime.of(10, 1)).toUiModel()
 
-        assertEquals("Expected --:--", result.expectedLabelText)
+        assertEquals("--:--", result.scheduledTimeText)
     }
 
     @Test
-    fun `arrived badge text is displayed`() = assertBadgeText(FlightStatus.Arrived, "Arrived")
+    fun `arrived badge maps to its resource`() =
+        assertBadgeText(FlightStatus.Arrived, FlightStatusText.Resource(R.string.flight_status_arrived))
 
     @Test
-    fun `departed badge text is displayed`() = assertBadgeText(FlightStatus.Departed, "Departed")
+    fun `departed badge maps to its resource`() =
+        assertBadgeText(FlightStatus.Departed, FlightStatusText.Resource(R.string.flight_status_departed))
 
     @Test
-    fun `schedule changed badge text is displayed`() =
-        assertBadgeText(FlightStatus.ScheduleChanged, "Schedule change")
+    fun `schedule changed badge maps to its resource`() =
+        assertBadgeText(FlightStatus.ScheduleChanged, FlightStatusText.Resource(R.string.flight_status_schedule_change))
 
     @Test
-    fun `cancelled badge text is displayed`() = assertBadgeText(FlightStatus.Cancelled, "Cancelled")
+    fun `cancelled badge maps to its resource`() =
+        assertBadgeText(FlightStatus.Cancelled, FlightStatusText.Resource(R.string.flight_status_cancelled))
 
     @Test
-    fun `delayed badge text is displayed`() = assertBadgeText(FlightStatus.Delayed, "Delayed")
+    fun `delayed badge maps to its resource`() =
+        assertBadgeText(FlightStatus.Delayed, FlightStatusText.Resource(R.string.flight_status_delayed))
 
     @Test
-    fun `on time badge text is displayed`() = assertBadgeText(FlightStatus.OnTime, "On time")
+    fun `on time badge maps to its resource`() =
+        assertBadgeText(FlightStatus.OnTime, FlightStatusText.Resource(R.string.flight_status_on_time))
 
     @Test
-    fun `unknown badge text is displayed`() = assertBadgeText(FlightStatus.Unknown("Diverted"), "Unknown")
+    fun `unknown badge maps to its resource`() =
+        assertBadgeText(FlightStatus.Unknown("Diverted"), FlightStatusText.Resource(R.string.flight_status_unknown))
 
     @Test
     fun `delayed status includes delay cause`() {
         val result = flightArrival(status = FlightStatus.Delayed, delayCause = "Weather").toUiModel()
 
-        assertEquals("Delayed · Weather", result.flightStatusText)
+        assertEquals(
+            FlightStatusText.Resource(R.string.flight_status_delayed_with_cause, "Weather"),
+            result.flightStatusText,
+        )
     }
 
     @Test
     fun `delayed status without cause is displayed plainly`() {
         val result = flightArrival(status = FlightStatus.Delayed).toUiModel()
 
-        assertEquals("Delayed", result.flightStatusText)
+        assertEquals(FlightStatusText.Resource(R.string.flight_status_delayed), result.flightStatusText)
     }
 
     @Test
     fun `unknown status displays nonblank raw value`() {
         val result = flightArrival(status = FlightStatus.Unknown("Diverted")).toUiModel()
 
-        assertEquals("Diverted", result.flightStatusText)
+        assertEquals(FlightStatusText.Raw("Diverted"), result.flightStatusText)
     }
 
     @Test
     fun `unknown status displays fallback for blank raw value`() {
         val result = flightArrival(status = FlightStatus.Unknown("   ")).toUiModel()
 
-        assertEquals("Status unknown", result.flightStatusText)
+        assertEquals(FlightStatusText.Resource(R.string.flight_status_unknown), result.flightStatusText)
     }
 
     @Test
@@ -201,10 +212,10 @@ class FlightUiMapperTest {
     }
 
     @Test
-    fun `gate uses placeholder when absent`() {
+    fun `gate is absent when source value is absent`() {
         val result = flightArrival(gate = null).toUiModel()
 
-        assertEquals("Gate --", result.gateText)
+        assertEquals(null, result.gate)
     }
 
     @Test
@@ -230,7 +241,7 @@ class FlightUiMapperTest {
         )
     }
 
-    private fun assertBadgeText(status: FlightStatus, expected: String) {
+    private fun assertBadgeText(status: FlightStatus, expected: FlightStatusText) {
         assertEquals(expected, flightArrival(status = status).toUiModel().badgeText)
     }
 

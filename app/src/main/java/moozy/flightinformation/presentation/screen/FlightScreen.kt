@@ -75,6 +75,7 @@ import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.presentation.mapper.messageRes
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
+import moozy.flightinformation.presentation.state.flights.FlightStatusText
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -730,6 +731,7 @@ private fun TimelineFlightRow(
     val scheme = MaterialTheme.colorScheme
     val item = entry.item
     val isCancelled = item.isCancelled
+    val badgeText = item.badgeText.resolve()
 
     val headlineStyle = rememberTimeHeadlineStyle()
     val nodeCenterY = RowVerticalGap + CardVerticalPadding + firstLineHeightOf(headlineStyle) / 2
@@ -865,7 +867,7 @@ private fun TimelineFlightRow(
                         Spacer(modifier = Modifier.weight(1f))
                         StatusBadge(
                             statusKey = item.statusKey,
-                            text = item.badgeText,
+                            text = badgeText,
                             disabled = isCancelled
                         )
                     }
@@ -1246,26 +1248,35 @@ private fun summaryTextOf(timeline: Timeline): String = when {
  * 次要資訊收斂為一行：出發地永遠保留；登機門僅在已到或下一班時才會指引行動；
  * 預計時間只在和主時間不同時呈現，避免將同一個時刻唸兩次。
  */
+@Composable
 private fun supportingLineOf(
     item: FlightArrivalItemUiModel,
     showGate: Boolean
-): String = buildList {
-    add(item.departureText)
-    if (showGate && item.gateText != "Gate --") add(item.gateText)
-    if (expectedTimeDiffers(item)) add(item.expectedLabelText)
-    if (item.flightStatusText != item.badgeText) add(item.flightStatusText)
-}.joinToString(separator = " · ")
+): String {
+    val gateText = item.gate?.let { stringResource(R.string.flight_gate, it) }
+    val expectedTimeText = stringResource(R.string.flight_expected_time, item.scheduledTimeText)
+
+    return buildList {
+        add(item.departureText)
+        if (showGate && gateText != null) add(gateText)
+        if (expectedTimeDiffers(item)) add(expectedTimeText)
+        if (item.flightStatusText != item.badgeText) add(item.flightStatusText.resolve())
+    }.joinToString(separator = " · ")
+}
+
+@Composable
+private fun FlightStatusText.resolve(): String = when (this) {
+    is FlightStatusText.Resource -> formatArgument?.let { stringResource(id, it) } ?: stringResource(id)
+    is FlightStatusText.Raw -> value
+}
 
 /** 已到或下一班的登機門會改變讀者現在該往哪裡走。 */
 private fun shouldShowGate(entry: TimelineEntry): Boolean =
     entry.isPast || entry.isNext || entry.item.statusKey.uppercase() in setOf("ARRIVED", "DEPARTED")
 
-/** `expectedLabelText` 內的 HH:mm 和主時間相同時，預計時間沒有新增訊息。 */
+/** 預計時間與主時間相同時不重複顯示，避免從已在地化文案解析資料。 */
 private fun expectedTimeDiffers(item: FlightArrivalItemUiModel): Boolean =
-    timeTextIn(item.expectedLabelText)?.let { it != item.headlineTimeText } ?: false
-
-private fun timeTextIn(text: String): String? =
-    Regex("\\b\\d{2}:\\d{2}\\b").find(text)?.value
+    item.scheduledTimeText != item.headlineTimeText
 
 /** Logo 載不到時墊在底下的首字。 */
 private fun monogramOf(carrierLineText: String): String =
@@ -1277,22 +1288,22 @@ private fun monogramOf(carrierLineText: String): String =
 
 private fun previewItem(
     time: String,
-    expected: String,
-    badge: String,
+    scheduledTime: String,
+    badge: FlightStatusText,
     status: String,
     carrier: String,
     from: String,
-    gate: String,
+    gate: String?,
     aircraft: String,
-    statusLine: String = badge,
+    statusLine: FlightStatusText = badge,
     logoUrl: String? = null
 ) = FlightArrivalItemUiModel(
     headlineTimeText = time,
-    expectedLabelText = expected,
+    scheduledTimeText = scheduledTime,
     badgeText = badge,
     carrierLineText = carrier,
     departureText = from,
-    gateText = gate,
+    gate = gate,
     aircraftText = aircraft,
     flightStatusText = statusLine,
     statusKey = status,
@@ -1304,76 +1315,76 @@ private fun previewItem(
 private val timelinePreviewItems = listOf(
     previewItem(
         time = "08:40",
-        expected = "Expected 08:35",
-        badge = "Arrived",
+        scheduledTime = "08:35",
+        badge = FlightStatusText.Resource(R.string.flight_status_arrived),
         status = "ARRIVED",
         carrier = "中華航空 · CI 152",
         from = "東京成田 (NRT)",
-        gate = "Gate 3",
+        gate = "3",
         aircraft = "B738",
         // 有 URL 的那一筆：預覽不發網路請求，看到的正好是首字退路。
         logoUrl = "https://www.kia.gov.tw/images/ALL-square/CI.png"
     ),
     previewItem(
         time = "09:05",
-        expected = "Expected 09:05",
-        badge = "Arrived",
+        scheduledTime = "09:05",
+        badge = FlightStatusText.Resource(R.string.flight_status_arrived),
         status = "ARRIVED",
         carrier = "長榮航空 · BR 106",
         from = "首爾仁川 (ICN)",
-        gate = "Gate 5",
+        gate = "5",
         aircraft = "A333"
     ),
     previewItem(
         time = "09:50",
-        expected = "Expected 09:20",
-        badge = "Delayed",
+        scheduledTime = "09:20",
+        badge = FlightStatusText.Resource(R.string.flight_status_delayed),
         status = "DELAYED",
         carrier = "星宇航空 · JX 722",
         from = "檳城 (PEN)",
-        gate = "Gate 7",
+        gate = "7",
         aircraft = "A321",
-        statusLine = "Delayed · Weather"
+        statusLine = FlightStatusText.Resource(R.string.flight_status_delayed_with_cause, "Weather")
     ),
     previewItem(
         time = "10:15",
-        expected = "Expected 10:15",
-        badge = "On time",
+        scheduledTime = "10:15",
+        badge = FlightStatusText.Resource(R.string.flight_status_on_time),
         status = "ON_TIME",
         carrier = "立榮航空 · B7 8690",
         from = "澎湖 (MZG)",
-        gate = "Gate --",
+        gate = null,
         aircraft = "AT76"
     ),
     previewItem(
         time = "10:40",
-        expected = "Expected 10:40",
-        badge = "Cancelled",
+        scheduledTime = "10:40",
+        badge = FlightStatusText.Resource(R.string.flight_status_cancelled),
         status = "CANCELLED",
         carrier = "國泰航空 · CX 564",
         from = "香港 (HKG)",
-        gate = "Gate --",
+        gate = null,
         aircraft = "A359",
-        statusLine = "Cancelled · Typhoon"
+        statusLine = FlightStatusText.Resource(R.string.flight_status_cancelled_with_cause, "Typhoon")
     ),
     previewItem(
         time = "11:05",
-        expected = "Expected 11:05",
-        badge = "Schedule change",
+        scheduledTime = "11:05",
+        badge = FlightStatusText.Resource(R.string.flight_status_schedule_change),
         status = "SCHEDULE_CHANGE",
         carrier = "日本航空 · JL 802",
         from = "東京羽田 (HND)",
-        gate = "Gate 2",
+        gate = "2",
         aircraft = "B788"
     ),
     previewItem(
         time = "--:--",
-        expected = "Expected --:--",
-        badge = "Unknown",
+        scheduledTime = "--:--",
+        badge = FlightStatusText.Resource(R.string.flight_status_unknown),
         status = "UNKNOWN",
         carrier = "酷航 · TR 898",
         from = "新加坡 (SIN)",
-        gate = "Gate --",
+        gate = null,
         aircraft = "--"
     )
 )
