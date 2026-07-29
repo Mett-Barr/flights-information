@@ -1,6 +1,7 @@
 package moozy.flightinformation.feature.calculator
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -19,6 +20,12 @@ private const val DEFAULT_MAX_DECIMALS = 2
 private const val DECIMAL_RADIX = 10L
 private const val WHOLE_NUMBER_DIVISOR = 1.0
 
+/**
+ * 可變，但每個欄位都是 Compose 的 snapshot 狀態，變動會被正確通知——這正是
+ * @Stable 的定義。沒有這個標註，Compose 只能保守假設它隨時可能改變，
+ * 於是接收它的 composable 永遠無法被 skip。
+ */
+@Stable
 class Calculator(
     initialValue: Double = 0.0,
     /** 幣別的小數位數（例如 USD=2, JPY=0, BHD=3），決定結果最多保留幾位。 */
