@@ -90,17 +90,6 @@ fast-forward 會把主題分支的存在抹掉，history 變成一條直線，�
 git merge --no-ff refactor/domain-model
 ```
 
-### 為什麼不用 git flow 的 develop
-
-git flow 的 `develop` + `release/*` 是為**多版本並行維護**設計的——在 release
-分支穩定舊版，同時 develop 收新功能。本專案單一 app、單一開發者、無版本維護
-包袱，`develop` 只會是 master 的影子，每個變更多推一次、多合一次，換不到任何
-隔離效果。
-
-需要時再引入不會太遲：加一個長命分支是低成本的，拆掉一套沒人遵守的儀式才貴。
-
----
-
 ## 合併前的檢查
 
 `master` 上的每個 commit 都應該可建置、測試全綠。合併前在本地跑：
