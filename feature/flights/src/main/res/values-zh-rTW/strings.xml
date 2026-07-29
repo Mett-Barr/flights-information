@@ -1,0 +1,23 @@
+<resources>
+    <string name="flights_empty">目前沒有航班資訊。</string>
+    <string name="flights_unscheduled">尚未排定</string>
+    <string name="flight_expected_time">預計 %1$s</string>
+    <string name="flight_gate">登機門 %1$s</string>
+    <plurals name="flights_summary"><item quantity="other">已過 %1$d · 即將抵達 %2$d</item></plurals>
+    <plurals name="flights_summary_next"><item quantity="other">已過 %1$d · 即將抵達 %2$d · 下一班 %3$s</item></plurals>
+    <plurals name="flights_summary_unscheduled"><item quantity="other">已過 %1$d · 即將抵達 %2$d · 尚未排定 %3$d</item></plurals>
+    <plurals name="flights_summary_next_unscheduled"><item quantity="other">已過 %1$d · 即將抵達 %2$d · 下一班 %3$s · 尚未排定 %4$d</item></plurals>
+    <string name="action_refresh">重新整理</string>
+    <string name="flights_refresh_countdown">重新整理航班資訊。最後更新：%1$s</string>
+    <string name="flights_timeline_now">現在</string>
+    <string name="flights_timeline_now_description">目前時間，%1$s</string>
+    <string name="flight_status_arrived">已抵達</string>
+    <string name="flight_status_departed">已起飛</string>
+    <string name="flight_status_schedule_change">班表異動</string>
+    <string name="flight_status_cancelled">已取消</string>
+    <string name="flight_status_cancelled_with_cause">已取消 · %1$s</string>
+    <string name="flight_status_delayed">延誤</string>
+    <string name="flight_status_delayed_with_cause">延誤 · %1$s</string>
+    <string name="flight_status_on_time">準點</string>
+    <string name="flight_status_unknown">狀態不明</string>
+</resources>

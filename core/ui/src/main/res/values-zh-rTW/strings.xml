@@ -1,0 +1,7 @@
+<resources>
+    <string name="error_no_network">沒有網路連線，請檢查連線後再試一次。</string>
+    <string name="error_timeout">請求逾時，請再試一次。</string>
+    <string name="error_server">服務暫時無法使用，請稍後再試。</string>
+    <string name="error_generic">無法載入資料，請再試一次。</string>
+    <string name="action_retry">重試</string>
+</resources>

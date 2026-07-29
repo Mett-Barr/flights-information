@@ -1,12 +1,12 @@
 package moozy.flightinformation
 
-import moozy.flightinformation.presentation.navigation.AppNavDisplay
+import moozy.flightinformation.navigation.AppNavDisplay
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
-import moozy.flightinformation.presentation.theme.FlightInformationTheme
+import moozy.flightinformation.core.ui.FlightInformationTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

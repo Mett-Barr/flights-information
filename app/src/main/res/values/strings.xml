@@ -1,50 +1,5 @@
 <resources>
     <string name="app_name">Flight Information</string>
-
-    <string name="error_no_network">No internet connection. Check your connection and try again.</string>
-    <string name="error_timeout">The request timed out. Please try again.</string>
-    <string name="error_server">The service is temporarily unavailable. Please try again later.</string>
-    <string name="flights_empty">No flight information available.</string>
-    <string name="flights_unscheduled">Unscheduled</string>
-    <string name="flight_expected_time">Expected %1$s</string>
-    <string name="flight_gate">Gate %1$s</string>
     <string name="navigation_flights">Flights</string>
     <string name="navigation_currency">Currency</string>
-    <plurals name="flights_summary"><item quantity="one">%1$d past · %2$d upcoming</item><item quantity="other">%1$d past · %2$d upcoming</item></plurals>
-    <plurals name="flights_summary_next"><item quantity="one">%1$d past · %2$d upcoming · next %3$s</item><item quantity="other">%1$d past · %2$d upcoming · next %3$s</item></plurals>
-    <plurals name="flights_summary_unscheduled"><item quantity="one">%1$d past · %2$d upcoming · %3$d unscheduled</item><item quantity="other">%1$d past · %2$d upcoming · %3$d unscheduled</item></plurals>
-    <plurals name="flights_summary_next_unscheduled"><item quantity="one">%1$d past · %2$d upcoming · next %3$s · %4$d unscheduled</item><item quantity="other">%1$d past · %2$d upcoming · next %3$s · %4$d unscheduled</item></plurals>
-
-    <string name="error_generic">Couldn\'t load the data. Please try again.</string>
-    <string name="action_retry">Retry</string>
-    <string name="action_refresh">Refresh</string>
-    <string name="flights_refresh_countdown">Refresh flight information. Last updated: %1$s</string>
-    <string name="action_done">Done</string>
-
-    <string name="currency_per_one">Per 1 %1$s</string>
-    <string name="currency_converted_from">Converted from %1$s</string>
-    <string name="currency_open_keypad">Open the keypad</string>
-    <string name="currency_change_base_currency">Change the base currency</string>
-    <string name="currency_tap_amount_hint">%1$s · tap the amount to enter a value</string>
-    <string name="currency_calculator_result">= %1$s</string>
-    <string name="currency_use_as_base">Use %1$s as the base currency</string>
-    <string name="currency_rate_per_base">%1$s / 1 %2$s</string>
-    <string name="currency_empty">No currencies to convert to yet.</string>
-    <string name="currency_choose_currencies">Choose currencies</string>
-    <string name="currency_currencies">Currencies</string>
-    <string name="currency_base_currency">Base currency</string>
-    <string name="currency_base_currency_description">Every tile is converted from this one. Changing it reloads the rates.</string>
-    <string name="currency_shown_in_grid">Shown in the grid</string>
-    <plurals name="currency_selected_description"><item quantity="one">%1$d selected.</item><item quantity="other">%1$d selected.</item></plurals>
-    <string name="flights_timeline_now">Now</string>
-    <string name="flights_timeline_now_description">Current time, %1$s</string>
-    <string name="flight_status_arrived">Arrived</string>
-    <string name="flight_status_departed">Departed</string>
-    <string name="flight_status_schedule_change">Schedule change</string>
-    <string name="flight_status_cancelled">Cancelled</string>
-    <string name="flight_status_cancelled_with_cause">Cancelled · %1$s</string>
-    <string name="flight_status_delayed">Delayed</string>
-    <string name="flight_status_delayed_with_cause">Delayed · %1$s</string>
-    <string name="flight_status_on_time">On time</string>
-    <string name="flight_status_unknown">Unknown</string>
 </resources>

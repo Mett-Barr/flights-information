@@ -1,0 +1,18 @@
+<resources>
+    <string name="action_done">完成</string>
+    <string name="currency_per_one">每 1 %1$s</string>
+    <string name="currency_converted_from">以 %1$s 換算</string>
+    <string name="currency_open_keypad">開啟數字鍵盤</string>
+    <string name="currency_change_base_currency">變更基準幣別</string>
+    <string name="currency_tap_amount_hint">%1$s · 點選金額即可輸入</string>
+    <string name="currency_calculator_result">= %1$s</string>
+    <string name="currency_use_as_base">將 %1$s 設為基準幣別</string>
+    <string name="currency_rate_per_base">%1$s / 1 %2$s</string>
+    <string name="currency_empty">尚無可換算的幣別。</string>
+    <string name="currency_choose_currencies">選擇幣別</string>
+    <string name="currency_currencies">幣別</string>
+    <string name="currency_base_currency">基準幣別</string>
+    <string name="currency_base_currency_description">所有卡片皆以此幣別換算。變更後會重新載入匯率。</string>
+    <string name="currency_shown_in_grid">顯示於格狀清單</string>
+    <plurals name="currency_selected_description"><item quantity="other">已選擇 %1$d 項。</item></plurals>
+</resources>

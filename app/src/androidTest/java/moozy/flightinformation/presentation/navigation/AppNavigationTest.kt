@@ -1,4 +1,4 @@
-package moozy.flightinformation.presentation.navigation
+package moozy.flightinformation.navigation
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected

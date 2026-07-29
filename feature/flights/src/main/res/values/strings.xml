@@ -1,0 +1,23 @@
+<resources>
+    <string name="flights_empty">No flight information available.</string>
+    <string name="flights_unscheduled">Unscheduled</string>
+    <string name="flight_expected_time">Expected %1$s</string>
+    <string name="flight_gate">Gate %1$s</string>
+    <plurals name="flights_summary"><item quantity="one">%1$d past · %2$d upcoming</item><item quantity="other">%1$d past · %2$d upcoming</item></plurals>
+    <plurals name="flights_summary_next"><item quantity="one">%1$d past · %2$d upcoming · next %3$s</item><item quantity="other">%1$d past · %2$d upcoming · next %3$s</item></plurals>
+    <plurals name="flights_summary_unscheduled"><item quantity="one">%1$d past · %2$d upcoming · %3$d unscheduled</item><item quantity="other">%1$d past · %2$d upcoming · %3$d unscheduled</item></plurals>
+    <plurals name="flights_summary_next_unscheduled"><item quantity="one">%1$d past · %2$d upcoming · next %3$s · %4$d unscheduled</item><item quantity="other">%1$d past · %2$d upcoming · next %3$s · %4$d unscheduled</item></plurals>
+    <string name="action_refresh">Refresh</string>
+    <string name="flights_refresh_countdown">Refresh flight information. Last updated: %1$s</string>
+    <string name="flights_timeline_now">Now</string>
+    <string name="flights_timeline_now_description">Current time, %1$s</string>
+    <string name="flight_status_arrived">Arrived</string>
+    <string name="flight_status_departed">Departed</string>
+    <string name="flight_status_schedule_change">Schedule change</string>
+    <string name="flight_status_cancelled">Cancelled</string>
+    <string name="flight_status_cancelled_with_cause">Cancelled · %1$s</string>
+    <string name="flight_status_delayed">Delayed</string>
+    <string name="flight_status_delayed_with_cause">Delayed · %1$s</string>
+    <string name="flight_status_on_time">On time</string>
+    <string name="flight_status_unknown">Unknown</string>
+</resources>

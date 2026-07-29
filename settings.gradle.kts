@@ -23,4 +23,7 @@ rootProject.name = "Flight Information"
 include(":app")
 include(":core:domain")
 include(":core:data")
+include(":core:ui")
 include(":feature:calculator")
+include(":feature:flights")
+include(":feature:currency")

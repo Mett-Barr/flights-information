@@ -114,7 +114,10 @@ dependencies {
 
     implementation(project(":core:data"))
     implementation(project(":core:domain"))
+    implementation(project(":core:ui"))
     implementation(project(":feature:calculator"))
+    implementation(project(":feature:flights"))
+    implementation(project(":feature:currency"))
 
     testImplementation(libs.junit)
     testImplementation(libs.konsist)
