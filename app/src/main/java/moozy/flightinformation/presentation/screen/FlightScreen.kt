@@ -131,6 +131,10 @@ private val HourPillHorizontalPadding = 10.dp
 private val HourPillVerticalPadding = 4.dp
 private val HourPillBorderWidth = 1.dp
 
+private val NowRuleWidth = 2.dp
+private val NowMarkerHeight = 32.dp
+private val NowLabelHorizontalPadding = 8.dp
+
 /** 整點膠囊釘在軌道上、左右都會溢出車道，附註文字要從這個距離之後才開始。 */
 private val HourNoteGutter = 32.dp
 
@@ -190,11 +194,9 @@ private val updatedAtFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(
  *    畫到最下緣，格與格之間沒有任何間隙（列距是畫在格子「裡面」的 padding，
  *    不是 `Arrangement.spacedBy`），所以相鄰線段接起來就是一條連續的線。
  *    整點膠囊是軌道上的**子元素**，畫在軌道之後，於是線從它背後穿過去。
- * 2. **不再有會落到不可能位置的 NOW 標記。** 前一版把「現在」當成一個獨立的列插進小時分組裡，
- *    結果出現「02:12 排在 08:00 標題之後」這種讀不通的畫面。這一版直接把標記換成
- *    **下一班抵達**本身：節點放大、染成 primary、外加一圈柔光。
- *    它是清單裡真實存在的一筆，位置永遠合法；而且在入境看板上，
- *    「下一班是哪一班」本來就比「現在幾點」有用。
+ * 2. **NOW 是跨過內容的時間分界。** 現在是一個瞬間，不該佔據軌道的一段；
+ *    因此用 tertiary 的橫線穿過軌道與卡片欄，讓已過去與尚未到達的班次一眼分開。
+ *    標籤放在末端、以 surface 墊底，既不會遮住軌道，又能在規則線上維持足夠對比。
  * 3. **時間回到卡片裡。** 前一版把時間放大擺在軌道外面，和航班編號互搶注意力；
  *    現在它是卡片的第一行標題（[rememberTimeHeadlineStyle]，等寬數字）。
  * 4. **節點不再是小灰點。** 12dp 圓、2.5dp 邊，三種語意各自對應到 scheme 角色，
@@ -664,42 +666,41 @@ private fun TimelineNowMarker(
     val time = "${twoDigits(now.hour)}:${twoDigits(now.minute)}"
     val description = stringResource(R.string.flights_timeline_now_description, time)
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = ScreenHorizontalPadding)
             .semantics { contentDescription = description }
+            .height(NowMarkerHeight)
             .drawBehind {
                 val x = RailCenterX.toPx()
+                val y = size.height / 2
                 drawLine(
                     color = scheme.outlineVariant,
                     start = Offset(x, 0f),
                     end = Offset(x, size.height),
                     strokeWidth = RailLineWidth.toPx()
                 )
+                drawLine(
+                    color = scheme.tertiary,
+                    start = Offset(0f, y),
+                    end = Offset(size.width, y),
+                    strokeWidth = NowRuleWidth.toPx()
+                )
             }
-            .padding(vertical = RowVerticalGap)
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.width(RailLaneWidth)
+        Surface(
+            color = scheme.surface,
+            contentColor = scheme.tertiary,
+            modifier = Modifier.align(Alignment.CenterEnd)
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.extraSmall,
-                color = scheme.primary,
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(24.dp)
-            ) {}
+            Text(
+                text = "$label $time",
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                modifier = Modifier.padding(horizontal = NowLabelHorizontalPadding)
+            )
         }
-        Spacer(modifier = Modifier.width(RailGutterWidth))
-        Text(
-            text = "$label $time",
-            style = MaterialTheme.typography.labelMedium,
-            color = scheme.primary,
-            maxLines = 1
-        )
     }
 }
 
