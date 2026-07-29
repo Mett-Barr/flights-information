@@ -7,7 +7,10 @@ plugins {
 
 android {
     namespace = "moozy.flightinformation.feature.calculator"
+    // API 37 以 minor 版本的形式發行（platforms;android-37.0）。省略 minor
+    // 時工具會去解析不存在的 android-37 目標，所以明確寫出來。
     compileSdk = 37
+    compileSdkMinor = 0
 
     defaultConfig {
         minSdk = 24
