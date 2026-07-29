@@ -174,6 +174,4 @@ val state = flow {
 
 分支與提交慣例見 [`docs/git-conventions.md`](docs/git-conventions.md)。
 
-**下一階段**：分層目前只靠套件命名慣例維持，沒有任何機制強制。
-[ADR 0004](docs/adr/0004-one-module-until-a-boundary-earns-its-keep.md)
-記錄了為什麼維持單一模組、以及改用架構測試（Konsist）補上強制力的計畫。
+**下一階段**：以架構測試（Konsist）把分層從命名慣例升級成 CI 強制。
