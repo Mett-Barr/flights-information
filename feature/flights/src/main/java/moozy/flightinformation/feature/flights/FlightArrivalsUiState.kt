@@ -11,7 +11,16 @@ sealed class FlightArrivalsUiState {
     data class Content(
         val items: ImmutableList<FlightArrivalItemUiModel>,
         val updatedAt: LocalDateTime,
-        val isRefreshing: Boolean = false
+        val isRefreshing: Boolean = false,
+        val refreshAttempt: Long = 0,
+        val refreshHealth: RefreshHealth = RefreshHealth.NeverFailed,
     ) : FlightArrivalsUiState()
     data class Error(val error: LoadError) : FlightArrivalsUiState()
+}
+
+@Immutable
+sealed interface RefreshHealth {
+    data object NeverFailed : RefreshHealth
+    data class Failed(val error: LoadError) : RefreshHealth
+    data object Recovered : RefreshHealth
 }

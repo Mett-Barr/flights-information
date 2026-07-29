@@ -131,6 +131,8 @@ private fun TimelineHeader(
         Spacer(modifier = Modifier.width(12.dp))
         FreshnessIndicator(
             updatedAt = content.updatedAt,
+            refreshAttempt = content.refreshAttempt,
+            refreshHealth = content.refreshHealth,
             isRefreshing = refreshIndicatorVisible(content.isRefreshing),
             onRefresh = onRefresh,
         )
@@ -161,15 +163,25 @@ internal fun refreshIndicatorVisible(active: Boolean, tail: Duration = MIN_REFRE
 @Composable
 private fun FreshnessIndicator(
     updatedAt: LocalDateTime,
+    refreshAttempt: Long,
+    refreshHealth: RefreshHealth,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val progress = remember { Animatable(1f) }
-    val refreshDescription = stringResource(
-        R.string.flights_refresh_countdown,
-        updatedAt.format(updatedAtFormatter),
-    )
+    val refreshDescription = when (refreshHealth) {
+        is RefreshHealth.Failed -> stringResource(
+            R.string.flights_refresh_countdown_failed,
+            updatedAt.format(updatedAtFormatter),
+            stringResource(refreshHealth.error.messageRes()),
+        )
+
+        RefreshHealth.NeverFailed, RefreshHealth.Recovered -> stringResource(
+            R.string.flights_refresh_countdown,
+            updatedAt.format(updatedAtFormatter),
+        )
+    }
     val refreshLabel = stringResource(R.string.action_refresh)
 
     suspend fun restartCountdown() {
@@ -183,7 +195,7 @@ private fun FreshnessIndicator(
         )
     }
 
-    LaunchedEffect(updatedAt) { restartCountdown() }
+    LaunchedEffect(refreshAttempt) { restartCountdown() }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -203,7 +215,12 @@ private fun FreshnessIndicator(
         // 環再跟著轉就變成兩個轉圈講同一件事，而且會蓋掉倒數本來要傳達的訊息。
         CircularProgressIndicator(
             progress = { progress.value },
-            modifier = Modifier.size(FreshnessIndicatorSize)
+            modifier = Modifier.size(FreshnessIndicatorSize),
+            color = if (refreshHealth is RefreshHealth.Failed) {
+                MaterialTheme.colorScheme.error
+            } else {
+                MaterialTheme.colorScheme.primary
+            },
         )
     }
 }

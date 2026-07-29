@@ -208,7 +208,17 @@ class FlightsViewModelTest {
             // StateFlow 會 conflate 掉「內容相同的後續發射」，所以看當前值而非發射序列。
             val afterFailure = viewModel.state.value
             assertTrue(afterFailure is FlightArrivalsUiState.Content)
-            assertEquals(loaded.items, (afterFailure as FlightArrivalsUiState.Content).items)
+            afterFailure as FlightArrivalsUiState.Content
+            assertEquals(loaded.items, afterFailure.items)
+            assertTrue(afterFailure.refreshHealth is RefreshHealth.Failed)
+            assertTrue(afterFailure.refreshAttempt > loaded.refreshAttempt)
+
+            repository.result = Result.success(listOf(FakeFlightsRepository.anArrival()))
+            viewModel.refresh()
+
+            val afterRecovery = viewModel.state.value as FlightArrivalsUiState.Content
+            assertTrue(afterRecovery.refreshHealth is RefreshHealth.Recovered)
+            assertTrue(afterRecovery.refreshAttempt > afterFailure.refreshAttempt)
 
             cancelAndIgnoreRemainingEvents()
         }
