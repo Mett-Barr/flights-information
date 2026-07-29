@@ -55,6 +55,8 @@ free_currency_api_key=你的金鑰
 
 核心仍分三層，依賴指向內層，DTO 不越過資料層；各畫面依功能拆為獨立的 feature 模組。
 
+貨幣畫面的基準幣別與目標幣別選擇會透過 `SavedStateHandle` 在程序遭系統回收後還原，但不會跨完整的應用程式重新啟動保存。
+
 ```
 :app                             MainActivity、FlightInformationApp、DI、導覽與 RotatableScaffold
 ├─ di/                            Hilt 綁定

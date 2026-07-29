@@ -1,6 +1,7 @@
 package moozy.flightinformation.feature.currency
 
 import app.cash.turbine.test
+import androidx.lifecycle.SavedStateHandle
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -48,14 +49,14 @@ class CurrencyViewModelTest {
 
     @Test
     fun `starts in loading`() {
-        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository(), SavedStateHandle())
 
         assertTrue(viewModel.state.value is CurrencyUiState.Loading)
     }
 
     @Test
     fun `load publishes content after a successful request`() = runTest {
-        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository(), SavedStateHandle())
 
         viewModel.load()
         advanceUntilIdle()
@@ -67,6 +68,7 @@ class CurrencyViewModelTest {
     fun `load publishes error after a failed request`() = runTest {
         val viewModel = CurrencyViewModel(
             FakeCurrencyRepository(Result.failure(IOException("offline"))),
+            SavedStateHandle(),
         )
 
         viewModel.load()
@@ -79,7 +81,7 @@ class CurrencyViewModelTest {
     @Test
     fun `load requests a fixed currency set that contains the base`() = runTest {
         val repository = FakeCurrencyRepository()
-        val viewModel = CurrencyViewModel(repository)
+        val viewModel = CurrencyViewModel(repository, SavedStateHandle())
 
         viewModel.load()
         advanceUntilIdle()
@@ -108,9 +110,56 @@ class CurrencyViewModelTest {
     }
 
     @Test
+    fun `load restores selected currencies and an explicitly cleared base currency`() = runTest {
+        val repository = FakeCurrencyRepository(
+            Result.success(
+                Currencies(
+                    base = CurrencyCode.USD,
+                    list = listOf(
+                        CurrencyRate(MoneyCode.Known(CurrencyCode.USD), BigDecimal("1.0")),
+                        CurrencyRate(MoneyCode.Known(CurrencyCode.JPY), BigDecimal("150.0")),
+                    ),
+                ),
+            ),
+        )
+        val savedStateHandle = SavedStateHandle().apply {
+            this["selected_base_currency"] = null
+            this["selected_currencies"] = arrayListOf(CurrencyCode.USD.name, CurrencyCode.JPY.name)
+        }
+        val viewModel = CurrencyViewModel(repository, savedStateHandle)
+
+        viewModel.load()
+        advanceUntilIdle()
+
+        val content = viewModel.state.value as CurrencyUiState.Content.Plain
+        assertEquals(null, content.selectedBaseCurrency)
+        assertEquals(persistentSetOf(CurrencyCode.USD, CurrencyCode.JPY), content.selected)
+        assertEquals(null, repository.lastBase)
+        assertEquals(setOf(CurrencyCode.USD, CurrencyCode.JPY), repository.lastCodes)
+    }
+
+    @Test
+    fun `load restores the selected base currency`() = runTest {
+        val repository = FakeCurrencyRepository()
+        val savedStateHandle = SavedStateHandle().apply {
+            this["selected_base_currency"] = CurrencyCode.EUR.name
+            this["selected_currencies"] = arrayListOf(CurrencyCode.USD.name, CurrencyCode.EUR.name)
+        }
+        val viewModel = CurrencyViewModel(repository, savedStateHandle)
+
+        viewModel.load()
+        advanceUntilIdle()
+
+        val content = viewModel.state.value as CurrencyUiState.Content.Plain
+        assertEquals(CurrencyCode.EUR, content.selectedBaseCurrency)
+        assertEquals(persistentSetOf(CurrencyCode.USD, CurrencyCode.EUR), content.selected)
+        assertEquals(CurrencyCode.EUR, repository.lastBase)
+    }
+
+    @Test
     fun `a refresh always requests the selected base alongside the selection`() = runTest {
         val repository = FakeCurrencyRepository()
-        val viewModel = CurrencyViewModel(repository)
+        val viewModel = CurrencyViewModel(repository, SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
 
@@ -130,7 +179,7 @@ class CurrencyViewModelTest {
     @Test
     fun `a refresh without a selected base still requests the default base`() = runTest {
         val repository = FakeCurrencyRepository()
-        val viewModel = CurrencyViewModel(repository)
+        val viewModel = CurrencyViewModel(repository, SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
 
@@ -146,7 +195,7 @@ class CurrencyViewModelTest {
 
     @Test
     fun `a reload keeps the selected base currency`() = runTest {
-        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository(), SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
 
@@ -164,7 +213,7 @@ class CurrencyViewModelTest {
     @Test
     fun `a failed refresh keeps the previously loaded rows`() = runTest {
         val repository = FakeCurrencyRepository()
-        val viewModel = CurrencyViewModel(repository)
+        val viewModel = CurrencyViewModel(repository, SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
         val loaded = viewModel.state.value as CurrencyUiState.Content
@@ -185,7 +234,7 @@ class CurrencyViewModelTest {
     @Test
     fun `load requests the repository only once`() = runTest {
         val repository = FakeCurrencyRepository()
-        val viewModel = CurrencyViewModel(repository)
+        val viewModel = CurrencyViewModel(repository, SavedStateHandle())
 
         viewModel.load()
         viewModel.load()
@@ -196,7 +245,7 @@ class CurrencyViewModelTest {
 
     @Test
     fun `refresh completes without consuming virtual time`() = runTest {
-        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository(), SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
         val content = viewModel.state.value as CurrencyUiState.Content
@@ -211,7 +260,7 @@ class CurrencyViewModelTest {
 
     @Test
     fun `selecting a currency toggles it in the content selection`() = runTest {
-        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository(), SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
 
@@ -228,7 +277,7 @@ class CurrencyViewModelTest {
 
     @Test
     fun `base selection and money input update content conversion`() = runTest {
-        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository(), SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
 
@@ -246,7 +295,7 @@ class CurrencyViewModelTest {
 
     @Test
     fun `money input uses the selected base currency from content`() = runTest {
-        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository(), SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
 
@@ -263,7 +312,7 @@ class CurrencyViewModelTest {
 
     @Test
     fun `money input keeps the selected base after reading state again`() = runTest {
-        val viewModel = CurrencyViewModel(FakeCurrencyRepository())
+        val viewModel = CurrencyViewModel(FakeCurrencyRepository(), SavedStateHandle())
         viewModel.load()
         advanceUntilIdle()
 

@@ -1,5 +1,6 @@
 package moozy.flightinformation.feature.currency
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,17 +19,27 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CurrencyViewModel @Inject constructor(
-    private val repository: CurrencyRepository
+    private val repository: CurrencyRepository,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _state: MutableStateFlow<CurrencyUiState> =
         MutableStateFlow(CurrencyUiState.Loading)
     val state: StateFlow<CurrencyUiState> = _state.asStateFlow()
     private var hasLoaded = false
 
+    private val restoredSelectedBaseCurrency: CurrencyCode? =
+        savedStateHandle.get<String>(SELECTED_BASE_CURRENCY_KEY)?.toCurrencyCodeOrNull()
+    private val hasRestoredSelectedBaseCurrency =
+        savedStateHandle.contains(SELECTED_BASE_CURRENCY_KEY)
+    private val restoredSelectedCurrencies: Set<CurrencyCode>? =
+        savedStateHandle.get<ArrayList<String>>(SELECTED_CURRENCIES_KEY)
+            ?.mapNotNull(String::toCurrencyCodeOrNull)
+            ?.toSet()
+
     /**
-     * Starts the initial request when the currency screen is actually displayed.
+     * 在匯率畫面實際顯示時才啟動初次請求。
      *
-     * This remains separate from [_state] because later user actions update that state directly.
+     * 因為後續使用者操作會直接更新 [_state]，所以仍與它分開處理。
      */
     fun load() {
         if (hasLoaded && _state.value !is CurrencyUiState.Error) return
@@ -36,8 +47,12 @@ class CurrencyViewModel @Inject constructor(
 
         viewModelScope.launch {
             getLatestCurrencies(
-                base = DEFAULT_BASE_CURRENCY,
-                codes = DEFAULT_CURRENCY_CODES
+                base = if (hasRestoredSelectedBaseCurrency) {
+                    restoredSelectedBaseCurrency
+                } else {
+                    DEFAULT_BASE_CURRENCY
+                },
+                codes = restoredSelectedCurrencies ?: DEFAULT_CURRENCY_CODES,
             )
         }
     }
@@ -46,11 +61,15 @@ class CurrencyViewModel @Inject constructor(
         _state.update {
             when (it) {
                 is CurrencyUiState.Content.Plain -> {
-                    it.copy(selected = it.selected.toggle(currencyCode))
+                    val selected = it.selected.toggle(currencyCode)
+                    saveSelectedCurrencies(selected)
+                    it.copy(selected = selected)
                 }
 
                 is CurrencyUiState.Content.WithConversion -> {
-                    it.copy(selected = it.selected.toggle(currencyCode))
+                    val selected = it.selected.toggle(currencyCode)
+                    saveSelectedCurrencies(selected)
+                    it.copy(selected = selected)
                 }
 
                 else -> it
@@ -62,19 +81,23 @@ class CurrencyViewModel @Inject constructor(
         _state.update {
             when (it) {
                 is CurrencyUiState.Content.Plain -> {
-                    if (it.selectedBaseCurrency == currencyCode) {
-                        it.copy(selectedBaseCurrency = null)
+                    val selectedBaseCurrency = if (it.selectedBaseCurrency == currencyCode) {
+                        null
                     } else {
-                        it.copy(selectedBaseCurrency = currencyCode)
+                        currencyCode
                     }
+                    saveSelectedBaseCurrency(selectedBaseCurrency)
+                    it.copy(selectedBaseCurrency = selectedBaseCurrency)
                 }
 
                 is CurrencyUiState.Content.WithConversion -> {
-                    if (it.selectedBaseCurrency == currencyCode) {
-                        it.copy(selectedBaseCurrency = null)
+                    val selectedBaseCurrency = if (it.selectedBaseCurrency == currencyCode) {
+                        null
                     } else {
-                        it.copy(selectedBaseCurrency = currencyCode)
+                        currencyCode
                     }
+                    saveSelectedBaseCurrency(selectedBaseCurrency)
+                    it.copy(selectedBaseCurrency = selectedBaseCurrency)
                 }
 
                 else -> it
@@ -127,7 +150,11 @@ class CurrencyViewModel @Inject constructor(
                     isRefreshing = false,
                     baseCode = currencies.base,
                     // 使用者挑的基準幣別是 UI 偏好，不該被每次載入洗掉。
-                    selectedBaseCurrency = previous?.selectedBaseCurrency
+                    selectedBaseCurrency = if (previous == null && hasRestoredSelectedBaseCurrency) {
+                        restoredSelectedBaseCurrency
+                    } else {
+                        previous?.selectedBaseCurrency
+                    }
                 )
             },
             onFailure = { error ->
@@ -148,7 +175,18 @@ class CurrencyViewModel @Inject constructor(
         }
     }
 
+    private fun saveSelectedCurrencies(selected: Set<CurrencyCode>) {
+        savedStateHandle[SELECTED_CURRENCIES_KEY] = ArrayList(selected.map(CurrencyCode::name))
+    }
+
+    private fun saveSelectedBaseCurrency(selectedBaseCurrency: CurrencyCode?) {
+        // 以 key 是否存在區分使用者清除選擇與從未儲存過偏好。
+        savedStateHandle[SELECTED_BASE_CURRENCY_KEY] = selectedBaseCurrency?.name
+    }
+
     private companion object {
+        const val SELECTED_BASE_CURRENCY_KEY = "selected_base_currency"
+        const val SELECTED_CURRENCIES_KEY = "selected_currencies"
         /** 預設基準幣別：也是匯率 API 未指定 base 時的預設值，兩邊一致才不會標錯。 */
         val DEFAULT_BASE_CURRENCY = CurrencyCode.USD
 
@@ -176,6 +214,9 @@ class CurrencyViewModel @Inject constructor(
 /** repository 之下的每一層都已把失敗收斂成 [LoadError]；這裡只是兜底。 */
 private fun Throwable.asLoadError(): LoadError =
     this as? LoadError ?: LoadError.Unknown(message)
+
+private fun String.toCurrencyCodeOrNull(): CurrencyCode? =
+    CurrencyCode.entries.firstOrNull { it.name == this }
 
 /** [CurrencyUiState.Content] 是 sealed class，沒有共用的 `copy`，只能逐子型別複製。 */
 private fun CurrencyUiState.Content.copyRefreshing(isRefreshing: Boolean): CurrencyUiState.Content =
