@@ -168,3 +168,12 @@ val state = flow {
 ## 決策紀錄
 
 架構上的取捨記於 [`docs/adr/`](docs/adr/)。
+
+程式碼導讀（閱讀順序、值得慢讀的地方、已知缺陷）見
+[`docs/code-reading-guide.md`](docs/code-reading-guide.md)。
+
+分支與提交慣例見 [`docs/git-conventions.md`](docs/git-conventions.md)。
+
+**下一階段**：分層目前只靠套件命名慣例維持，沒有任何機制強制。
+[ADR 0004](docs/adr/0004-one-module-until-a-boundary-earns-its-keep.md)
+記錄了為什麼維持單一模組、以及改用架構測試（Konsist）補上強制力的計畫。
