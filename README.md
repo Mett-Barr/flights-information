@@ -20,8 +20,8 @@ free_currency_api_key=你的金鑰
 金鑰可於 [freecurrencyapi.com](https://freecurrencyapi.com/) 免費註冊取得。未填仍可建置與執行，但匯率頁會顯示錯誤；航班頁不需金鑰。
 
 ```bash
-./gradlew assembleDebug   # 建置
-./gradlew test            # 單元測試
+./gradlew build                           # 所有 variant 與檢查
+./gradlew compileDebugAndroidTestKotlin   # 編譯 Android instrumentation 測試
 ```
 
 ## 需求對照
@@ -49,38 +49,33 @@ free_currency_api_key=你的金鑰
 - [x] Jetpack Navigation 3：返回堆疊、預測返回與深連結
 - [x] 依視窗尺寸切換底部導覽列、導覽 rail 或導覽 drawer
 - [x] 使用第三方 library
-- [x] 152 項單元測試與 11 項 Android instrumentation 測試
+- [x] 157 項 JVM 單元測試與 11 項 Android instrumentation 測試
 - [x] 支援螢幕轉向與深色模式
 
 ## 架構
 
-三層，依賴指向內層，DTO 不越過資料層。
+核心仍分三層，依賴指向內層，DTO 不越過資料層；計算機是獨立的 feature 模組。
 
 ```
-presentation/                    UI、UiState、ViewModel
-├─ component/                     共用 Composable 與 modifier
-├─ mapper/                        domain → UI：格式化、文案、顏色
-├─ model/                         UI model
-├─ navigation/                    Navigation 3 route、back stack、deep link
-├─ screen/                        航班時間軸與匯率卡片網格
-├─ state/                         flights/、currency/ UiState
-├─ theme/
-└─ viewmodel/
+:app                             DI 組裝、導覽、畫面、ViewModel、mapper、UI state、theme、components
+├─ presentation/                  UI、UiState、ViewModel、mapper、導覽、畫面與元件
+├─ di/                            Hilt 綁定
+└─ util/                          純工具
 
-domain/                          業務語彙，不依賴任何外層
+:core:domain                     純 Kotlin JVM：模型、錯誤型別、repository 介面
 ├─ error/                         LoadError
 ├─ model/                         flights/、currency/
 └─ repository/                    Repository 介面
 
-data/                            I/O 與格式收斂
+:core:data                       Android library：網路、DTO、repository 實作
 ├─ datasource/                    currency/、flights/ 的 api、dto、url
 ├─ network/                       HttpClient 封裝與錯誤分類
 └─ repository/                    DTO → domain 映射
 
-feature/calculator/              狀態驅動的計算機與 Compose view
-di/                              Hilt 綁定
-util/                            純工具
+:feature:calculator              Android library：狀態驅動的計算機與 Compose view
 ```
+
+依賴關係為：`:app → :core:data`、`:app → :core:domain`、`:app → :feature:calculator`、`:core:data → :core:domain`。`:core:domain` 是純 Kotlin JVM 模組，Android 與 Ktor 型別不在其編譯 classpath。
 
 **資料流**
 
@@ -93,6 +88,41 @@ DTO ──(data mapper)──▶ domain model ──(presentation mapper)──�
 
 `airFlyStatus` 的中英混雜值在資料層收斂成 `FlightStatus`；未知值以 `Unknown(raw)` 保留。來源時間為不帶日期與時區的 `HH:mm`，因此以機場當地看板時間顯示，不做換算。
 
+### 模組相依圖
+
+```mermaid
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {"lineColor":"#676767"}
+  }
+}%%
+
+graph TB
+  :app["app"]
+  subgraph :core
+    :core:data["data"]
+    :core:domain["domain"]
+    :core:data["data"]
+  end
+  subgraph :feature
+    :feature:calculator["calculator"]
+  end
+
+  :core:data --> :core:domain
+  :app --> :core:data
+  :app --> :core:domain
+  :app --> :feature:calculator
+
+classDef android-library fill:#3BD482,stroke:#fff,stroke-width:2px,color:#fff;
+classDef kotlin-jvm fill:#8150FF,stroke:#fff,stroke-width:2px,color:#fff;
+classDef android-application fill:#2C4162,stroke:#fff,stroke-width:2px,color:#fff;
+class :core:data android-library
+class :core:domain kotlin-jvm
+class :app android-application
+class :feature:calculator android-library
+
+```
 ### 抓取時機
 
 航班資料在有畫面收集且資料失效時抓取。 `SharingStarted.WhileSubscribed` 讓沒有收集者時停止輪詢；資料新鮮期為十秒，使用者也可下拉刷新。刷新失敗時保留既有資料與上次成功的抓取時刻；沒有可顯示資料時才進入錯誤畫面。
@@ -103,11 +133,11 @@ DTO ──(data mapper)──▶ domain model ──(presentation mapper)──�
 
 ### 計算機
 
-`feature/calculator/` 的計算機以 `CurrentState` 控制合法按鍵，採中綴轉後綴運算。支援四則運算、左結合優先序、括號巢狀與一元負號；該模組有 51 個單元測試。
+`:feature:calculator` 的計算機以 `CurrentState` 控制合法按鍵，採中綴轉後綴運算。支援四則運算、左結合優先序、括號巢狀與一元負號；該模組有 51 個單元測試。
 
 ## 測試
 
-共有 152 個 `app/src/test/` 單元測試與 11 個 `app/src/androidTest/` Android instrumentation 測試。
+共有 157 個 JVM 單元測試與 11 個 `:app` 的 Android instrumentation 測試。JVM 測試分布為：`:app` 84、`:feature:calculator` 51、`:core:data` 22、`:core:domain` 0。
 
 | 範圍 | 內容 |
 |---|---|
@@ -117,7 +147,7 @@ DTO ──(data mapper)──▶ domain model ──(presentation mapper)──�
 | calculator | 運算式、運算子優先序、括號、負號與輸入狀態矩陣（51 項） |
 | Android UI | Navigation deep link、航班時間軸與匯率卡片網格的畫面行為 |
 
-測試以 fake 與 Ktor `MockEngine` 隔離網路。編譯器警告視為錯誤（`allWarningsAsErrors`），CI 在推送與 PR 執行建置與測試。
+測試以 fake 與 Ktor `MockEngine` 隔離網路。編譯器警告視為錯誤（`allWarningsAsErrors`），CI 在推送與 PR 執行 `./gradlew build` 與 `compileDebugAndroidTestKotlin`。
 
 ## 技術
 
@@ -136,6 +166,8 @@ DTO ──(data mapper)──▶ domain model ──(presentation mapper)──�
 Compose UI、Material 3、animation、foundation 與 Compose 測試 artifact 的版本由 Compose BOM 管理；version catalog 未為它們重複釘選版本。
 
 ## 決策紀錄
+
+上方的模組相依圖由 `./gradlew createModuleGraph` 依實際相依關係產生，不手動維護。
 
 架構上的取捨記於 [`docs/adr/`](docs/adr/)。
 

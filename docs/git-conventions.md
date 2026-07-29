@@ -95,7 +95,8 @@ git merge --no-ff refactor/domain-model
 `master` 上的每個 commit 都應該可建置、測試全綠。合併前在本地跑：
 
 ```bash
-./gradlew assembleDebug testDebugUnitTest lint
+./gradlew build
+./gradlew compileDebugAndroidTestKotlin
 ```
 
 專案設定 `allWarningsAsErrors = true`，所以編譯警告會直接讓建置失敗。

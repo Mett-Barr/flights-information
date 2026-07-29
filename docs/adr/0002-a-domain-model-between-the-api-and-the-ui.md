@@ -6,14 +6,14 @@ Accepted · 2026-07-26
 
 Two conventions were in play at once. Currency had a domain model and its
 repository returned it. Flights did not: `FlightsRepository` — declared in
-`domain` — imported the DTO and returned `Result<List<InstantScheduleDomesticArrivalDtoItem>>`,
+`:core:domain` — imported the DTO and returned `Result<List<InstantScheduleDomesticArrivalDtoItem>>`,
 which the UI mapper then consumed directly.
 
 That mattered more than it looks, because the project had picked a side. Putting
-the repository interface in `domain` is the dependency-inversion arrangement from
+the repository interface in `:core:domain` is the dependency-inversion arrangement from
 Clean Architecture, where source dependencies point inward and the DTO is an
 outer-layer concern. Declaring the interface there while its signature returns a
-DTO is inversion in form only: `domain` still knows about `data`. One codebase
+DTO is inversion in form only: `:core:domain` still knows about `:core:data`. One codebase
 with two conventions is worse than either convention applied consistently,
 because a reviewer cannot tell which one is intended.
 
@@ -25,8 +25,8 @@ UI.
 
 ## Decision
 
-Introduce `FlightArrival` and `FlightStatus` in `domain`; have
-`FlightsRepositoryImpl` map DTO → domain; leave `FlightUiMapper` with formatting
+Introduce `FlightArrival` and `FlightStatus` in `:core:domain`; have
+`:core:data`'s `FlightsRepositoryImpl` map DTO → domain; leave `FlightUiMapper` with formatting
 only.
 
 Field types follow from what the source actually carries:
@@ -47,8 +47,8 @@ computed with needs a value type.
 
 ## Consequences
 
-`domain` no longer imports anything from `data`, and the DTO exists only inside
-`data/datasource`. Parsing and normalisation happen once, at the boundary, rather
+`:core:domain` no longer imports anything from `:core:data`, and the DTO exists only inside
+`:core:data`'s `datasource/`. Parsing and normalisation happen once, at the boundary, rather
 than at each point of use.
 
 `FlightsRepositoryImpl` now has a reason to exist. It used to hand the data
