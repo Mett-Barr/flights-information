@@ -15,4 +15,24 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew assembleDebug test
+
+      # `build` 編譯每一個變體（debug 與 release）並執行所有 check 任務。
+      # 先前只跑 `assembleDebug test`，等於只驗證 debug——release 專屬的問題
+      # （縮減規則、變體專屬設定、模組設定錯誤）要到打包時才會發現。
+      - name: Build all variants and run all checks
+        run: ./gradlew build
+
+      # 儀器測試需要裝置，CI 上跑不了，但至少確保它們編譯得過。
+      # 否則畫面改版會讓它們默默腐爛，直到有人手動跑才發現。
+      - name: Compile instrumented tests
+        run: ./gradlew compileDebugAndroidTestKotlin
+
+      - name: Upload reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          retention-days: 7
