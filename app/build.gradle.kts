@@ -103,6 +103,9 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
 
     testImplementation(libs.junit)
+    // 計算機的測試是從來源專案原樣搬過來的，用 kotlin.test 的斷言；改寫成 JUnit4 斷言
+    // 就不再是當初驗證過的那份測試了，所以補依賴而不是改測試。
+    testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.ktor.client.mock)

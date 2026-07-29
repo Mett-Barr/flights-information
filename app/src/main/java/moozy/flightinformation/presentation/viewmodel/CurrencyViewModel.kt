@@ -40,8 +40,8 @@ class CurrencyViewModel @Inject constructor(
 
         viewModelScope.launch {
             getLatestCurrencies(
-                base = CurrencyCode.USD,
-                codes = CurrencyCode.entries.shuffled().take(15).toSet()
+                base = DEFAULT_BASE_CURRENCY,
+                codes = DEFAULT_CURRENCY_CODES
             )
         }
     }
@@ -114,10 +114,7 @@ class CurrencyViewModel @Inject constructor(
 
     fun getCurrencies(state: CurrencyUiState.Content) {
         viewModelScope.launch {
-            _state.value = when (state) {
-                is CurrencyUiState.Content.Plain -> state.copy(isRefreshing = true)
-                is CurrencyUiState.Content.WithConversion -> state.copy(isRefreshing = true)
-            }
+            _state.value = state.copyRefreshing(true)
 
             getLatestCurrencies(state.selectedBaseCurrency, state.selected)
         }
@@ -127,9 +124,16 @@ class CurrencyViewModel @Inject constructor(
         base: CurrencyCode?,
         codes: Set<CurrencyCode>
     ) {
+        // 失敗時要能把畫面上既有的資料留下來，所以先記住當前 Content。
+        val previous: CurrencyUiState.Content? = _state.value as? CurrencyUiState.Content
+
+        // base 沒被一起請求，回應裡就沒有它那一列，換算會失去分母（也會拿別的幣別當基準）。
+        // base 為 null 時 repository 會退回 USD，這裡補的就是同一個預設值。
+        val requestedCodes: Set<CurrencyCode> = codes + (base ?: DEFAULT_BASE_CURRENCY)
+
         _state.value = repository.getLatest(
             base = base,
-            codes = codes
+            codes = requestedCodes
         ).fold(
             onSuccess = { currencies ->
                 val rows: List<CurrencyRow> = mapCurrenciesToRows(
@@ -146,11 +150,15 @@ class CurrencyViewModel @Inject constructor(
                     rows = rows,
                     selected = selectedFromResponse,
                     isRefreshing = false,
-                    baseCode = currencies.base
+                    baseCode = currencies.base,
+                    // 使用者挑的基準幣別是 UI 偏好，不該被每次載入洗掉。
+                    selectedBaseCurrency = previous?.selectedBaseCurrency
                 )
             },
-            onFailure = {
-                CurrencyUiState.Error(it.asLoadError())
+            onFailure = { error ->
+                // 刷新失敗時寧可留著舊資料，也不要把畫面清空；
+                // 只有從頭就沒東西可顯示時才進錯誤畫面。
+                previous?.copyRefreshing(false) ?: CurrencyUiState.Error(error.asLoadError())
             }
         )
     }
@@ -164,8 +172,39 @@ class CurrencyViewModel @Inject constructor(
             _state.value = r
         }
     }
+
+    private companion object {
+        /** 預設基準幣別：也是匯率 API 未指定 base 時的預設值，兩邊一致才不會標錯。 */
+        val DEFAULT_BASE_CURRENCY = CurrencyCode.USD
+
+        /**
+         * 首次載入顯示的幣別：主要貨幣加上高雄機場鄰近航線常用的幣別。
+         *
+         * 固定清單而非隨機取樣——顯示哪些幣別是產品決定，隨機的話每次冷啟動都不一樣，
+         * 使用者回報的問題無法重現，測試也無從斷言。
+         */
+        val DEFAULT_CURRENCY_CODES: Set<CurrencyCode> = setOf(
+            CurrencyCode.USD,
+            CurrencyCode.EUR,
+            CurrencyCode.JPY,
+            CurrencyCode.GBP,
+            CurrencyCode.CNY,
+            CurrencyCode.HKD,
+            CurrencyCode.KRW,
+            CurrencyCode.SGD,
+            CurrencyCode.THB,
+            CurrencyCode.AUD
+        )
+    }
 }
 
 /** repository 之下的每一層都已把失敗收斂成 [LoadError]；這裡只是兜底。 */
 private fun Throwable.asLoadError(): LoadError =
     this as? LoadError ?: LoadError.Unknown(message)
+
+/** [CurrencyUiState.Content] 是 sealed class，沒有共用的 `copy`，只能逐子型別複製。 */
+private fun CurrencyUiState.Content.copyRefreshing(isRefreshing: Boolean): CurrencyUiState.Content =
+    when (this) {
+        is CurrencyUiState.Content.Plain -> copy(isRefreshing = isRefreshing)
+        is CurrencyUiState.Content.WithConversion -> copy(isRefreshing = isRefreshing)
+    }

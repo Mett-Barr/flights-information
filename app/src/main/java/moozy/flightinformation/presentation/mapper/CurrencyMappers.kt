@@ -154,14 +154,15 @@ fun nextContent(
             rate = r.rate,
             convertedAmount = converted,
             baseAmount = baseAmount,
-            baseCode = content.baseCode.code
+            // 標示的基準幣別必須就是上面當分母的那一個，否則畫面會用 A 的匯率掛 B 的名字。
+            baseCode = baseCode.code
         )
     }
 
     return CurrencyUiState.Content.WithConversion(
         rows = withRows,
         baseAmount = baseAmount,
-        baseCode = content.baseCode,
+        baseCode = baseCode,
         selected = selectedSet,
         isRefreshing = isRefreshing,
         selectedBaseCurrency = content.selectedBaseCurrency,
