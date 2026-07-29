@@ -36,13 +36,3 @@ fun CurrenciesDto.toCurrencies(base: CurrencyCode): Currencies {
 
     return Currencies(list = list, base = base)
 }
-
-val currenciesJson = """{
-    "data": {
-        "EUR": 1,
-        "JPY": 176.3319718999,
-        "KRW": 1649.8980758438,
-        "SGD": 1.5030074335,
-        "THB": 37.7004041343
-    }
-}"""

@@ -1,16 +1,15 @@
 package moozy.flightinformation.presentation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toPersistentSet
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.currency.CurrencyRepository
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.MoneyCode
@@ -36,7 +35,7 @@ class CurrencyViewModel @Inject constructor(
      * This remains separate from [_state] because later user actions update that state directly.
      */
     fun load() {
-        if (hasLoaded) return
+        if (hasLoaded && _state.value !is CurrencyUiState.Error) return
         hasLoaded = true
 
         viewModelScope.launch {
@@ -120,9 +119,6 @@ class CurrencyViewModel @Inject constructor(
                 is CurrencyUiState.Content.WithConversion -> state.copy(isRefreshing = true)
             }
 
-            // 演示動畫效果
-            delay(1500)
-
             getLatestCurrencies(state.selectedBaseCurrency, state.selected)
         }
     }
@@ -154,20 +150,22 @@ class CurrencyViewModel @Inject constructor(
                 )
             },
             onFailure = {
-                CurrencyUiState.Error(it.message)
+                CurrencyUiState.Error(it.asLoadError())
             }
         )
     }
 
     fun inputMoney(
-        content: CurrencyUiState.Content,                 // ① 當前 Content（必填）
-        chosenBase: CurrencyCode?,                        // ② 當前選中的 Currency（可為 null；需存在於 rows）
+        content: CurrencyUiState.Content,
         amountText: String?
     ) {
         viewModelScope.launch {
-            val r = nextContent(content, chosenBase, amountText)
-            Log.d("!!!", "nextContent: $r")
+            val r = nextContent(content, content.selectedBaseCurrency, amountText)
             _state.value = r
         }
     }
 }
+
+/** repository 之下的每一層都已把失敗收斂成 [LoadError]；這裡只是兜底。 */
+private fun Throwable.asLoadError(): LoadError =
+    this as? LoadError ?: LoadError.Unknown(message)

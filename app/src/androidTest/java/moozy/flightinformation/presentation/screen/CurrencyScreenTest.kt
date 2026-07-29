@@ -1,0 +1,158 @@
+package moozy.flightinformation.presentation.screen
+
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasProgressBarRangeInfo
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import moozy.flightinformation.R
+import moozy.flightinformation.domain.error.LoadError
+import java.math.BigDecimal
+import moozy.flightinformation.domain.value.CurrencyCode
+import moozy.flightinformation.presentation.model.currency.CurrencyRowPlain
+import moozy.flightinformation.presentation.model.currency.CurrencyRowWithConversion
+import moozy.flightinformation.presentation.state.currency.CurrencyUiState
+import moozy.flightinformation.presentation.theme.FlightInformationTheme
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class CurrencyScreenTest {
+    @get:Rule
+    val composeTestRule: ComposeContentTestRule = createComposeRule()
+
+    @Test
+    fun loadingState_showsProgressIndicator() {
+        setCurrencyScreenContent(CurrencyUiState.Loading)
+
+        composeTestRule
+            .onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun noNetworkError_showsCategorizedMessage() {
+        setCurrencyScreenContent(CurrencyUiState.Error(LoadError.NoNetwork))
+
+        composeTestRule
+            .onNodeWithText(string(R.string.error_no_network))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun errorState_retry_callsRetryCallback() {
+        var retries = 0
+        setCurrencyScreenContent(
+            state = CurrencyUiState.Error(LoadError.NoNetwork),
+            onRetry = { retries++ },
+        )
+
+        composeTestRule.onNodeWithTag("currency_retry").performClick()
+
+        assertEquals(1, retries)
+    }
+
+    @Test
+    fun withConversionContent_showsCurrencyAndConvertedAmount() {
+        setCurrencyScreenContent(
+            CurrencyUiState.Content.WithConversion(
+                rows = listOf(
+                    CurrencyRowWithConversion(
+                        code = "JPY",
+                        name = "Japanese Yen",
+                        symbol = "¥",
+                        rate = BigDecimal("156.25"),
+                        convertedAmount = BigDecimal("15625.00"),
+                        baseAmount = BigDecimal("100"),
+                        baseCode = "USD",
+                    ),
+                ),
+                baseAmount = BigDecimal("100"),
+                baseCode = CurrencyCode.USD,
+            )
+        )
+
+        composeTestRule.onNodeWithText("JPY").assertIsDisplayed()
+        composeTestRule.onNodeWithText("15625.00").assertIsDisplayed()
+    }
+
+    @Test
+    fun selectingTargetCurrency_callsCurrencySelectWithSelectedCode() {
+        var selectedCurrency: CurrencyCode? = null
+        setCurrencyScreenContent(
+            contentState(),
+            onCurrencySelect = { selectedCurrency = it },
+        )
+
+        composeTestRule.onNodeWithText("Search").performClick()
+        composeTestRule.onNodeWithText("USD").performClick()
+
+        assertEquals(CurrencyCode.USD, selectedCurrency)
+    }
+
+    @Test
+    fun selectingBaseCurrency_callsBaseCurrencySelectAndShowsSelectedState() {
+        var selectedBaseCurrency: CurrencyCode? = null
+        setCurrencyScreenContent(
+            contentState(selectedBaseCurrency = CurrencyCode.EUR),
+            onBaseCurrencySelect = { selectedBaseCurrency = it },
+        )
+
+        composeTestRule.onNodeWithText("Search").performClick()
+        composeTestRule.onNodeWithText("select targets").performClick()
+        composeTestRule.onNodeWithText("EUR").assertIsSelected().performClick()
+
+        assertEquals(CurrencyCode.EUR, selectedBaseCurrency)
+    }
+
+    private fun contentState(
+        selectedBaseCurrency: CurrencyCode? = null,
+    ): CurrencyUiState.Content.Plain =
+        CurrencyUiState.Content.Plain(
+            rows = listOf(
+                CurrencyRowPlain(
+                    code = "JPY",
+                    name = "Japanese Yen",
+                    symbol = "¥",
+                    rate = BigDecimal("156.25"),
+                ),
+            ),
+            baseCode = CurrencyCode.USD,
+            selectedBaseCurrency = selectedBaseCurrency,
+        )
+
+    /** 從資源讀取，才不會在測試裡再抄一份文案。 */
+    private fun string(id: Int): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
+
+    private fun setCurrencyScreenContent(
+        state: CurrencyUiState,
+        onCurrencySelect: (CurrencyCode) -> Unit = {},
+        onBaseCurrencySelect: (CurrencyCode) -> Unit = {},
+        onRetry: () -> Unit = {},
+    ) {
+        composeTestRule.setContent {
+            FlightInformationTheme {
+                CurrencyScreen(
+                    state = state,
+                    onCalculatorShow = {},
+                    onCalculatorDismiss = {},
+                    onMoneyInput = { _, _ -> },
+                    onCurrencyClick = {},
+                    onCurrencySelect = onCurrencySelect,
+                    onSearch = {},
+                    onBaseCurrencySelect = onBaseCurrencySelect,
+                    onRetry = onRetry,
+                )
+            }
+        }
+    }
+}

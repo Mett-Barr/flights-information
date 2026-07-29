@@ -15,6 +15,7 @@ import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.flights.FlightsRepository
 import moozy.flightinformation.presentation.mapper.toUiModels
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 /**
@@ -28,9 +29,13 @@ import javax.inject.Inject
  * 又不想用取消協程來重啟的計時器；換成狀態模型後那個需求就消失了。
  */
 @HiltViewModel
-class FlightsViewModel @Inject constructor(
-    private val flightsRepository: FlightsRepository
+class FlightsViewModel(
+    private val flightsRepository: FlightsRepository,
+    private val clock: () -> LocalDateTime = LocalDateTime::now,
 ) : ViewModel() {
+
+    @Inject
+    constructor(flightsRepository: FlightsRepository) : this(flightsRepository, LocalDateTime::now)
 
     /** 使用者宣告手上的資料已不可信。CONFLATED：連按只算一次。 */
     private val invalidated = Channel<Unit>(Channel.CONFLATED)
@@ -40,14 +45,20 @@ class FlightsViewModel @Inject constructor(
 
     val state: StateFlow<FlightArrivalsUiState> = flow {
         var current: FlightArrivalsUiState = FlightArrivalsUiState.Loading
+        var refreshWasUserInitiated = false
         while (true) {
+            if (refreshWasUserInitiated && current is FlightArrivalsUiState.Content) {
+                current = current.copy(isRefreshing = true)
+                emit(current)
+            }
             current = load(current)
             emit(current)
             if (current is FlightArrivalsUiState.Content) _refreshEvent.emit(Unit)
 
             // 等使用者作廢資料，最多等一個新鮮期。兩條路都是「資料失效了」，
-            // 所以回傳值用不上：醒來就回到迴圈頂端重抓。
-            withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
+            // 但回傳值區分刷新來源，只有使用者主動刷新才顯示指示器。
+            refreshWasUserInitiated =
+                withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() } != null
         }
     }.stateIn(
         scope = viewModelScope,
@@ -65,12 +76,16 @@ class FlightsViewModel @Inject constructor(
             .mapCatching { it.toUiModels() }
             .fold(
                 onSuccess = { items ->
-                    FlightArrivalsUiState.Content(items = items, isRefreshing = false)
+                    FlightArrivalsUiState.Content(
+                        items = items,
+                        updatedAt = clock(),
+                        isRefreshing = false,
+                    )
                 },
                 onFailure = { error ->
                     // 刷新失敗時寧可留著舊資料，也不要把畫面清空；
                     // 只有從頭就沒東西可顯示時才進錯誤畫面。
-                    if (previous is FlightArrivalsUiState.Content) previous
+                    if (previous is FlightArrivalsUiState.Content) previous.copy(isRefreshing = false)
                     else FlightArrivalsUiState.Error(error.asLoadError())
                 },
             )

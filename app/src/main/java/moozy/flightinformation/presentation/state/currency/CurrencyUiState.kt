@@ -2,6 +2,7 @@ package moozy.flightinformation.presentation.state.currency
 
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentSetOf
+import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.presentation.model.currency.CurrencyRow
 import java.math.BigDecimal
@@ -35,7 +36,7 @@ sealed class CurrencyUiState {
             override val selectedBaseCurrency: CurrencyCode? = null
         ) : Content()
     }
-    data class Error(val message: String?) : CurrencyUiState()
+    data class Error(val error: LoadError) : CurrencyUiState()
 }
 
 sealed class CurrencyModel {
