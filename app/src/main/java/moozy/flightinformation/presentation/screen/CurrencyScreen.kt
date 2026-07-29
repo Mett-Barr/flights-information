@@ -44,7 +44,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -235,7 +234,6 @@ fun CurrencyScreen(
                     animateEntrance = animateEntrance,
                     onAmountClick = { showCalculator = true },
                     onBaseClick = { showPicker = true },
-                    onManageClick = { showPicker = true },
                     onPromote = { row ->
                         // 點目標卡＝把它變成新的基準，換算方向整個翻過來。
                         val code = CurrencyCode.fromCode(row.code)
@@ -287,7 +285,6 @@ private fun CardGridContent(
     animateEntrance: Boolean,
     onAmountClick: () -> Unit,
     onBaseClick: () -> Unit,
-    onManageClick: () -> Unit,
     onPromote: (CurrencyRow) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
@@ -345,8 +342,7 @@ private fun CardGridContent(
                     baseCode = baseCode,
                     amount = baseAmount,
                     onAmountClick = onAmountClick,
-                    onBaseClick = onBaseClick,
-                    onManageClick = onManageClick
+                    onBaseClick = onBaseClick
                 )
             }
 
@@ -397,7 +393,6 @@ private fun CardGridBaseTile(
     amount: BigDecimal?,
     onAmountClick: () -> Unit,
     onBaseClick: () -> Unit,
-    onManageClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // 還沒輸入時用 1 當佔位值：此時每張卡顯示的就是「1 基準幣別換得到多少」，也就是匯率本身。
@@ -428,14 +423,6 @@ private fun CardGridBaseTile(
             )
 
             Column(modifier = Modifier.padding(CardGridSpace.md)) {
-                Text(
-                    text = stringResource(R.string.currency_base_amount),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.semantics { heading() }
-                )
-
-                Spacer(modifier = Modifier.height(CardGridSpace.sm))
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Card(
                         onClick = onAmountClick,
@@ -508,18 +495,6 @@ private fun CardGridBaseTile(
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(CardGridSpace.xs))
-
-                    // 管理目標幣別與切換基準幣別同屬這張輸入卡，避免把設定動作拆到頁面別處。
-                    IconButton(
-                        onClick = onManageClick,
-                        modifier = Modifier.size(CARD_GRID_MIN_TOUCH_TARGET)
-                    ) {
-                        Icon(
-                            imageVector = rememberGridTuneIcon(),
-                            contentDescription = stringResource(R.string.currency_manage_currencies)
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(CardGridSpace.xs))
@@ -911,33 +886,33 @@ private fun CardGridCalculatorSheet(
                 .padding(bottom = CardGridSpace.sm)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.currency_base_amount_code, baseCode.code),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = expression,
-                        style = MaterialTheme.typography.headlineSmall
-                            .copy(fontFeatureSettings = CARD_GRID_TABULAR),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    // 算式還沒收斂成單一數字時，把「目前已成立的金額」也講出來——
-                    // 那才是網格正在使用的值。
-                    if (stable != expression) {
-                        Text(
-                            text = "= $stable",
-                            style = MaterialTheme.typography.bodyMedium
-                                .copy(fontFeatureSettings = CARD_GRID_TABULAR),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
+                Text(
+                    text = baseCode.code,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.width(CardGridSpace.xs))
+                Text(
+                    text = expression,
+                    style = MaterialTheme.typography.headlineSmall
+                        .copy(fontFeatureSettings = CARD_GRID_TABULAR),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(CardGridSpace.xs))
+                // 算式可無限延長，讓它先截斷才能保留結果與確認動作的可讀性。
+                Text(
+                    text = stringResource(R.string.currency_calculator_result, stable),
+                    style = MaterialTheme.typography.titleMedium
+                        .copy(fontFeatureSettings = CARD_GRID_TABULAR),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 120.dp)
+                )
                 TextButton(
                     onClick = {
                         scope.launch { sheetState.hide() }.invokeOnCompletion {
@@ -1202,75 +1177,6 @@ private fun buildCardGridIcon(
         builder.path(fill = SolidColor(tint)) { subpath() }
     }
     return builder.build()
-}
-
-/** 滑桿圖示：基準金額卡上的「幣別管理」動作。 */
-@Composable
-private fun rememberGridTuneIcon(): ImageVector {
-    val tint = LocalContentColor.current
-    return remember(tint) {
-        buildCardGridIcon(
-            name = "cardGridTune",
-            tint = tint,
-            subpaths = listOf(
-                {
-                    moveTo(3f, 17f)
-                    verticalLineToRelative(2f)
-                    horizontalLineToRelative(6f)
-                    verticalLineToRelative(-2f)
-                    close()
-                },
-                {
-                    moveTo(3f, 5f)
-                    verticalLineToRelative(2f)
-                    horizontalLineToRelative(10f)
-                    verticalLineToRelative(-2f)
-                    close()
-                },
-                {
-                    moveTo(13f, 21f)
-                    verticalLineToRelative(-2f)
-                    horizontalLineToRelative(8f)
-                    verticalLineToRelative(-2f)
-                    horizontalLineToRelative(-8f)
-                    verticalLineToRelative(-2f)
-                    horizontalLineToRelative(-2f)
-                    verticalLineToRelative(6f)
-                    close()
-                },
-                {
-                    moveTo(7f, 9f)
-                    verticalLineToRelative(2f)
-                    horizontalLineTo(3f)
-                    verticalLineToRelative(2f)
-                    horizontalLineToRelative(4f)
-                    verticalLineToRelative(2f)
-                    horizontalLineToRelative(2f)
-                    verticalLineTo(9f)
-                    close()
-                },
-                {
-                    moveTo(21f, 13f)
-                    verticalLineToRelative(-2f)
-                    horizontalLineTo(11f)
-                    verticalLineToRelative(2f)
-                    close()
-                },
-                {
-                    moveTo(15f, 9f)
-                    horizontalLineToRelative(2f)
-                    verticalLineTo(7f)
-                    horizontalLineToRelative(4f)
-                    verticalLineTo(5f)
-                    horizontalLineToRelative(-4f)
-                    verticalLineTo(3f)
-                    horizontalLineToRelative(-2f)
-                    verticalLineToRelative(6f)
-                    close()
-                }
-            )
-        )
-    }
 }
 
 /** 向下箭頭：基準幣別按鈕的「可以換一個」提示。 */

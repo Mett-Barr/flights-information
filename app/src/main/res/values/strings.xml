@@ -18,18 +18,16 @@
     <string name="action_done">Done</string>
     <string name="action_update">Update</string>
 
-    <string name="currency_manage_currencies">Manage currencies</string>
     <string name="currency_per_one">Per 1 %1$s</string>
     <string name="currency_converted_from">Converted from %1$s</string>
-    <string name="currency_base_amount">Base amount</string>
     <string name="currency_open_keypad">Open the keypad</string>
     <string name="currency_change_base_currency">Change the base currency</string>
     <string name="currency_tap_amount_hint">%1$s · tap the amount to enter a value</string>
+    <string name="currency_calculator_result">= %1$s</string>
     <string name="currency_use_as_base">Use %1$s as the base currency</string>
     <string name="currency_rate_per_base">%1$s / 1 %2$s</string>
     <string name="currency_empty">No currencies to convert to yet.</string>
     <string name="currency_choose_currencies">Choose currencies</string>
-    <string name="currency_base_amount_code">Base amount · %1$s</string>
     <string name="currency_currencies">Currencies</string>
     <string name="currency_base_currency">Base currency</string>
     <string name="currency_base_currency_description">Every tile is converted from this one. Changing it reloads the rates.</string>
