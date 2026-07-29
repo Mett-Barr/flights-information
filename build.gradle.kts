@@ -22,7 +22,7 @@ plugins {
 moduleGraphConfig {
     readmePath.set("${rootDir}/README.md")
     heading.set("### 模組相依圖")
-    // 四個模組以由上而下的資料流呈現，較容易閱讀相依方向。
+    // 由上而下呈現，較容易讀出相依方向。
     orientation.set(Orientation.TOP_TO_BOTTOM)
     // 所有專案相依皆為 implementation，重複標示不會增加辨識資訊。
     linkText.set(LinkText.NONE)
@@ -32,7 +32,10 @@ moduleGraphConfig {
     setStyleByModuleType.set(true)
     theme.set(
         Theme.BASE(
-            // 不覆寫 Mermaid 主題變數，讓節點色彩只由類型 classDef 決定。
+            // theme 一旦指定為 base，Mermaid 就不再跟隨 GitHub 的深淺色，連線會
+            // 落回預設的黑——在深色版面上等於看不見。這裡挑一個中間調的灰，
+            // 淺底與深底都讀得到。
+            themeVariables = mapOf("lineColor" to "#8C8C8C"),
             moduleTypes = listOf(
                 AndroidApp("#2C4162"),
                 AndroidLibrary("#3BD482"),

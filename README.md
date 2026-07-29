@@ -93,7 +93,8 @@ DTO ──(data mapper)──▶ domain model ──(presentation mapper)──�
 ```mermaid
 %%{
   init: {
-    'theme': 'base'
+    'theme': 'base',
+    'themeVariables': {"lineColor":"#8C8C8C"}
   }
 }%%
 
@@ -101,22 +102,37 @@ graph TB
   subgraph :core
     :core:data["data"]
     :core:domain["domain"]
+    :core:ui["ui"]
   end
   subgraph :feature
+    :feature:currency["currency"]
     :feature:calculator["calculator"]
+    :feature:flights["flights"]
   end
   :core:data --> :core:domain
+  :core:ui --> :core:domain
+  :feature:currency --> :core:ui
+  :feature:currency --> :core:domain
+  :feature:currency --> :feature:calculator
   :app --> :core:data
   :app --> :core:domain
+  :app --> :core:ui
   :app --> :feature:calculator
+  :app --> :feature:flights
+  :app --> :feature:currency
+  :feature:flights --> :core:ui
+  :feature:flights --> :core:domain
 
 classDef android-library fill:#3BD482,stroke:#fff,stroke-width:2px,color:#fff;
 classDef kotlin-jvm fill:#8150FF,stroke:#fff,stroke-width:2px,color:#fff;
 classDef android-application fill:#2C4162,stroke:#fff,stroke-width:2px,color:#fff;
 class :core:data android-library
 class :core:domain kotlin-jvm
-class :app android-application
+class :core:ui android-library
+class :feature:currency android-library
 class :feature:calculator android-library
+class :app android-application
+class :feature:flights android-library
 
 ```
 ### 抓取時機
