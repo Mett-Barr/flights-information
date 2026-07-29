@@ -138,150 +138,146 @@ import java.text.DecimalFormat
  * - 圓角只從 `MaterialTheme.shapes` 取，字級只從 `MaterialTheme.typography` 取，
  *   間距只從 [CardGridSpace] 取（4/8dp 網格）。
  */
+private val previewBaseAmount = BigDecimal("1250")
+
+private fun previewConvertedRows(): List<CurrencyRow> = listOf(
+    CurrencyRowWithConversion(
+        code = "EUR",
+        name = "Euro",
+        symbol = "€",
+        rate = BigDecimal("0.9231004512"),
+        convertedAmount = BigDecimal("1153.8755640000"),
+        baseAmount = previewBaseAmount,
+        baseCode = "USD"
+    ),
+    CurrencyRowWithConversion(
+        code = "JPY",
+        name = "Japanese Yen",
+        symbol = "¥",
+        rate = BigDecimal("157.4021338800"),
+        convertedAmount = BigDecimal("196752.6673500000"),
+        baseAmount = previewBaseAmount,
+        baseCode = "USD"
+    ),
+    CurrencyRowWithConversion(
+        code = "GBP",
+        name = "British Pound Sterling",
+        symbol = "£",
+        rate = BigDecimal("0.7842119900"),
+        convertedAmount = BigDecimal("980.2649875000"),
+        baseAmount = previewBaseAmount,
+        baseCode = "USD"
+    ),
+    CurrencyRowWithConversion(
+        code = "KRW",
+        name = "South Korean Won",
+        symbol = "₩",
+        rate = BigDecimal("1378.5504120000"),
+        convertedAmount = BigDecimal("1723188.0150000000"),
+        baseAmount = previewBaseAmount,
+        baseCode = "USD"
+    ),
+    CurrencyRowWithConversion(
+        code = "CHF",
+        name = "Swiss Franc",
+        symbol = "Fr",
+        rate = BigDecimal("0.8804112300"),
+        convertedAmount = BigDecimal("1100.5140375000"),
+        baseAmount = previewBaseAmount,
+        baseCode = "USD"
+    ),
+    CurrencyRowWithConversion(
+        code = "AUD",
+        name = "Australian Dollar",
+        symbol = "$",
+        rate = BigDecimal("1.5231889400"),
+        convertedAmount = BigDecimal("1903.9861750000"),
+        baseAmount = previewBaseAmount,
+        baseCode = "USD"
+    )
+)
+
+private fun previewPlainRows(): List<CurrencyRow> = listOf(
+    CurrencyRowPlain("EUR", "Euro", "€", BigDecimal("0.9231004512")),
+    CurrencyRowPlain("JPY", "Japanese Yen", "¥", BigDecimal("157.4021338800")),
+    CurrencyRowPlain("GBP", "British Pound Sterling", "£", BigDecimal("0.7842119900")),
+    CurrencyRowPlain("THB", "Thai Baht", "฿", BigDecimal("36.4120009900"))
+)
+
+private val previewSelection = persistentSetOf(
+    CurrencyCode.EUR,
+    CurrencyCode.JPY,
+    CurrencyCode.GBP,
+    CurrencyCode.KRW,
+    CurrencyCode.CHF,
+    CurrencyCode.AUD
+)
+
+@Preview(name = "Card grid · converted", showBackground = true, widthDp = 400, heightDp = 880)
 @Composable
-fun CurrencyScreen(
-    state: CurrencyUiState,
-    onCalculatorShow: () -> Unit,
-    onCalculatorDismiss: () -> Unit,
-    onMoneyInput: (
-        content: CurrencyUiState.Content,
-        amountText: String?,
-    ) -> Unit,
-    onCurrencyClick: (String) -> Unit,
-    onCurrencySelect: (CurrencyCode) -> Unit,
-    onSearch: (CurrencyUiState.Content) -> Unit,
-    onBaseCurrencySelect: (CurrencyCode) -> Unit,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-    innerPadding: PaddingValues = PaddingValues(0.dp)
-) {
-    // 此設計以 ModalBottomSheet 呈現計算機，無需隱藏導覽列。
-    // 註：onCurrencyClick 在這個版面刻意不接。它在 ViewModel 的唯一效果是把該列搬到最前面，
-    // 而網格裡「點一張卡」已經被指派給更有意義的動作（換基準）。簽章由 pager 統一決定，故保留。
-    val layoutDirection = LocalLayoutDirection.current
-    val content = state as? CurrencyUiState.Content
-
-    // 兩張 sheet 的開關都要撐過旋轉，否則轉一下畫面就把使用者做到一半的事情關掉。
-    var showCalculator by rememberSaveable { mutableStateOf(false) }
-    var showPicker by rememberSaveable { mutableStateOf(false) }
-
-    // 進場動畫只在「內容第一次出現」時跑一次。旗標存進 saveable，
-    // 旋轉之後也不會再重播；每次匯率刷新更不該讓整片網格再淡入一遍。
-    var entranceDone by rememberSaveable { mutableStateOf(false) }
-    val hasContent = content != null
-    LaunchedEffect(hasContent) {
-        if (hasContent && !entranceDone) {
-            delay(ENTRANCE_TOTAL_MS)
-            entranceDone = true
-        }
-    }
-    // IDE 的 preview 只畫第一格畫面，動畫不會跑；不關掉的話卡片會停在 alpha = 0。
-    val inspecting = LocalInspectionMode.current
-    val animateEntrance = !entranceDone && !inspecting
-
-    // 計算機只有「已成立的金額」會送進 ViewModel；打到一半的算式不需要撐過旋轉，
-    // 旋轉後直接用 state 裡的 baseAmount 重新 seed 回去，使用者看到的數字不會掉。
-    val restoredAmount = (state as? CurrencyUiState.Content.WithConversion)?.baseAmount
-    val calculator = remember {
-        Calculator().apply {
-            if (restoredAmount != null && restoredAmount.signum() != 0) {
-                seedFromDisplayString(restoredAmount.stripTrailingZeros().toPlainString())
-            }
-        }
-    }
-
-    val currentState by rememberUpdatedState(state)
-    val currentOnMoneyInput by rememberUpdatedState(onMoneyInput)
-
-    LaunchedEffect(calculator) {
-        // 空輸入時金額是 0，snapshotFlow 的首次發射會把既有的換算結果洗回 Plain，
-        // 所以在使用者真的輸入前先把發射丟掉。
-        // 取 lastStableAmountText 而非 equal：那是計算機已格式化好的十進位字串，
-        // 內部的 Double 不會以科學記號或二進位誤差外流，匯率管線維持全程 BigDecimal。
-        snapshotFlow { calculator.lastStableAmountText.value.toBigDecimalOrNull() }
-            .dropWhile { amount -> amount == null || amount.signum() == 0 }
-            .collect { amount ->
-                val target = currentState as? CurrencyUiState.Content ?: return@collect
-                currentOnMoneyInput(target, amount?.toPlainString())
-            }
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(
-                start = innerPadding.calculateStartPadding(layoutDirection),
-                end = innerPadding.calculateEndPadding(layoutDirection)
-            )
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            when (val current = state) {
-                CurrencyUiState.Loading -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-
-                is CurrencyUiState.Error -> CardGridError(
-                    error = current.error,
-                    onRetry = onRetry
-                )
-
-                is CurrencyUiState.Content -> CardGridContent(
-                    state = current,
-                    bottomPadding = innerPadding.calculateBottomPadding(),
-                    animateEntrance = animateEntrance,
-                    onAmountClick = { showCalculator = true },
-                    onBaseClick = { showPicker = true },
-                    onPromote = { row ->
-                        // 點目標卡＝把它變成新的基準，換算方向整個翻過來。
-                        val code = CurrencyCode.fromCode(row.code)
-                        if (code != null) {
-                            // onBaseCurrencySelect 是 toggle：對同一個 code 再點一次會清成 null，
-                            // 所以只有真的換基準時才呼叫它。
-                            if (current.selectedBaseCurrency != code) onBaseCurrencySelect(code)
-                            // getCurrencies 讀的是「傳進去的那份 content」而不是 ViewModel 當下的
-                            // state，所以要先把新基準寫進 content 再送出，否則這一發還是用舊基準。
-                            onSearch(current.withGridBase(code))
-                        }
-                    },
-                    onRefresh = { onSearch(current) }
-                )
-            }
-        }
-    }
-
-    if (showCalculator && content != null) {
-        CardGridCalculatorSheet(
-            calculator = calculator,
-            baseCode = content.baseCode,
-            onDismiss = { showCalculator = false }
-        )
-    }
-
-    if (showPicker && content != null) {
-        CardGridPickerSheet(
-            state = content,
-            onBaseSelect = { code ->
-                if (content.selectedBaseCurrency != code) onBaseCurrencySelect(code)
-                onSearch(content.withGridBase(code))
-            },
-            onTargetToggle = { code ->
-                onCurrencySelect(code)
-                onSearch(content.withGridSelection(code))
-            },
-            onDismiss = { showPicker = false }
+private fun CurrencyScreenCardGridConvertedPreview() {
+    FlightInformationTheme(darkTheme = false, dynamicColor = false) {
+        CurrencyScreen(
+            state = CurrencyUiState.Content.WithConversion(
+                rows = previewConvertedRows(),
+                baseAmount = previewBaseAmount,
+                baseCode = CurrencyCode.USD,
+                selected = previewSelection
+            ),
+            onCalculatorShow = {},
+            onCalculatorDismiss = {},
+            onMoneyInput = { _, _ -> },
+            onCurrencyClick = {},
+            onCurrencySelect = {},
+            onSearch = {},
+            onBaseCurrencySelect = {},
+            onRetry = {}
         )
     }
 }
 
-/* ============================================================
- *  網格本體
- * ============================================================ */
+@Preview(
+    name = "Card grid · rates only, dark",
+    showBackground = true,
+    widthDp = 400,
+    heightDp = 880,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun CurrencyScreenCardGridPlainDarkPreview() {
+    FlightInformationTheme(darkTheme = true, dynamicColor = false) {
+        CurrencyScreen(
+            state = CurrencyUiState.Content.Plain(
+                rows = previewPlainRows(),
+                baseCode = CurrencyCode.USD,
+                selected = previewSelection
+            ),
+            onCalculatorShow = {},
+            onCalculatorDismiss = {},
+            onMoneyInput = { _, _ -> },
+            onCurrencyClick = {},
+            onCurrencySelect = {},
+            onSearch = {},
+            onBaseCurrencySelect = {},
+            onRetry = {}
+        )
+    }
+}
 
+@Preview(name = "Card grid · error", showBackground = true, widthDp = 400, heightDp = 440)
+@Composable
+private fun CurrencyScreenCardGridErrorPreview() {
+    FlightInformationTheme(darkTheme = false, dynamicColor = false) {
+        CurrencyScreen(
+            state = CurrencyUiState.Error(LoadError.NoNetwork),
+            onCalculatorShow = {},
+            onCalculatorDismiss = {},
+            onMoneyInput = { _, _ -> },
+            onCurrencyClick = {},
+            onCurrencySelect = {},
+            onSearch = {},
+            onBaseCurrencySelect = {},
+            onRetry = {}
+        )
+    }
+}
