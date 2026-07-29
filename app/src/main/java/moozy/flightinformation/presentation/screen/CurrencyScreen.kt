@@ -141,13 +141,10 @@ import java.text.DecimalFormat
 @Composable
 fun CurrencyScreen(
     state: CurrencyUiState,
-    onCalculatorShow: () -> Unit,
-    onCalculatorDismiss: () -> Unit,
     onMoneyInput: (
         content: CurrencyUiState.Content,
         amountText: String?,
     ) -> Unit,
-    onCurrencyClick: (String) -> Unit,
     onCurrencySelect: (CurrencyCode) -> Unit,
     onSearch: (CurrencyUiState.Content) -> Unit,
     onBaseCurrencySelect: (CurrencyCode) -> Unit,
@@ -156,8 +153,6 @@ fun CurrencyScreen(
     innerPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     // 此設計以 ModalBottomSheet 呈現計算機，無需隱藏導覽列。
-    // 註：onCurrencyClick 在這個版面刻意不接。它在 ViewModel 的唯一效果是把該列搬到最前面，
-    // 而網格裡「點一張卡」已經被指派給更有意義的動作（換基準）。簽章由 pager 統一決定，故保留。
     val layoutDirection = LocalLayoutDirection.current
     val content = state as? CurrencyUiState.Content
 

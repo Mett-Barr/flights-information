@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    config.setFrom(rootProject.files("config/detekt/detekt.yml"))
 }
 
 android {

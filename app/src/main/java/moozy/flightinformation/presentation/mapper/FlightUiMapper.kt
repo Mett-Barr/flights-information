@@ -4,6 +4,7 @@ import moozy.flightinformation.R
 import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
+import moozy.flightinformation.presentation.state.flights.FlightStatusLevel
 import moozy.flightinformation.presentation.state.flights.FlightStatusText
 import java.time.format.DateTimeFormatter
 
@@ -60,22 +61,22 @@ fun FlightArrival.toUiModel(): FlightArrivalItemUiModel {
         gate = gate,
         aircraftText = aircraftType ?: NO_VALUE,
         flightStatusText = statusLine,
-        statusKey = status.uiKey,
+        statusLevel = status.statusLevel,
         isCancelled = status == FlightStatus.Cancelled,
         airlineLogoUrl = airlineLogoUrl,
     )
 }
 
 /** UI 用來挑顏色/圖示的鍵；這張映射表屬於呈現層，不放進 domain。 */
-private val FlightStatus.uiKey: String
+private val FlightStatus.statusLevel: FlightStatusLevel
     get() = when (this) {
-        FlightStatus.Arrived -> "ARRIVED"
-        FlightStatus.Departed -> "DEPARTED"
-        FlightStatus.ScheduleChanged -> "SCHEDULE_CHANGE"
-        FlightStatus.Cancelled -> "CANCELLED"
-        FlightStatus.Delayed -> "DELAYED"
-        FlightStatus.OnTime -> "ON_TIME"
-        is FlightStatus.Unknown -> "UNKNOWN"
+        FlightStatus.Arrived,
+        FlightStatus.Departed -> FlightStatusLevel.Completed
+        FlightStatus.ScheduleChanged,
+        FlightStatus.Delayed -> FlightStatusLevel.Attention
+        FlightStatus.Cancelled -> FlightStatusLevel.Cancelled
+        FlightStatus.OnTime -> FlightStatusLevel.OnTime
+        is FlightStatus.Unknown -> FlightStatusLevel.Neutral
     }
 
 fun List<FlightArrival>.toUiModels(): List<FlightArrivalItemUiModel> = map { it.toUiModel() }

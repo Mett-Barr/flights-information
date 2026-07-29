@@ -87,32 +87,6 @@ class CurrencyViewModel @Inject constructor(
         }
     }
 
-    fun onCurrencyClick(currencyCode: String) {
-        _state.update {
-            when (it) {
-                is CurrencyUiState.Content.Plain -> {
-                    it.copy(rows = it.rows.toMutableList().apply {
-                        find { r -> r.code == currencyCode }?.let { row ->
-                            remove(row)
-                            add(0, row)
-                        }
-                    })
-                }
-
-                is CurrencyUiState.Content.WithConversion -> {
-                    it.copy(rows = it.rows.toMutableList().apply {
-                        find { r -> r.code == currencyCode }?.let { row ->
-                            remove(row)
-                            add(0, row)
-                        }
-                    })
-                }
-
-                else -> it
-            }
-        }
-    }
-
     // 每次選取都會重新請求。連續點選時舊的請求必須取消，否則多筆回應會競速，
     // 畫面可能停在先送出、後回來的那一份，也就是使用者已經取消掉的選擇。
     private var loadJob: Job? = null

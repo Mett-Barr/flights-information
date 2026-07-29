@@ -78,6 +78,7 @@ import moozy.flightinformation.presentation.mapper.messageRes
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
 import moozy.flightinformation.presentation.state.flights.FlightStatusText
+import moozy.flightinformation.presentation.state.flights.FlightStatusLevel
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -100,7 +101,7 @@ private fun previewItem(
     time: String,
     scheduledTime: String,
     badge: FlightStatusText,
-    status: String,
+    statusLevel: FlightStatusLevel,
     carrier: String,
     from: String,
     gate: String?,
@@ -116,8 +117,8 @@ private fun previewItem(
     gate = gate,
     aircraftText = aircraft,
     flightStatusText = statusLine,
-    statusKey = status,
-    isCancelled = status == "CANCELLED",
+    statusLevel = statusLevel,
+    isCancelled = statusLevel == FlightStatusLevel.Cancelled,
     airlineLogoUrl = logoUrl
 )
 
@@ -127,7 +128,7 @@ private val timelinePreviewItems = listOf(
         time = "08:40",
         scheduledTime = "08:35",
         badge = FlightStatusText.Resource(R.string.flight_status_arrived),
-        status = "ARRIVED",
+        statusLevel = FlightStatusLevel.Completed,
         carrier = "中華航空 · CI 152",
         from = "東京成田 (NRT)",
         gate = "3",
@@ -139,7 +140,7 @@ private val timelinePreviewItems = listOf(
         time = "09:05",
         scheduledTime = "09:05",
         badge = FlightStatusText.Resource(R.string.flight_status_arrived),
-        status = "ARRIVED",
+        statusLevel = FlightStatusLevel.Completed,
         carrier = "長榮航空 · BR 106",
         from = "首爾仁川 (ICN)",
         gate = "5",
@@ -149,7 +150,7 @@ private val timelinePreviewItems = listOf(
         time = "09:50",
         scheduledTime = "09:20",
         badge = FlightStatusText.Resource(R.string.flight_status_delayed),
-        status = "DELAYED",
+        statusLevel = FlightStatusLevel.Attention,
         carrier = "星宇航空 · JX 722",
         from = "檳城 (PEN)",
         gate = "7",
@@ -160,7 +161,7 @@ private val timelinePreviewItems = listOf(
         time = "10:15",
         scheduledTime = "10:15",
         badge = FlightStatusText.Resource(R.string.flight_status_on_time),
-        status = "ON_TIME",
+        statusLevel = FlightStatusLevel.OnTime,
         carrier = "立榮航空 · B7 8690",
         from = "澎湖 (MZG)",
         gate = null,
@@ -170,7 +171,7 @@ private val timelinePreviewItems = listOf(
         time = "10:40",
         scheduledTime = "10:40",
         badge = FlightStatusText.Resource(R.string.flight_status_cancelled),
-        status = "CANCELLED",
+        statusLevel = FlightStatusLevel.Cancelled,
         carrier = "國泰航空 · CX 564",
         from = "香港 (HKG)",
         gate = null,
@@ -181,7 +182,7 @@ private val timelinePreviewItems = listOf(
         time = "11:05",
         scheduledTime = "11:05",
         badge = FlightStatusText.Resource(R.string.flight_status_schedule_change),
-        status = "SCHEDULE_CHANGE",
+        statusLevel = FlightStatusLevel.Attention,
         carrier = "日本航空 · JL 802",
         from = "東京羽田 (HND)",
         gate = "2",
@@ -191,7 +192,7 @@ private val timelinePreviewItems = listOf(
         time = "--:--",
         scheduledTime = "--:--",
         badge = FlightStatusText.Resource(R.string.flight_status_unknown),
-        status = "UNKNOWN",
+        statusLevel = FlightStatusLevel.Neutral,
         carrier = "酷航 · TR 898",
         from = "新加坡 (SIN)",
         gate = null,

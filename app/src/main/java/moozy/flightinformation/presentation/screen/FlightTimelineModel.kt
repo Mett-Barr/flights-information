@@ -58,6 +58,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
@@ -76,6 +77,7 @@ import moozy.flightinformation.R
 import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.presentation.mapper.messageRes
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
+import moozy.flightinformation.presentation.state.flights.FlightStatusLevel
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
 import moozy.flightinformation.presentation.state.flights.FlightStatusText
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
@@ -260,30 +262,34 @@ internal fun twoDigits(value: Int): String = value.toString().padStart(2, '0')
 
 @Composable
 internal fun summaryTextOf(timeline: Timeline): String = when {
-    timeline.nextLabel != null && timeline.unscheduledCount > 0 -> stringResource(
-        R.string.flights_summary_next_unscheduled,
+    timeline.nextLabel != null && timeline.unscheduledCount > 0 -> pluralStringResource(
+        R.plurals.flights_summary_next_unscheduled,
+        timeline.pastCount,
         timeline.pastCount,
         timeline.upcomingCount,
         timeline.nextLabel,
         timeline.unscheduledCount
     )
 
-    timeline.nextLabel != null -> stringResource(
-        R.string.flights_summary_next,
+    timeline.nextLabel != null -> pluralStringResource(
+        R.plurals.flights_summary_next,
+        timeline.pastCount,
         timeline.pastCount,
         timeline.upcomingCount,
         timeline.nextLabel
     )
 
-    timeline.unscheduledCount > 0 -> stringResource(
-        R.string.flights_summary_unscheduled,
+    timeline.unscheduledCount > 0 -> pluralStringResource(
+        R.plurals.flights_summary_unscheduled,
+        timeline.pastCount,
         timeline.pastCount,
         timeline.upcomingCount,
         timeline.unscheduledCount
     )
 
-    else -> stringResource(
-        R.string.flights_summary,
+    else -> pluralStringResource(
+        R.plurals.flights_summary,
+        timeline.pastCount,
         timeline.pastCount,
         timeline.upcomingCount
     )
@@ -317,7 +323,7 @@ internal fun FlightStatusText.resolve(): String = when (this) {
 
 /** 已到或下一班的登機門會改變讀者現在該往哪裡走。 */
 internal fun shouldShowGate(entry: TimelineEntry): Boolean =
-    entry.isPast || entry.isNext || entry.item.statusKey.uppercase() in setOf("ARRIVED", "DEPARTED")
+    entry.isPast || entry.isNext || entry.item.statusLevel == FlightStatusLevel.Completed
 
 /** 預計時間與主時間相同時不重複顯示，避免從已在地化文案解析資料。 */
 private fun expectedTimeDiffers(item: FlightArrivalItemUiModel): Boolean =

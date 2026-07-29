@@ -224,10 +224,7 @@ private fun CurrencyScreenCardGridConvertedPreview() {
                 baseCode = CurrencyCode.USD,
                 selected = previewSelection
             ),
-            onCalculatorShow = {},
-            onCalculatorDismiss = {},
             onMoneyInput = { _, _ -> },
-            onCurrencyClick = {},
             onCurrencySelect = {},
             onSearch = {},
             onBaseCurrencySelect = {},
@@ -252,10 +249,7 @@ private fun CurrencyScreenCardGridPlainDarkPreview() {
                 baseCode = CurrencyCode.USD,
                 selected = previewSelection
             ),
-            onCalculatorShow = {},
-            onCalculatorDismiss = {},
             onMoneyInput = { _, _ -> },
-            onCurrencyClick = {},
             onCurrencySelect = {},
             onSearch = {},
             onBaseCurrencySelect = {},
@@ -270,10 +264,7 @@ private fun CurrencyScreenCardGridErrorPreview() {
     FlightInformationTheme(darkTheme = false, dynamicColor = false) {
         CurrencyScreen(
             state = CurrencyUiState.Error(LoadError.NoNetwork),
-            onCalculatorShow = {},
-            onCalculatorDismiss = {},
             onMoneyInput = { _, _ -> },
-            onCurrencyClick = {},
             onCurrencySelect = {},
             onSearch = {},
             onBaseCurrencySelect = {},

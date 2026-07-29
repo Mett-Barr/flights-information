@@ -10,7 +10,6 @@ import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -21,7 +20,6 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import kotlinx.coroutines.launch
 import moozy.flightinformation.presentation.component.RotatableScaffold
 import moozy.flightinformation.presentation.screen.FlightsScreen
 import moozy.flightinformation.presentation.screen.CurrencyScreen
@@ -45,7 +43,6 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
     val currentRoute = backStack.currentTopLevel()
 
     val scaffoldState = rememberNavigationSuiteScaffoldState()
-    val coroutineScope = rememberCoroutineScope()
 
     // 安全網。計算機會把導覽套件藏起來，而返回鍵不看導覽套件在不在——使用者可以在藏著的
     // 狀態下按返回換頁，那會停在一個沒有導覽列的畫面上（正是先前那個 soft-lock 的形狀）。
@@ -86,7 +83,6 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                     )
                 }
 
-                // 設計比較用：所有版本收在同一個分頁裡，用 pager 橫向切換對照。
                 entry<NavRoute.Currency> {
                     LaunchedEffect(Unit) {
                         currencyViewModel.load()
@@ -94,18 +90,7 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
                     val state by currencyViewModel.state.collectAsStateWithLifecycle()
                     CurrencyScreen(
                         state = state,
-                        onCalculatorShow = {
-                            coroutineScope.launch {
-                                scaffoldState.hide()
-                            }
-                        },
-                        onCalculatorDismiss = {
-                            coroutineScope.launch {
-                                scaffoldState.show()
-                            }
-                        },
                         onMoneyInput = currencyViewModel::inputMoney,
-                        onCurrencyClick = currencyViewModel::onCurrencyClick,
                         onCurrencySelect = currencyViewModel::onCurrencySelect,
                         onSearch = currencyViewModel::getCurrencies,
                         onBaseCurrencySelect = currencyViewModel::onBaseCurrencySelect,

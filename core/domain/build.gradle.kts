@@ -2,6 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    config.setFrom(rootProject.files("config/detekt/detekt.yml"))
 }
 
 // kotlin-jvm 也套用 Java plugin，而 Java 端預設跟隨 Gradle 執行時的 JVM。

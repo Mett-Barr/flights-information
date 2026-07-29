@@ -155,10 +155,7 @@ class CurrencyScreenTest {
             FlightInformationTheme {
                 CurrencyScreen(
                     state = state,
-                    onCalculatorShow = {},
-                    onCalculatorDismiss = {},
                     onMoneyInput = { _, _ -> },
-                    onCurrencyClick = {},
                     onCurrencySelect = onCurrencySelect,
                     onSearch = onSearch,
                     onBaseCurrencySelect = onBaseCurrencySelect,

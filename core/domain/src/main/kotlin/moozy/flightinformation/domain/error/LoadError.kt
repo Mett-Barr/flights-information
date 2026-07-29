@@ -14,11 +14,19 @@ sealed class LoadError(message: String) : Exception(message) {
 
     /** 連線不到對方：沒網路、DNS 解析失敗、連線被拒。 */
     data object NoNetwork : LoadError("No network connection") {
+        // JVM 反序列化透過反射呼叫，靜態分析看不到呼叫端。
+        // data object 繼承了可序列化的 Exception，沒有這個 hook 反序列化
+        // 會產生第二個實例，識別就不再唯一。
+        @Suppress("UnusedPrivateMember")
         private fun readResolve(): Any = NoNetwork
     }
 
     /** 對方沒有在時限內回應。 */
     data object Timeout : LoadError("The request timed out") {
+        // JVM 反序列化透過反射呼叫，靜態分析看不到呼叫端。
+        // data object 繼承了可序列化的 Exception，沒有這個 hook 反序列化
+        // 會產生第二個實例，識別就不再唯一。
+        @Suppress("UnusedPrivateMember")
         private fun readResolve(): Any = Timeout
     }
 

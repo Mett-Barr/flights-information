@@ -77,6 +77,7 @@ import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.presentation.mapper.messageRes
 import moozy.flightinformation.presentation.state.flights.FlightArrivalItemUiModel
 import moozy.flightinformation.presentation.state.flights.FlightArrivalsUiState
+import moozy.flightinformation.presentation.state.flights.FlightStatusLevel
 import moozy.flightinformation.presentation.state.flights.FlightStatusText
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
 import java.time.LocalDateTime
@@ -239,7 +240,7 @@ internal fun TimelineFlightRow(
                         Spacer(modifier = Modifier.width(HeadlineBadgeSpacing))
                         Spacer(modifier = Modifier.weight(1f))
                         StatusBadge(
-                            statusKey = item.statusKey,
+                            statusLevel = item.statusLevel,
                             text = badgeText,
                             disabled = isCancelled
                         )
@@ -275,7 +276,7 @@ internal fun TimelineFlightRow(
  * 狀態徽章。
  *
  * 顏色一律從 scheme 的語意角色推導，不寫死任何十六進位色碼、也不手動判斷深色模式
- * （寫死的色碼在動態取色下更是完全不成立）。六個 statusKey 收斂成四個語意層級：
+ * （寫死的色碼在動態取色下更是完全不成立）。六個航班狀態收斂成四個語意層級：
  *
  * - `ON_TIME` → primary container：一切照計畫，這是最正面的狀態。
  * - `ARRIVED` / `DEPARTED` → secondary container：已完成，語氣比較低調
@@ -288,18 +289,18 @@ internal fun TimelineFlightRow(
  */
 @Composable
 private fun StatusBadge(
-    statusKey: String,
+    statusLevel: FlightStatusLevel,
     text: String,
     disabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
-    val (container, content) = when (statusKey.uppercase()) {
-        "ON_TIME" -> scheme.primaryContainer to scheme.onPrimaryContainer
-        "ARRIVED", "DEPARTED" -> scheme.secondaryContainer to scheme.onSecondaryContainer
-        "DELAYED", "SCHEDULE_CHANGE" -> scheme.tertiaryContainer to scheme.onTertiaryContainer
-        "CANCELLED" -> scheme.errorContainer to scheme.onErrorContainer
-        else -> scheme.surfaceContainerHighest to scheme.onSurfaceVariant
+    val (container, content) = when (statusLevel) {
+        FlightStatusLevel.OnTime -> scheme.primaryContainer to scheme.onPrimaryContainer
+        FlightStatusLevel.Completed -> scheme.secondaryContainer to scheme.onSecondaryContainer
+        FlightStatusLevel.Attention -> scheme.tertiaryContainer to scheme.onTertiaryContainer
+        FlightStatusLevel.Cancelled -> scheme.errorContainer to scheme.onErrorContainer
+        FlightStatusLevel.Neutral -> scheme.surfaceContainerHighest to scheme.onSurfaceVariant
     }
     val badgeContainer = if (disabled) {
         scheme.onSurface.copy(alpha = DisabledContainerOpacity)

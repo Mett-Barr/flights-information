@@ -75,6 +75,7 @@ import androidx.compose.ui.graphics.vector.PathBuilder
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -383,7 +384,11 @@ internal fun CardGridPickerSheet(
                     text = if (mode == CardGridPickerMode.Base) {
                         stringResource(R.string.currency_base_currency_description)
                     } else {
-                        stringResource(R.string.currency_selected_description, state.selected.size)
+                        pluralStringResource(
+                            R.plurals.currency_selected_description,
+                            state.selected.size,
+                            state.selected.size,
+                        )
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -5,10 +5,10 @@
     <string name="error_server">服務暫時無法使用，請稍後再試。</string>
     <string name="flights_empty">目前沒有航班資訊。</string>
     <string name="flights_unscheduled">尚未排定</string>
-    <string name="flights_summary">已過 %1$d · 即將抵達 %2$d</string>
-    <string name="flights_summary_next">已過 %1$d · 即將抵達 %2$d · 下一班 %3$s</string>
-    <string name="flights_summary_unscheduled">已過 %1$d · 即將抵達 %2$d · 尚未排定 %3$d</string>
-    <string name="flights_summary_next_unscheduled">已過 %1$d · 即將抵達 %2$d · 下一班 %3$s · 尚未排定 %4$d</string>
+    <plurals name="flights_summary"><item quantity="other">已過 %1$d · 即將抵達 %2$d</item></plurals>
+    <plurals name="flights_summary_next"><item quantity="other">已過 %1$d · 即將抵達 %2$d · 下一班 %3$s</item></plurals>
+    <plurals name="flights_summary_unscheduled"><item quantity="other">已過 %1$d · 即將抵達 %2$d · 尚未排定 %3$d</item></plurals>
+    <plurals name="flights_summary_next_unscheduled"><item quantity="other">已過 %1$d · 即將抵達 %2$d · 下一班 %3$s · 尚未排定 %4$d</item></plurals>
     <string name="error_generic">無法載入資料，請再試一次。</string>
     <string name="action_retry">重試</string>
     <string name="action_refresh">重新整理</string>
@@ -28,7 +28,7 @@
     <string name="currency_base_currency">基準幣別</string>
     <string name="currency_base_currency_description">所有卡片皆以此幣別換算。變更後會重新載入匯率。</string>
     <string name="currency_shown_in_grid">顯示於格狀清單</string>
-    <string name="currency_selected_description">已選擇 %1$d 項。</string>
+    <plurals name="currency_selected_description"><item quantity="other">已選擇 %1$d 項。</item></plurals>
     <string name="flights_timeline_now">現在</string>
     <string name="flights_timeline_now_description">目前時間，%1$s</string>
     <string name="flight_status_arrived">已抵達</string>

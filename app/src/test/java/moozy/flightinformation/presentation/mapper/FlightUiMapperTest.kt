@@ -4,6 +4,7 @@ import moozy.flightinformation.R
 import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
 import moozy.flightinformation.presentation.state.flights.FlightStatusText
+import moozy.flightinformation.presentation.state.flights.FlightStatusLevel
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalTime
@@ -128,17 +129,17 @@ class FlightUiMapperTest {
     }
 
     @Test
-    fun `arrived status key is displayed`() = assertStatusKey(FlightStatus.Arrived, "ARRIVED")
+    fun `arrived status level is completed`() = assertStatusLevel(FlightStatus.Arrived, FlightStatusLevel.Completed)
 
     @Test
-    fun `departed status key is displayed`() = assertStatusKey(FlightStatus.Departed, "DEPARTED")
+    fun `departed status level is completed`() = assertStatusLevel(FlightStatus.Departed, FlightStatusLevel.Completed)
 
     @Test
-    fun `schedule changed status key is displayed`() =
-        assertStatusKey(FlightStatus.ScheduleChanged, "SCHEDULE_CHANGE")
+    fun `schedule changed status level needs attention`() =
+        assertStatusLevel(FlightStatus.ScheduleChanged, FlightStatusLevel.Attention)
 
     @Test
-    fun `cancelled status key is displayed`() = assertStatusKey(FlightStatus.Cancelled, "CANCELLED")
+    fun `cancelled status level is cancelled`() = assertStatusLevel(FlightStatus.Cancelled, FlightStatusLevel.Cancelled)
 
     @Test
     fun `cancelled status is marked disabled for presentation`() {
@@ -147,13 +148,13 @@ class FlightUiMapperTest {
     }
 
     @Test
-    fun `delayed status key is displayed`() = assertStatusKey(FlightStatus.Delayed, "DELAYED")
+    fun `delayed status level needs attention`() = assertStatusLevel(FlightStatus.Delayed, FlightStatusLevel.Attention)
 
     @Test
-    fun `on time status key is displayed`() = assertStatusKey(FlightStatus.OnTime, "ON_TIME")
+    fun `on time status level is on time`() = assertStatusLevel(FlightStatus.OnTime, FlightStatusLevel.OnTime)
 
     @Test
-    fun `unknown status key is displayed`() = assertStatusKey(FlightStatus.Unknown("Diverted"), "UNKNOWN")
+    fun `unknown status level is neutral`() = assertStatusLevel(FlightStatus.Unknown("Diverted"), FlightStatusLevel.Neutral)
 
     @Test
     fun `carrier line joins name and flight number`() {
@@ -245,8 +246,8 @@ class FlightUiMapperTest {
         assertEquals(expected, flightArrival(status = status).toUiModel().badgeText)
     }
 
-    private fun assertStatusKey(status: FlightStatus, expected: String) {
-        assertEquals(expected, flightArrival(status = status).toUiModel().statusKey)
+    private fun assertStatusLevel(status: FlightStatus, expected: FlightStatusLevel) {
+        assertEquals(expected, flightArrival(status = status).toUiModel().statusLevel)
     }
 
     private fun flightArrival(

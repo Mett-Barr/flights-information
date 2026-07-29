@@ -1,0 +1,43 @@
+# detekt 在這個專案只負責一件事：抓出 Kotlin 編譯器看不到的死程式碼。
+#
+# 專案已設定 allWarningsAsErrors，編譯警告一律擋下建置。但 Kotlin **不會**對
+# 公開函式的未使用參數發出警告——對 library 而言那是合法的 API 表面。實際後果是
+# CurrencyScreen 曾經有三個宣告了、傳進來了、卻從未被讀取的參數，一直活到有人
+# 用 IDE inspection 才發現。這份設定把那個檢查交給建置，而不是交給人眼。
+#
+# 其餘規則刻意不啟用。複雜度上限、命名慣例、魔術數字、格式——那些是風格意見，
+# 在既有程式碼上一次開啟只會產生一整面待處理清單，接著被 baseline 檔消音，
+# 最後工具變成裝飾品：CI 是綠的，但什麼都沒守住。
+
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+
+style:
+  active: true
+
+  # UnusedImports 需要型別解析才判斷得準。本專案跑的是不帶 classpath 的 detekt
+  # task，這條規則在 Compose 這種大量擴充函式的程式碼上回報過 1362 筆，全數誤判。
+  # 要開它得改跑 detektMain（慢很多），代價與收益不成比例。
+  UnusedImports:
+    active: false
+
+  UnusedParameter:
+    active: true
+
+  UnusedPrivateClass:
+    active: true
+
+  # @Preview 的 composable 由 IDE 直接呼叫，靜態分析看不到呼叫端。不排除的話
+  # 每個預覽都會被當成死碼。
+  UnusedPrivateMember:
+    active: true
+    ignoreAnnotated:
+      - 'Preview'
+
+  UnusedPrivateProperty:
+    active: true
+    ignoreAnnotated:
+      - 'Preview'

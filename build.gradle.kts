@@ -15,6 +15,7 @@ plugins {
     // Declared here (without applying) so it shares a class loader with the Hilt
     // plugin — see https://github.com/google/dagger/issues/3965
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.detekt) apply false
     alias(libs.plugins.module.graph)
 }
 

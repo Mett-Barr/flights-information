@@ -13,6 +13,14 @@ sealed interface FlightStatusText {
     data class Raw(val value: String) : FlightStatusText
 }
 
+enum class FlightStatusLevel {
+    OnTime,
+    Completed,
+    Attention,
+    Cancelled,
+    Neutral,
+}
+
 data class FlightArrivalItemUiModel(
     val headlineTimeText: String,   // 大字時間：realTime 優先，否則 expectTime，皆無則 "--:--"
     val scheduledTimeText: String,  // 預計時間未交給 mapper 組成文案，讓畫面依語系決定格式。
@@ -22,7 +30,7 @@ data class FlightArrivalItemUiModel(
     val gate: String?,              // null 代表沒有登機門資料，避免以文案作為狀態判斷。
     val aircraftText: String,       // "Boeing 737" / "--"
     val flightStatusText: FlightStatusText,
-    val statusKey: String,          // "ARRIVED" | "DEPARTED" | "SCHEDULE_CHANGE" | "CANCELLED" | "DELAYED" | "ON_TIME" | "UNKNOWN"
+    val statusLevel: FlightStatusLevel,
     val isCancelled: Boolean = false,
     val airlineLogoUrl: String?     // Logo URL
 )
@@ -46,7 +54,7 @@ val fakeFlightArrivalItem = FlightArrivalItemUiModel(
     // 航班已抵達，沒有延誤原因，直接顯示狀態
     flightStatusText = FlightStatusText.Resource(R.string.flight_status_arrived),
     // 狀態鍵值
-    statusKey = "ARRIVED",
+    statusLevel = FlightStatusLevel.Completed,
     // Logo URL
     airlineLogoUrl = "https://www.kia.gov.tw/images/ALL-square/B7.png"
 )
