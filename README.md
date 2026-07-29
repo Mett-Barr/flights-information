@@ -93,22 +93,18 @@ DTO ──(data mapper)──▶ domain model ──(presentation mapper)──�
 ```mermaid
 %%{
   init: {
-    'theme': 'base',
-    'themeVariables': {"lineColor":"#676767"}
+    'theme': 'base'
   }
 }%%
 
 graph TB
-  :app["app"]
   subgraph :core
     :core:data["data"]
     :core:domain["domain"]
-    :core:data["data"]
   end
   subgraph :feature
     :feature:calculator["calculator"]
   end
-
   :core:data --> :core:domain
   :app --> :core:data
   :app --> :core:domain
