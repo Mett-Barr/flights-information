@@ -75,7 +75,6 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
-    implementation(libs.ktor.client.logging)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
@@ -83,10 +82,9 @@ dependencies {
     implementation(libs.coil.network.okhttp)
 
 
-    // Versions come from the Compose BOM declared above.
-    implementation("androidx.compose.animation:animation")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.material:material")
+    // 版本一律由上面的 Compose BOM 供應。
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.foundation)
 
 
     implementation(libs.androidx.material3.adaptive)
