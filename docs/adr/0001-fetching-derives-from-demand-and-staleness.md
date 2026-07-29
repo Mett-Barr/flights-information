@@ -60,8 +60,10 @@ re-enters and the window is measured from the new fetch. `ReTimer` — a
 conflated-channel timer that could be reset from outside without cancelling a
 coroutine — existed to make that work under the event model, and was deleted.
 
-`FlightsScreen` no longer takes `onScreenVisible`/`onScreenHidden`. It collects
-state; that is the whole contract.
+`FlightsScreen` no longer takes `onScreenVisible`/`onScreenHidden`. The
+`entry<NavRoute.Flights>` block in `navigation/AppNavDisplay.kt` collects state
+and passes the collected `FlightArrivalsUiState` to the screen; that composition
+scope is the whole contract.
 
 The trade-off is that `WhileSubscribed(5_000)` does not remember when the last
 fetch happened, so leaving for more than five seconds always refetches even if

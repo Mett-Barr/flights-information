@@ -11,12 +11,15 @@
 
 | 模組 | 檔 | 行 |
 |---|---:|---:|
-| `:app` | 31 | 5,297 |
-| `:core:data` | 16 | 372 |
-| `:core:domain` | 10 | 191 |
-| `:feature:calculator` | 3 | 937 |
+| `:app` | 10 | 460 |
+| `:core:data` | 16 | 326 |
+| `:core:domain` | 10 | 176 |
+| `:core:ui` | 4 | 376 |
+| `:feature:flights` | 10 | 2,076 |
+| `:feature:currency` | 10 | 2,213 |
+| `:feature:calculator` | 3 | 827 |
 
-`:app` 內的 `presentation/` 有 24 檔、5,121 行；`di/` 有 3 檔、137 行；`util/` 有 2 檔、10 行。
+`:app` 只保留組裝責任：`di/`、`navigation/` 與 `component/`。航班與匯率的畫面、ViewModel、mapper、UI state 與 previews 已分別在 `:feature:flights` 與 `:feature:currency`。
 
 兩個畫面仍是行數的大宗——它們的版面（時間軸的軌道與節點、
 匯率的卡片網格）都在 Compose 裡直接繪製，沒有拆成一堆小元件。
@@ -32,22 +35,23 @@
 | 1 | `:core:domain` | 零相依，最快建立詞彙表 |
 | 2 | `:core:data` 的 `network/` | 錯誤分類的收斂點，整個 app 的失敗語意在此定義 |
 | 3 | `:core:data` 的 `datasource/` + `repository/` | DTO → domain 的轉換邊界 |
-| 4 | `:app` 的 `presentation/viewmodel/` | 核心機制在這（見下節） |
-| 5 | `:app` 的 `presentation/mapper/` + `state/` | domain → UI 的最後一哩 |
-| 6 | `:app` 的 `presentation/screen/` + `component/` | 畫面本身 |
-| 7 | `:app` 的 `presentation/navigation/` | Navigation 3：back stack、deep link、window size class 自適應 |
-| 8 | `:feature:calculator` | 獨立元件，可最後看 |
+| 4 | `:feature:flights/FlightsViewModel.kt` | 核心抓取機制在這（見下節） |
+| 5 | `:feature:flights/FlightUiMapper.kt` + UI state | domain → UI 的最後一哩 |
+| 6 | `:feature:flights/FlightScreen.kt`、`FlightTimeline*.kt` 與 `:feature:currency` | 兩個功能畫面本身 |
+| 7 | `:app` 的 `navigation/AppNavDisplay.kt` | Navigation 3、nav entry 的收集作用域、back stack、deep link、window size class 自適應 |
+| 8 | `:core:ui` 與 `:feature:calculator` | 共享呈現資源與獨立元件，可最後看 |
 
 ---
 
 ## 分層
 
-核心仍分三層，相依一律指向內層，DTO 不越過資料層；計算機則是獨立的 feature 模組。
+核心仍分三層，相依一律指向內層，DTO 不越過資料層；共享 UI 與三個功能各自是獨立模組。
 
 ```
-:app  ──依賴──▶  :core:domain  ◀──依賴──  :core:data
- :app  ──依賴──▶  :core:data
- :app  ──依賴──▶  :feature:calculator
+:app  ──依賴──▶  :core:data ──依賴──▶ :core:domain
+ :app  ──依賴──▶  :core:ui ───依賴──▶ :core:domain
+ :app  ──依賴──▶  :feature:flights ──依賴──▶ :core:ui、:core:domain
+ :app  ──依賴──▶  :feature:currency ──依賴──▶ :core:ui、:core:domain、:feature:calculator
 ```
 
 repository 介面定義在 `:core:domain` 的 `repository/`，實作在 `:core:data` 的 `repository/`，
@@ -56,13 +60,12 @@ repository 介面定義在 `:core:domain` 的 `repository/`，實作在 `:core:d
 可驗證：
 
 ```bash
-grep -r "import moozy.flightinformation.data"          core/domain/src/main/                              # 0
-grep -r "import moozy.flightinformation.presentation"  core/domain/src/main/                              # 0
-grep -r "import io.ktor"                               app/src/main/java/moozy/flightinformation/presentation/  # 0
-grep -rn "Dto"                                         app/src/main/java/moozy/flightinformation/presentation/  # 0
+rg -n "import moozy.flightinformation.data" core/domain/src/main          # 無結果
+rg -n "import moozy.flightinformation.feature" core/domain/src/main       # 無結果
+rg -n "import io.ktor|Dto" feature/flights/src/main feature/currency/src/main core/ui/src/main # 無結果
 ```
 
-最後一條是真正要守的界線：DTO 不出現在 presentation。
+最後一條是真正要守的界線：DTO 與 Ktor 不出現在 feature 或共享 UI；`:app` 的 DI 組裝可持有 Ktor client。
 
 最內層的 `:core:domain` 現在是純 Kotlin JVM 模組；Android 與 Ktor 型別不在它的編譯 classpath，
 因此這條邊界由模組結構與編譯器強制，而不只靠目錄約定。
@@ -76,7 +79,9 @@ grep -rn "Dto"                                         app/src/main/java/moozy/f
 
 ## 值得慢讀的地方：抓取條件 = 有人在看 ∧ 資料已過期
 
-`:app` 的 `presentation/viewmodel/FlightsViewModel.kt`
+`:feature:flights` 的 `FlightsViewModel.kt`。它的 state 由 `:app` 的
+`navigation/AppNavDisplay.kt` 中 `entry<NavRoute.Flights>` 收集，再把已收集的
+`FlightArrivalsUiState` 傳給 `FlightsScreen`。
 
 ```kotlin
 val state: StateFlow<...> = flow {
@@ -103,9 +108,10 @@ val state: StateFlow<...> = flow {
 
 ### 這個設計的前提
 
-收集必須發生在「使用者實際在看那個畫面」的作用域內。把 `collectAsStateWithLifecycle()`
-提升到畫面之外的共用作用域，輪詢就永遠不會停——而且畫面上看不出任何異狀。
-改動導覽層時要留意這點。
+收集必須發生在「使用者實際在看那個畫面」的作用域內。這裡是
+`entry<NavRoute.Flights>`；`SinglePaneSceneStrategy` 只組合最上層 entry，因此離開航班
+entry 時 collector 會停止，`WhileSubscribed` 才真正表示使用者正在看航班板。把收集提升到
+共用作用域，輪詢就不會停——而且畫面上看不出任何異狀。
 
 ---
 
@@ -123,7 +129,7 @@ val state: StateFlow<...> = flow {
    把協程取消變成假的 `LoadError`。
 3. **timeout 的比對排在 `IOException` 之前**，否則永遠走不到 `Timeout` 分支。
 
-原始例外不會流到畫面上，文案由 `:app` 的 `presentation/mapper/LoadErrorMessages.kt`
+原始例外不會流到畫面上，文案由 `:core:ui` 的 `LoadErrorMessages.kt`
 依錯誤類別對應字串資源。
 
 刷新失敗時保留既有內容而非清空畫面，只有從頭就無資料可顯示時才進錯誤畫面。
@@ -136,25 +142,22 @@ val state: StateFlow<...> = flow {
 
 | 模組 | 檔案 | @Test | 涵蓋 |
 |---|---|---:|---|
-| `:app` | `FlightUiMapperTest` | 35 | 狀態正規化、空值、無法解析的時間 |
-| `:app` | `FlightsViewModelTest` | 15 | 抓取條件：無人收集不抓、新鮮期內不重抓、手動刷新重新計時 |
-| `:app` | `CurrencyMappersTest` | 13 | 換算數學、捨入邊界 |
-| `:app` | `CurrencyViewModelTest` | 9 | 狀態轉換 |
+| `:app` | `LayeringTest` | 5 | 完整專案的分層規則 |
+| `:core:data` | data 測試 | 22 | DTO、URL、HTTP 錯誤與 repository 映射 |
+| `:feature:flights` | `FlightUiMapperTest`、`FlightsViewModelTest` | 51 | 呈現映射與抓取條件 |
+| `:feature:currency` | `CurrencyMappersTest`、`CurrencyViewModelTest` | 29 | 換算、捨入與狀態轉換 |
 | `:feature:calculator` | 計算機測試 | 51 | 運算式、運算子優先序、括號、負號與輸入狀態矩陣 |
-| `:core:data` | `FlightsRepositoryImplTest` | 7 | DTO → domain 映射 |
-| `:core:data` | `KtorHttpRequesterImplTest` | 6 | 錯誤分類，含 4xx-可解析的迴歸測試 |
-| `:core:data` | `CurrencyRepositoryImplTest` | 6 | repository 契約 |
-| `:app` | `CurrencyScreenTest`（instrumented） | 6 | 載入／錯誤／內容狀態 |
-| `:app` | `FlightsScreenTest`（instrumented） | 4 | 同上 |
-| `:core:data`、`:app` | DTO / API / 導覽測試 | 4 | 反序列化、URL、分頁切換 |
+| `:app` | `AppNavigationTest`（instrumented） | 1 | deep link 與 nav entry |
+| `:feature:flights` | `FlightsScreenTest`（instrumented） | 4 | 航班畫面狀態 |
+| `:feature:currency` | `CurrencyScreenTest`（instrumented） | 6 | 匯率畫面狀態 |
 
-以 fake 而非 mock 驅動（`testing/FakeFlightsRepository.kt`），斷言的是行為契約
+以 fake 而非 mock 驅動（`:feature:flights` 的 `FakeFlightsRepository.kt`），斷言的是行為契約
 而非特定實作，所以更換計時或載入方式時不需要改測試。
 
 時鐘是注入的（`FlightsViewModel` 的 `clock: () -> LocalDateTime`），測試中固定，
 因此沒有時間相依的不穩定測試。
 
-CI 執行 `./gradlew build`（所有 variant 與所有檢查）以及 `compileDebugAndroidTestKotlin`。
+CI 執行 `./gradlew build detekt lint`。
 
 ---
 

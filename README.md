@@ -20,8 +20,7 @@ free_currency_api_key=你的金鑰
 金鑰可於 [freecurrencyapi.com](https://freecurrencyapi.com/) 免費註冊取得。未填仍可建置與執行，但匯率頁會顯示錯誤；航班頁不需金鑰。
 
 ```bash
-./gradlew build                           # 所有 variant 與檢查
-./gradlew compileDebugAndroidTestKotlin   # 編譯 Android instrumentation 測試
+./gradlew build detekt lint                # 建置、靜態分析與 Android lint
 ```
 
 ## 需求對照
@@ -54,13 +53,13 @@ free_currency_api_key=你的金鑰
 
 ## 架構
 
-核心仍分三層，依賴指向內層，DTO 不越過資料層；計算機是獨立的 feature 模組。
+核心仍分三層，依賴指向內層，DTO 不越過資料層；各畫面依功能拆為獨立的 feature 模組。
 
 ```
-:app                             DI 組裝、導覽、畫面、ViewModel、mapper、UI state、theme、components
-├─ presentation/                  UI、UiState、ViewModel、mapper、導覽、畫面與元件
+:app                             MainActivity、FlightInformationApp、DI、導覽與 RotatableScaffold
 ├─ di/                            Hilt 綁定
-└─ util/                          純工具
+├─ navigation/                    Navigation 3 back stack、deep link 與 nav entries
+└─ component/                     共用 scaffold
 
 :core:domain                     純 Kotlin JVM：模型、錯誤型別、repository 介面
 ├─ error/                         LoadError
@@ -72,10 +71,16 @@ free_currency_api_key=你的金鑰
 ├─ network/                       HttpClient 封裝與錯誤分類
 └─ repository/                    DTO → domain 映射
 
+:core:ui                         Android library：主題、LoadErrorMessages 與共享字串
+
+:feature:flights                 航班畫面、時間軸、ViewModel、mapper、UI state 與 previews
+
+:feature:currency                匯率畫面、卡片網格、圖示、ViewModel、mapper、UI state 與 previews
+
 :feature:calculator              Android library：狀態驅動的計算機與 Compose view
 ```
 
-依賴關係為：`:app → :core:data`、`:app → :core:domain`、`:app → :feature:calculator`、`:core:data → :core:domain`。`:core:domain` 是純 Kotlin JVM 模組，Android 與 Ktor 型別不在其編譯 classpath。
+依賴關係見下方產生的模組圖：`:app` 組裝 data、domain、ui 與三個 feature；`:core:data` 與 `:core:ui` 依賴 domain；航班 feature 依賴 ui 與 domain；匯率 feature 另依賴 calculator。`:core:domain` 是純 Kotlin JVM 模組，Android 與 Ktor 型別不在其編譯 classpath。
 
 **資料流**
 
@@ -141,7 +146,7 @@ class :feature:flights android-library
 
 ### 錯誤處理
 
-資料層將失敗收斂為 `LoadError`：`NoNetwork`、`Timeout`、`Server(code)`、`Malformed`、`Unknown`。presentation 層將錯誤類別對應為字串資源，原始例外不會傳到畫面。
+資料層將失敗收斂為 `LoadError`：`NoNetwork`、`Timeout`、`Server(code)`、`Malformed`、`Unknown`。`:core:ui` 將錯誤類別對應為字串資源，原始例外不會傳到畫面。
 
 ### 計算機
 
@@ -149,17 +154,17 @@ class :feature:flights android-library
 
 ## 測試
 
-共有 158 個 JVM 單元測試與 11 個 `:app` 的 Android instrumentation 測試。JVM 測試分布為：`:app` 85、`:feature:calculator` 51、`:core:data` 22、`:core:domain` 0。
+共有 158 個 JVM 單元測試與 11 個 Android instrumentation 測試。JVM／instrumented 分布為：`:app` 5／1、`:core:data` 22／0、`:feature:flights` 51／4、`:feature:currency` 29／6、`:feature:calculator` 51／0；`:core:domain` 與 `:core:ui` 目前沒有測試。
 
 | 範圍 | 內容 |
 |---|---|
 | data | DTO 反序列化、HTTP 錯誤分類、DTO → domain 映射與匯率資料處理 |
-| presentation mapper | 航班狀態／時間與匯率金額的 UI 映射 |
-| ViewModel | 載入、刷新、快取新鮮期、選取與錯誤狀態轉換 |
+| feature mapper | 航班狀態／時間與匯率金額的 UI 映射 |
+| feature ViewModel | 載入、刷新、快取新鮮期、選取與錯誤狀態轉換 |
 | calculator | 運算式、運算子優先序、括號、負號與輸入狀態矩陣（51 項） |
 | Android UI | Navigation deep link、航班時間軸與匯率卡片網格的畫面行為 |
 
-測試以 fake 與 Ktor `MockEngine` 隔離網路。編譯器警告視為錯誤（`allWarningsAsErrors`），CI 在推送與 PR 執行 `./gradlew build` 與 `compileDebugAndroidTestKotlin`。
+測試以 fake 與 Ktor `MockEngine` 隔離網路。編譯器警告視為錯誤（`allWarningsAsErrors`）；detekt 的規則與採用原因記於 `config/detekt/detekt.yml`。CI 在推送與 PR 執行 `./gradlew build detekt lint`。
 
 ## 技術
 

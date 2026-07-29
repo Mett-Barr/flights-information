@@ -85,13 +85,6 @@ import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.delay
 import androidx.compose.ui.draw.clip
 
-/* ============================================================
- *  尺寸與字串常數
- *
- *  版面間距一律走 8dp 系統（4 / 8 / 12 / 16 / 24 / 48）。
- *  「軌道」那幾個數字是繪圖座標，不是間距，另外標註。
- * ============================================================ */
-
 @Composable
 fun FlightsScreen(
     flightArrivalsUiState: FlightArrivalsUiState,

@@ -26,7 +26,8 @@ whose state is mostly user-owned.
 
 ## Decision
 
-Drop the `init` block, expose `load()`, and call it once from the screen's
+Drop the `init` block, expose `load()`, and call it once from the currency
+navigation entry's `LaunchedEffect(Unit)` in `navigation/AppNavDisplay.kt`.
 `LaunchedEffect(Unit)`. A `hasLoaded` flag makes it idempotent, since that effect
 re-runs whenever the composable re-enters the composition — returning from the
 flights tab, for instance.
@@ -44,7 +45,7 @@ whether the state is owned by the upstream or by the user:
 |---|---|---|
 | Who owns the state | the repository | the user, after the first load |
 | Refetches periodically | yes, every ten seconds | no — rates do not move that fast |
-| Fix | `stateIn(WhileSubscribed)` | `load()` from `LaunchedEffect(Unit)` |
+| Fix | `stateIn(WhileSubscribed)` | `load()` from the currency navigation entry's `LaunchedEffect(Unit)` |
 
 `hasLoaded` is a flag, and ADR 0001 removed a flag. They are not the same kind:
 `allowAutoRefresh` existed to arbitrate between four independent triggers, while

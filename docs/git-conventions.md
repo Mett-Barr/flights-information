@@ -96,7 +96,7 @@ git merge --no-ff refactor/domain-model
 
 ```bash
 ./gradlew build
-./gradlew compileDebugAndroidTestKotlin
+./gradlew detekt lint
 ```
 
 專案設定 `allWarningsAsErrors = true`，所以編譯警告會直接讓建置失敗。
