@@ -67,6 +67,7 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -75,8 +76,6 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
@@ -103,6 +102,11 @@ dependencies {
 
 
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.kotlinx.coroutines.core)
+
+    implementation(project(":core:data"))
+    implementation(project(":core:domain"))
+    implementation(project(":feature:calculator"))
 
     testImplementation(libs.junit)
     testImplementation(libs.konsist)
@@ -111,7 +115,6 @@ dependencies {
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
-    testImplementation(libs.ktor.client.mock)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

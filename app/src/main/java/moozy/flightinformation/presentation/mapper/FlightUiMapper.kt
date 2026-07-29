@@ -27,9 +27,11 @@ fun FlightArrival.toUiModel(): FlightArrivalItemUiModel {
         is FlightStatus.Unknown -> "Unknown"
     }
 
-    val statusLine = when (status) {
+    // 綁進區域變數才能 smart cast：status 是別的模組的 public property，
+    // 編譯器無法保證兩次讀取之間它沒被換掉。
+    val statusLine = when (val current = status) {
         FlightStatus.Delayed -> delayCause?.let { "Delayed · $it" } ?: "Delayed"
-        is FlightStatus.Unknown -> status.raw.ifBlank { "Status unknown" }
+        is FlightStatus.Unknown -> current.raw.ifBlank { "Status unknown" }
         else -> badge
     }
 
