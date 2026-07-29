@@ -6,7 +6,6 @@
     <string name="error_server">The service is temporarily unavailable. Please try again later.</string>
     <string name="flights_empty">No flight information available.</string>
     <string name="flights_last_updated">Last updated: %1$s</string>
-    <string name="flights_arrivals_timeline">Arrivals timeline</string>
     <string name="flights_unscheduled">Unscheduled</string>
     <string name="flights_summary">%1$d past · %2$d upcoming</string>
     <string name="flights_summary_next">%1$d past · %2$d upcoming · next %3$s</string>
@@ -19,7 +18,6 @@
     <string name="action_done">Done</string>
     <string name="action_update">Update</string>
 
-    <string name="currency_title">Currency</string>
     <string name="currency_manage_currencies">Manage currencies</string>
     <string name="currency_per_one">Per 1 %1$s</string>
     <string name="currency_converted_from">Converted from %1$s</string>
