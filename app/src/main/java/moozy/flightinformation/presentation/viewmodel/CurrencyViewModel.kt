@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toPersistentSet
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -112,8 +113,13 @@ class CurrencyViewModel @Inject constructor(
         }
     }
 
+    // 每次選取都會重新請求。連續點選時舊的請求必須取消，否則多筆回應會競速，
+    // 畫面可能停在先送出、後回來的那一份，也就是使用者已經取消掉的選擇。
+    private var loadJob: Job? = null
+
     fun getCurrencies(state: CurrencyUiState.Content) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _state.value = state.copyRefreshing(true)
 
             getLatestCurrencies(state.selectedBaseCurrency, state.selected)

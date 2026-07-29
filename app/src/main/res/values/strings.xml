@@ -16,7 +16,6 @@
     <string name="action_retry">Retry</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_done">Done</string>
-    <string name="action_update">Update</string>
 
     <string name="currency_per_one">Per 1 %1$s</string>
     <string name="currency_converted_from">Converted from %1$s</string>
@@ -32,5 +31,5 @@
     <string name="currency_base_currency">Base currency</string>
     <string name="currency_base_currency_description">Every tile is converted from this one. Changing it reloads the rates.</string>
     <string name="currency_shown_in_grid">Shown in the grid</string>
-    <string name="currency_selected_description">%1$d selected. Tap Update to apply.</string>
+    <string name="currency_selected_description">%1$d selected.</string>
 </resources>

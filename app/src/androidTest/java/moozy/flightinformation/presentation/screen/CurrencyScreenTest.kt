@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -87,15 +88,21 @@ class CurrencyScreenTest {
     @Test
     fun selectingTargetCurrency_callsCurrencySelectWithSelectedCode() {
         var selectedCurrency: CurrencyCode? = null
+        var searchedContent: CurrencyUiState.Content? = null
         setCurrencyScreenContent(
             contentState(),
             onCurrencySelect = { selectedCurrency = it },
+            onSearch = { searchedContent = it },
         )
 
-        composeTestRule.onNodeWithText("Search").performClick()
-        composeTestRule.onNodeWithText("USD").performClick()
+        composeTestRule
+            .onNodeWithContentDescription(string(R.string.currency_change_base_currency))
+            .performClick()
+        composeTestRule.onNodeWithText(string(R.string.currency_shown_in_grid)).performClick()
+        composeTestRule.onNodeWithTag("currency_picker_code_USD").performClick()
 
         assertEquals(CurrencyCode.USD, selectedCurrency)
+        assertEquals(true, searchedContent?.selected?.contains(CurrencyCode.USD))
     }
 
     @Test
@@ -106,9 +113,13 @@ class CurrencyScreenTest {
             onBaseCurrencySelect = { selectedBaseCurrency = it },
         )
 
-        composeTestRule.onNodeWithText("Search").performClick()
-        composeTestRule.onNodeWithText("select targets").performClick()
-        composeTestRule.onNodeWithText("EUR").assertIsSelected().performClick()
+        composeTestRule
+            .onNodeWithContentDescription(string(R.string.currency_change_base_currency))
+            .performClick()
+        composeTestRule
+            .onNodeWithTag("currency_picker_code_EUR")
+            .assertIsSelected()
+            .performClick()
 
         assertEquals(CurrencyCode.EUR, selectedBaseCurrency)
     }
@@ -136,6 +147,7 @@ class CurrencyScreenTest {
     private fun setCurrencyScreenContent(
         state: CurrencyUiState,
         onCurrencySelect: (CurrencyCode) -> Unit = {},
+        onSearch: (CurrencyUiState.Content) -> Unit = {},
         onBaseCurrencySelect: (CurrencyCode) -> Unit = {},
         onRetry: () -> Unit = {},
     ) {
@@ -148,7 +160,7 @@ class CurrencyScreenTest {
                     onMoneyInput = { _, _ -> },
                     onCurrencyClick = {},
                     onCurrencySelect = onCurrencySelect,
-                    onSearch = {},
+                    onSearch = onSearch,
                     onBaseCurrencySelect = onBaseCurrencySelect,
                     onRetry = onRetry,
                 )

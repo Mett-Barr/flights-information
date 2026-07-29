@@ -47,6 +47,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -79,6 +82,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -100,6 +104,7 @@ import moozy.flightinformation.presentation.model.currency.CurrencyRow
 import moozy.flightinformation.presentation.model.currency.CurrencyRowPlain
 import moozy.flightinformation.presentation.model.currency.CurrencyRowWithConversion
 import moozy.flightinformation.presentation.state.currency.CurrencyUiState
+import moozy.flightinformation.util.collection.toggle
 import moozy.flightinformation.presentation.theme.FlightInformationTheme
 import java.math.BigDecimal
 import java.math.MathContext
@@ -267,8 +272,10 @@ fun CurrencyScreen(
                 if (content.selectedBaseCurrency != code) onBaseCurrencySelect(code)
                 onSearch(content.withGridBase(code))
             },
-            onTargetToggle = onCurrencySelect,
-            onApply = { onSearch(content) },
+            onTargetToggle = { code ->
+                onCurrencySelect(code)
+                onSearch(content.withGridSelection(code))
+            },
             onDismiss = { showPicker = false }
         )
     }
@@ -941,20 +948,17 @@ private fun CardGridCalculatorSheet(
 /**
  * 幣別挑選。
  *
- * 兩件事情長得不一樣，也講明白差在哪：
- * - **基準幣別**是單選，選了就立刻重新請求（callback 本身不會重載，所以這裡補送 onSearch）。
- * - **顯示幣別**是複選，改完按 Update 才送出。
+ * 兩種選取都立即生效，避免使用者誤以為還要確認尚未提交的變更。
  */
 @Composable
 private fun CardGridPickerSheet(
     state: CurrencyUiState.Content,
     onBaseSelect: (CurrencyCode) -> Unit,
     onTargetToggle: (CurrencyCode) -> Unit,
-    onApply: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val scope = rememberCoroutineScope()
+    var mode by remember { mutableStateOf(CardGridPickerMode.Base) }
     // selectedBaseCurrency 首次載入是 null，此時真正生效的基準是回應裡的 baseCode。
     val base = state.selectedBaseCurrency ?: state.baseCode
 
@@ -963,8 +967,9 @@ private fun CardGridPickerSheet(
         sheetState = sheetState
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Text(
+                text = stringResource(R.string.currency_currencies),
+                style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -972,25 +977,8 @@ private fun CardGridPickerSheet(
                         end = CardGridSpace.md,
                         bottom = CardGridSpace.sm
                     )
-            ) {
-                Text(
-                    text = stringResource(R.string.currency_currencies),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { heading() }
-                )
-                Button(
-                    onClick = {
-                        onApply()
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) onDismiss()
-                        }
-                    }
-                ) {
-                    Text(text = stringResource(R.string.action_update))
-                }
-            }
+                    .semantics { heading() }
+            )
 
             Column(
                 modifier = Modifier
@@ -998,24 +986,56 @@ private fun CardGridPickerSheet(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = CardGridSpace.lg)
             ) {
-                CardGridPickerSection(
-                    title = stringResource(R.string.currency_base_currency),
-                    subtitle = stringResource(R.string.currency_base_currency_description)
-                )
-                CardGridCodeChips(
-                    isSelected = { code -> code == base },
-                    onClick = onBaseSelect
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    CardGridPickerMode.entries.forEachIndexed { index, item ->
+                        SegmentedButton(
+                            selected = mode == item,
+                            onClick = { mode = item },
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = CardGridPickerMode.entries.size
+                            ),
+                            label = {
+                                Text(
+                                    text = stringResource(
+                                        if (item == CardGridPickerMode.Base) {
+                                            R.string.currency_base_currency
+                                        } else {
+                                            R.string.currency_shown_in_grid
+                                        }
+                                    )
+                                )
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(CardGridSpace.sm))
+
+                Text(
+                    text = if (mode == CardGridPickerMode.Base) {
+                        stringResource(R.string.currency_base_currency_description)
+                    } else {
+                        stringResource(R.string.currency_selected_description, state.selected.size)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(CardGridSpace.lg))
+                Spacer(modifier = Modifier.height(CardGridSpace.sm))
 
-                CardGridPickerSection(
-                    title = stringResource(R.string.currency_shown_in_grid),
-                    subtitle = stringResource(R.string.currency_selected_description, state.selected.size)
-                )
                 CardGridCodeChips(
-                    isSelected = { code -> state.selected.any { it.code == code.code } },
-                    onClick = onTargetToggle
+                    isSelected = { code ->
+                        if (mode == CardGridPickerMode.Base) {
+                            code == base
+                        } else {
+                            state.selected.any { it.code == code.code }
+                        }
+                    },
+                    onClick = { code ->
+                        if (mode == CardGridPickerMode.Base) onBaseSelect(code) else onTargetToggle(code)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(CardGridSpace.xl))
@@ -1024,34 +1044,17 @@ private fun CardGridPickerSheet(
     }
 }
 
-@Composable
-private fun CardGridPickerSection(
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier.padding(bottom = CardGridSpace.sm)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.semantics { heading() }
-        )
-        Spacer(modifier = Modifier.height(CardGridSpace.xxs))
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+private enum class CardGridPickerMode {
+    Base,
+    Grid
 }
 
 /**
  * 幣別代碼一律三個字母，用固定欄數的 Row 排比 flow layout 整齊，
  * 也不用為了三十幾個 chip 在 sheet 裡再開一個會跟外層捲動打架的 lazy 容器。
  *
- * 兩區都用 [FilterChip]：MD3 的 filter chip 單選複選都算它的用法，
- * 而這裡兩區做的都是「從一組固定選項裡篩」。
+ * 兩種模式都用 [FilterChip]：MD3 的 filter chip 單選複選都算它的用法，
+ * 而這裡都是「從一組固定選項裡篩」。
  */
 @Composable
 private fun CardGridCodeChips(
@@ -1084,6 +1087,7 @@ private fun CardGridCodeChips(
                         },
                         modifier = Modifier
                             .weight(1f)
+                            .semantics { testTag = "currency_picker_code_${code.code}" }
                             .heightIn(min = CARD_GRID_MIN_TOUCH_TARGET)
                     )
                 }
@@ -1149,6 +1153,13 @@ private fun CurrencyUiState.Content.withGridBase(
 ): CurrencyUiState.Content = when (this) {
     is CurrencyUiState.Content.Plain -> copy(selectedBaseCurrency = code)
     is CurrencyUiState.Content.WithConversion -> copy(selectedBaseCurrency = code)
+}
+
+private fun CurrencyUiState.Content.withGridSelection(
+    code: CurrencyCode
+): CurrencyUiState.Content = when (this) {
+    is CurrencyUiState.Content.Plain -> copy(selected = selected.toggle(code))
+    is CurrencyUiState.Content.WithConversion -> copy(selected = selected.toggle(code))
 }
 
 /* ============================================================
