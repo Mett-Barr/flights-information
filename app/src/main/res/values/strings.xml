@@ -32,4 +32,6 @@
     <string name="currency_base_currency_description">Every tile is converted from this one. Changing it reloads the rates.</string>
     <string name="currency_shown_in_grid">Shown in the grid</string>
     <string name="currency_selected_description">%1$d selected.</string>
+    <string name="flights_timeline_now">Now</string>
+    <string name="flights_timeline_now_description">Current time, %1$s</string>
 </resources>

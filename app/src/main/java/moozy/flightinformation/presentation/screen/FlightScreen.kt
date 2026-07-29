@@ -47,6 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -168,6 +169,9 @@ private const val PRE_NEXT_CONTEXT_ROWS = 2
 
 /** 「下一班」節點外圈柔光的透明度：夠亮到看得出來，又不至於變成第二個節點。 */
 private const val NEXT_NODE_HALO_ALPHA = 0.18f
+
+private const val DisabledContainerOpacity = 0.12f
+private const val DisabledContentOpacity = 0.38f
 
 /** 等寬數字。時間是要被上下比較的東西，位數不對齊就白費了整條時間軸。 */
 private const val TABULAR_NUMBERS = "tnum"
@@ -522,6 +526,8 @@ private fun TimelineContent(
                             note = row.note
                         )
 
+                        is TimelineRow.Now -> TimelineNowMarker(now = row.now)
+
                         is TimelineRow.Flight -> TimelineFlightRow(entry = row.entry)
 
                         is TimelineRow.Tail -> TimelineRailCap(
@@ -648,6 +654,55 @@ private fun TimelineHourMarker(
     }
 }
 
+@Composable
+private fun TimelineNowMarker(
+    now: LocalTime,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val label = stringResource(R.string.flights_timeline_now)
+    val time = "${twoDigits(now.hour)}:${twoDigits(now.minute)}"
+    val description = stringResource(R.string.flights_timeline_now_description, time)
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = ScreenHorizontalPadding)
+            .semantics { contentDescription = description }
+            .drawBehind {
+                val x = RailCenterX.toPx()
+                drawLine(
+                    color = scheme.outlineVariant,
+                    start = Offset(x, 0f),
+                    end = Offset(x, size.height),
+                    strokeWidth = RailLineWidth.toPx()
+                )
+            }
+            .padding(vertical = RowVerticalGap)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.width(RailLaneWidth)
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.extraSmall,
+                color = scheme.primary,
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(24.dp)
+            ) {}
+        }
+        Spacer(modifier = Modifier.width(RailGutterWidth))
+        Text(
+            text = "$label $time",
+            style = MaterialTheme.typography.labelMedium,
+            color = scheme.primary,
+            maxLines = 1
+        )
+    }
+}
+
 /**
  * 時間軸上的一筆班次：軌道上的節點 + 一段短連接線 + 右邊的卡片。
  *
@@ -673,6 +728,7 @@ private fun TimelineFlightRow(
 ) {
     val scheme = MaterialTheme.colorScheme
     val item = entry.item
+    val isCancelled = item.isCancelled
 
     val headlineStyle = rememberTimeHeadlineStyle()
     val nodeCenterY = RowVerticalGap + CardVerticalPadding + firstLineHeightOf(headlineStyle) / 2
@@ -709,12 +765,20 @@ private fun TimelineFlightRow(
     val hasHalo = entry.isNext
 
     // 已經過去的往後退一階（容器色更低、文字降級），還沒到的維持滿版強度。
-    val containerColor = when {
+    val containerColor = if (isCancelled) {
+        scheme.onSurface.copy(alpha = DisabledContainerOpacity)
+    } else when {
         entry.isNext -> scheme.surfaceContainerHigh
         entry.isPast -> scheme.surfaceContainerLow
         else -> scheme.surfaceContainer
     }
-    val contentColor = if (entry.isPast) scheme.onSurfaceVariant else scheme.onSurface
+    val contentColor = if (isCancelled) {
+        scheme.onSurface.copy(alpha = DisabledContentOpacity)
+    } else if (entry.isPast) {
+        scheme.onSurfaceVariant
+    } else {
+        scheme.onSurface
+    }
 
     Row(
         verticalAlignment = Alignment.Top,
@@ -778,7 +842,8 @@ private fun TimelineFlightRow(
             ) {
                 AirlineLogo(
                     url = item.airlineLogoUrl,
-                    monogram = monogramOf(item.carrierLineText)
+                    monogram = monogramOf(item.carrierLineText),
+                    disabled = isCancelled
                 )
                 Spacer(modifier = Modifier.width(LogoSpacing))
 
@@ -792,19 +857,23 @@ private fun TimelineFlightRow(
                             // 已經格式化好的字串，沒有可用時間時就是 "--:--"，原樣顯示。
                             text = item.headlineTimeText,
                             style = headlineStyle,
-                            color = if (entry.isNext) scheme.primary else contentColor,
+                            color = if (entry.isNext && !isCancelled) scheme.primary else contentColor,
                             maxLines = 1
                         )
                         Spacer(modifier = Modifier.width(HeadlineBadgeSpacing))
                         Spacer(modifier = Modifier.weight(1f))
-                        StatusBadge(statusKey = item.statusKey, text = item.badgeText)
+                        StatusBadge(
+                            statusKey = item.statusKey,
+                            text = item.badgeText,
+                            disabled = isCancelled
+                        )
                     }
 
                     Text(
                         text = item.carrierLineText,
                         // 下一班用 emphasized 字級角色（1.5.0-alpha 才公開的 API），
                         // 「目前作用中」在規格裡本來就是 emphasized 的用途。
-                        style = if (entry.isNext) {
+                        style = if (entry.isNext && !isCancelled) {
                             MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
                         } else {
                             MaterialTheme.typography.titleSmall
@@ -816,7 +885,7 @@ private fun TimelineFlightRow(
                     Text(
                         text = supportingLineOf(item, showGate = shouldShowGate(entry)),
                         style = MaterialTheme.typography.bodySmall,
-                        color = scheme.onSurfaceVariant,
+                        color = if (isCancelled) contentColor else scheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -845,6 +914,7 @@ private fun TimelineFlightRow(
 private fun StatusBadge(
     statusKey: String,
     text: String,
+    disabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -855,10 +925,20 @@ private fun StatusBadge(
         "CANCELLED" -> scheme.errorContainer to scheme.onErrorContainer
         else -> scheme.surfaceContainerHighest to scheme.onSurfaceVariant
     }
+    val badgeContainer = if (disabled) {
+        scheme.onSurface.copy(alpha = DisabledContainerOpacity)
+    } else {
+        container
+    }
+    val badgeContent = if (disabled) {
+        scheme.onSurface.copy(alpha = DisabledContentOpacity)
+    } else {
+        content
+    }
 
     Badge(
-        containerColor = container,
-        contentColor = content,
+        containerColor = badgeContainer,
+        contentColor = badgeContent,
         // "Schedule change" 這種長標籤不該把時間擠掉，寬度設上限、超出就省略。
         modifier = modifier.widthIn(max = StatusBadgeMaxWidth)
     ) {
@@ -882,6 +962,7 @@ private fun StatusBadge(
 private fun AirlineLogo(
     url: String?,
     monogram: String,
+    disabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     var loaded by remember(url) { mutableStateOf(false) }
@@ -889,8 +970,16 @@ private fun AirlineLogo(
 
     Surface(
         shape = MaterialTheme.shapes.small,
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = if (disabled) {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = DisabledContainerOpacity)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLowest
+        },
+        contentColor = if (disabled) {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = DisabledContentOpacity)
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
         modifier = modifier.size(LogoSize)
     ) {
         Box(contentAlignment = Alignment.Center) {
@@ -910,7 +999,8 @@ private fun AirlineLogo(
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(4.dp),
+                        .padding(4.dp)
+                        .alpha(if (disabled) DisabledContentOpacity else 1f),
                     onState = { state ->
                         loaded = state is AsyncImagePainter.State.Success
                     }
@@ -980,6 +1070,7 @@ private class TimelineEntry(
 private sealed class TimelineRow(val key: String) {
     object Head : TimelineRow(RAIL_HEAD_KEY)
     class Marker(markerKey: String, val label: String, val note: String?) : TimelineRow(markerKey)
+    class Now(val now: LocalTime) : TimelineRow("timeline-now")
     class Flight(val entry: TimelineEntry) : TimelineRow(entry.key)
     object Tail : TimelineRow(RAIL_TAIL_KEY)
 }
@@ -1053,6 +1144,7 @@ private fun buildTimeline(
         )
         while (cursor < sorted.size && sorted[cursor].minuteOfDay / MINUTES_PER_HOUR == hourOfDay) {
             val timedItem = sorted[cursor]
+            if (cursor == nextIndex) rows += TimelineRow.Now(now)
             rows += TimelineRow.Flight(
                 TimelineEntry(
                     item = timedItem.item,
@@ -1066,6 +1158,8 @@ private fun buildTimeline(
     }
 
     // 時間未定的班次在時間軸上沒有位置，硬塞進某個小時只是說謊，所以整組放在最後面。
+    if (nextIndex == sorted.size) rows += TimelineRow.Now(now)
+
     if (untimed.isNotEmpty()) {
         rows += TimelineRow.Marker(
             markerKey = UNSCHEDULED_MARKER_KEY,
@@ -1201,6 +1295,7 @@ private fun previewItem(
     aircraftText = aircraft,
     flightStatusText = statusLine,
     statusKey = status,
+    isCancelled = status == "CANCELLED",
     airlineLogoUrl = logoUrl
 )
 

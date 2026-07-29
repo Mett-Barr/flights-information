@@ -11,6 +11,7 @@ data class FlightArrivalItemUiModel(
     val aircraftText: String,       // "Boeing 737" / "--"
     val flightStatusText: String,   // 下方狀態行（可含延誤原因）例如 "On time"、"Delayed · Weather"
     val statusKey: String,          // "ARRIVED" | "DEPARTED" | "SCHEDULE_CHANGE" | "CANCELLED" | "DELAYED" | "ON_TIME" | "UNKNOWN"
+    val isCancelled: Boolean = false,
     val airlineLogoUrl: String?     // Logo URL
 )
 

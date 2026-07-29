@@ -57,6 +57,7 @@ fun FlightArrival.toUiModel(): FlightArrivalItemUiModel {
         aircraftText = aircraftType ?: NO_VALUE,
         flightStatusText = statusLine,
         statusKey = status.uiKey,
+        isCancelled = status == FlightStatus.Cancelled,
         airlineLogoUrl = airlineLogoUrl,
     )
 }

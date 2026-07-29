@@ -130,6 +130,12 @@ class FlightUiMapperTest {
     fun `cancelled status key is displayed`() = assertStatusKey(FlightStatus.Cancelled, "CANCELLED")
 
     @Test
+    fun `cancelled status is marked disabled for presentation`() {
+        assertEquals(true, flightArrival(status = FlightStatus.Cancelled).toUiModel().isCancelled)
+        assertEquals(false, flightArrival(status = FlightStatus.OnTime).toUiModel().isCancelled)
+    }
+
+    @Test
     fun `delayed status key is displayed`() = assertStatusKey(FlightStatus.Delayed, "DELAYED")
 
     @Test

@@ -29,4 +29,6 @@
     <string name="currency_base_currency_description">所有卡片皆以此幣別換算。變更後會重新載入匯率。</string>
     <string name="currency_shown_in_grid">顯示於格狀清單</string>
     <string name="currency_selected_description">已選擇 %1$d 項。</string>
+    <string name="flights_timeline_now">現在</string>
+    <string name="flights_timeline_now_description">目前時間，%1$s</string>
 </resources>
