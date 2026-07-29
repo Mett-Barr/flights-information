@@ -12,6 +12,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("unused") // Hilt 透過產生的程式碼讀取這些繫結，IDE 無法追蹤該使用處。
 abstract class RepositoryModule {
     @Binds
     @Singleton

@@ -1,8 +1,10 @@
 package moozy.flightinformation.feature.currency
 
 import java.math.BigDecimal
+import androidx.compose.runtime.Immutable
 
 // ui/model/CurrencyRow.kt
+@Immutable
 sealed interface CurrencyRow {
     val code: String           // "EUR" or raw when unknown
     val name: String           // "Euro" or fallback raw
@@ -11,6 +13,7 @@ sealed interface CurrencyRow {
 }
 
 /** 無轉換（預設僅顯示匯率） */
+@Immutable
 data class CurrencyRowPlain(
     override val code: String,
     override val name: String,
@@ -19,6 +22,7 @@ data class CurrencyRowPlain(
 ) : CurrencyRow
 
 /** 有轉換（顯示「1 {base} = X {code}」） */
+@Immutable
 data class CurrencyRowWithConversion(
     override val code: String,
     override val name: String,

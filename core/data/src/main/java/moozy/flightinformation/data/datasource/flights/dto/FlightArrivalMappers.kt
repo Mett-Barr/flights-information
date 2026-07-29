@@ -35,7 +35,7 @@ private val ON_TIME_WORDS = listOf(
     "ON TIME", "ONTIME", "ON-TIME", "準時", "準點", "正常",
 )
 
-fun InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem.toDomain(): FlightArrival =
+fun InstantScheduleDomesticArrivalDto.toDomain(): FlightArrival =
     FlightArrival(
         // airLineNum 已是完整的 IATA 航班號；airLineCode 是 ICAO 代碼（航管用），
         // 兩者屬於不同編碼系統，串在一起會得到 "UIA B78690" 這種不存在的編號。
@@ -52,5 +52,5 @@ fun InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem.toDo
         delayCause = airFlyDelayCause.cleaned(),
     )
 
-fun List<InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem>.toDomain(): List<FlightArrival> =
+fun List<InstantScheduleDomesticArrivalDto>.toDomain(): List<FlightArrival> =
     map { it.toDomain() }

@@ -31,7 +31,7 @@ class InstantScheduleDomesticArrivalDtoTest {
 
     @Test
     fun `反序列化-單一物件`() {
-        val item = json.decodeFromString<InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem>(singleJson)
+        val item = json.decodeFromString<InstantScheduleDomesticArrivalDto>(singleJson)
 
         assertEquals("09:00", item.expectTime)
         assertEquals("08:55", item.realTime)

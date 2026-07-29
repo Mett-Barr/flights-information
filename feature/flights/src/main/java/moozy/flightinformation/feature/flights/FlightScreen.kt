@@ -35,18 +35,17 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.SharedFlow
 import java.time.LocalDateTime
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
 import androidx.compose.ui.draw.clip
+import moozy.flightinformation.core.ui.messageRes
 
 @Composable
 fun FlightsScreen(
     flightArrivalsUiState: FlightArrivalsUiState,
     modifier: Modifier = Modifier,
     onRefresh: () -> Unit = {},
-    refreshEvent: SharedFlow<Unit>? = null,
     innerPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val layoutDirection = LocalLayoutDirection.current
@@ -67,7 +66,6 @@ fun FlightsScreen(
         ) {
             TimelineHeader(
                 content = flightArrivalsUiState as? FlightArrivalsUiState.Content,
-                refreshEvent = refreshEvent,
                 onRefresh = onRefresh,
             )
 
@@ -80,7 +78,7 @@ fun FlightsScreen(
                     is FlightArrivalsUiState.Loading -> TimelineLoading()
 
                     is FlightArrivalsUiState.Error -> TimelineError(
-                        error = flightArrivalsUiState.error,
+                        errorMessageRes = flightArrivalsUiState.error.messageRes(),
                         onRetry = onRefresh,
                         bottomPadding = innerPadding.calculateBottomPadding()
                     )
@@ -106,7 +104,6 @@ fun FlightsScreen(
 @Composable
 private fun TimelineHeader(
     content: FlightArrivalsUiState.Content?,
-    refreshEvent: SharedFlow<Unit>?,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -135,7 +132,6 @@ private fun TimelineHeader(
         FreshnessIndicator(
             updatedAt = content.updatedAt,
             isRefreshing = refreshIndicatorVisible(content.isRefreshing),
-            refreshEvent = refreshEvent,
             onRefresh = onRefresh,
         )
     }
@@ -166,7 +162,6 @@ internal fun refreshIndicatorVisible(active: Boolean, tail: Duration = MIN_REFRE
 private fun FreshnessIndicator(
     updatedAt: LocalDateTime,
     isRefreshing: Boolean,
-    refreshEvent: SharedFlow<Unit>?,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -189,9 +184,6 @@ private fun FreshnessIndicator(
     }
 
     LaunchedEffect(updatedAt) { restartCountdown() }
-    LaunchedEffect(refreshEvent) {
-        refreshEvent?.collect { restartCountdown() }
-    }
 
     Box(
         contentAlignment = Alignment.Center,

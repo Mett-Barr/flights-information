@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.core.ui.FlightInformationTheme
 import java.time.LocalDateTime
@@ -109,7 +111,7 @@ private val timelinePreviewItems = listOf(
         gate = null,
         aircraft = "--"
     )
-)
+).toImmutableList()
 
 private val timelinePreviewState = FlightArrivalsUiState.Content(
     items = timelinePreviewItems,
@@ -126,7 +128,6 @@ private fun TimelinePreviewHost(
         FlightsScreen(
             flightArrivalsUiState = state,
             onRefresh = {},
-            refreshEvent = null,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -149,7 +150,7 @@ fun FlightsScreenTimelineDarkPreview() {
 fun FlightsScreenTimelineEmptyPreview() {
     TimelinePreviewHost(
         state = FlightArrivalsUiState.Content(
-            items = emptyList(),
+            items = persistentListOf(),
             updatedAt = LocalDateTime.of(2026, 7, 26, 10, 3, 12)
         ),
         darkTheme = false
@@ -168,7 +169,7 @@ fun FlightsScreenTimelineErrorPreview() {
 @Preview(name = "Timeline · loading", showBackground = true, widthDp = 400, heightDp = 320)
 @Composable
 fun FlightsScreenTimelineLoadingPreview() {
-    TimelinePreviewHost(state = timelinePreviewState.copy(items = emptyList()).let {
+    TimelinePreviewHost(state = timelinePreviewState.copy(items = persistentListOf()).let {
         FlightArrivalsUiState.Loading
     }, darkTheme = false)
 }

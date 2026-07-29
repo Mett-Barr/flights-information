@@ -134,7 +134,7 @@ class CurrencyViewModel @Inject constructor(
             codes = requestedCodes
         ).fold(
             onSuccess = { currencies ->
-                val rows: List<CurrencyRow> = mapCurrenciesToRows(
+                val rows = mapCurrenciesToRows(
                     currencies = currencies,
                     conversion = null // 初始/未輸入 → 全 Plain（純資料）
                 )

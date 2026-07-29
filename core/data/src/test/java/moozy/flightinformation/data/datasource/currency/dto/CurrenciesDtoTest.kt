@@ -8,7 +8,7 @@ import java.math.BigDecimal
 class CurrenciesDtoTest {
 
     @Test
-    fun `反序列化會保留所有幣別與精確匯率`() {
+    fun 反序列化會保留所有幣別與精確匯率() {
         val json = Json {
             ignoreUnknownKeys = true
             isLenient = true

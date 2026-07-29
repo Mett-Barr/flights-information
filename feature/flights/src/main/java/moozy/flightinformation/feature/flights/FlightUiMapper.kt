@@ -2,6 +2,8 @@ package moozy.flightinformation.feature.flights
 
 import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import java.time.format.DateTimeFormatter
 
 private val DISPLAY_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -78,4 +80,4 @@ private val FlightStatus.statusLevel: FlightStatusLevel
         is FlightStatus.Unknown -> FlightStatusLevel.Neutral
     }
 
-fun List<FlightArrival>.toUiModels(): List<FlightArrivalItemUiModel> = map { it.toUiModel() }
+fun List<FlightArrival>.toUiModels(): ImmutableList<FlightArrivalItemUiModel> = map { it.toUiModel() }.toImmutableList()

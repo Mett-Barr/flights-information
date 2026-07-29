@@ -7,6 +7,8 @@ import moozy.flightinformation.domain.value.CurrencyInfo
 import moozy.flightinformation.domain.value.MoneyCode
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 
 /** 使用者的換算要求（輸入金額與其貨幣） */
@@ -27,7 +29,7 @@ fun mapCurrenciesToRows(
     infoIndex: Map<String, CurrencyInfo> = CurrencyCode.entries.associateBy { it.code },
     scale: Int = 18,
     rounding: RoundingMode = RoundingMode.HALF_UP
-): List<CurrencyRow> {
+): ImmutableList<CurrencyRow> {
 
     fun CurrencyRate.rawCode(): String = when (val c = code) {
         is MoneyCode.Known -> c.code.code
@@ -75,7 +77,7 @@ fun mapCurrenciesToRows(
                 convertedAmount = converted!!
             )
         }
-    }.sortedBy { it.code }
+    }.sortedBy { it.code }.toImmutableList()
 }
 
 
@@ -115,7 +117,7 @@ fun nextContent(
     if (baseAmount == null || baseAmount.compareTo(BigDecimal.ZERO) == 0) {
         val plainRows = rows.map { r ->
             CurrencyRowPlain(code = r.code, name = r.name, symbol = r.symbol, rate = r.rate)
-        }
+        }.toImmutableList()
         return CurrencyUiState.Content.Plain(
             rows = plainRows,
             selected = selectedSet,
@@ -129,9 +131,9 @@ fun nextContent(
 
     // baseAmount 在上面的 early return 已排除 null，這裡只需檢查 base 幣別與其匯率。
     if (baseCode == null || denom == null || denom.signum() == 0) {
-        val plainRows: List<CurrencyRowPlain> = rows.map { r ->
+        val plainRows = rows.map { r ->
             CurrencyRowPlain(code = r.code, name = r.name, symbol = r.symbol, rate = r.rate)
-        }
+        }.toImmutableList()
         return CurrencyUiState.Content.Plain(
             rows = plainRows,
             selected = selectedSet,
@@ -141,7 +143,7 @@ fun nextContent(
         )
     }
 
-    val withRows: List<CurrencyRowWithConversion> = rows.map { r ->
+    val withRows = rows.map { r ->
         val raw = if (r.code == baseCode.code) baseAmount
         else baseAmount.multiply(rateIndex[r.code]!!).divide(denom, scale, rounding)
         val converted = raw.atMostScale(maxDecimals, rounding)   // ★ 關鍵：最多三位小數
@@ -155,7 +157,7 @@ fun nextContent(
             // 標示的基準幣別必須就是上面當分母的那一個，否則畫面會用 A 的匯率掛 B 的名字。
             baseCode = baseCode.code
         )
-    }
+    }.toImmutableList()
 
     return CurrencyUiState.Content.WithConversion(
         rows = withRows,

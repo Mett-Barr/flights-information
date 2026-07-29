@@ -59,9 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
-import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.value.CurrencyCode
-import moozy.flightinformation.core.ui.messageRes
 import java.math.BigDecimal
 
 /**
@@ -544,7 +542,7 @@ private fun CardGridEmpty(
 
 @Composable
 internal fun CardGridError(
-    error: LoadError,
+    errorMessageRes: Int,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -558,7 +556,7 @@ internal fun CardGridError(
             modifier = Modifier.padding(CardGridSpace.xl)
         ) {
             Text(
-                text = stringResource(error.messageRes()),
+                text = stringResource(errorMessageRes),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center

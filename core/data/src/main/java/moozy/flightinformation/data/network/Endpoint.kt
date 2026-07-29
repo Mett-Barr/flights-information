@@ -7,8 +7,6 @@ import io.ktor.http.takeFrom
 interface Endpoint {
     val origin: String
     val path: String
-    val endpointUrl: String get() = "$origin$path"
-    fun endpointUrl(origin: String): String = origin.removeSuffix("/") + path
 }
 
 fun URLBuilder.applyEndpoint(

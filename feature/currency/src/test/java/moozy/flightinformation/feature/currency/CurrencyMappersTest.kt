@@ -1,6 +1,7 @@
 package moozy.flightinformation.feature.currency
 
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
 import moozy.flightinformation.domain.value.CurrencyCode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -22,7 +23,7 @@ class CurrencyMappersTest {
         baseCode: CurrencyCode = CurrencyCode.USD,
         selectedBaseCurrency: CurrencyCode? = null,
     ) = CurrencyUiState.Content.Plain(
-        rows = rows,
+        rows = rows.toImmutableList(),
         selected = persistentSetOf(CurrencyCode.EUR),
         baseCode = baseCode,
         selectedBaseCurrency = selectedBaseCurrency,

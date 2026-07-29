@@ -13,6 +13,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.core.ui.FlightInformationTheme
@@ -47,7 +49,7 @@ import java.math.BigDecimal
  */
 private val previewBaseAmount = BigDecimal("1250")
 
-private fun previewConvertedRows(): List<CurrencyRow> = listOf(
+private fun previewConvertedRows(): ImmutableList<CurrencyRow> = listOf(
     CurrencyRowWithConversion(
         code = "EUR",
         name = "Euro",
@@ -102,14 +104,14 @@ private fun previewConvertedRows(): List<CurrencyRow> = listOf(
         baseAmount = previewBaseAmount,
         baseCode = "USD"
     )
-)
+).toImmutableList()
 
-private fun previewPlainRows(): List<CurrencyRow> = listOf(
+private fun previewPlainRows(): ImmutableList<CurrencyRow> = listOf(
     CurrencyRowPlain("EUR", "Euro", "€", BigDecimal("0.9231004512")),
     CurrencyRowPlain("JPY", "Japanese Yen", "¥", BigDecimal("157.4021338800")),
     CurrencyRowPlain("GBP", "British Pound Sterling", "£", BigDecimal("0.7842119900")),
     CurrencyRowPlain("THB", "Thai Baht", "฿", BigDecimal("36.4120009900"))
-)
+).toImmutableList()
 
 private val previewSelection = persistentSetOf(
     CurrencyCode.EUR,

@@ -14,7 +14,7 @@ import javax.inject.Singleton
 class FlightsApi @Inject constructor(
     @param:Named("FlightsRequester") private val http: KtorHttpRequester
 ) {
-    suspend fun instantDomesticArrivals(): Result<List<InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem>> =
+    suspend fun instantDomesticArrivals(): Result<List<InstantScheduleDomesticArrivalDto>> =
         http.request {
             method = HttpMethod.Get                 // ① 這支 API 是 GET
             url {

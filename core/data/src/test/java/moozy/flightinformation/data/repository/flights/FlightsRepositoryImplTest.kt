@@ -2,7 +2,7 @@ package moozy.flightinformation.data.repository.flights
 
 import kotlinx.coroutines.test.runTest
 import moozy.flightinformation.data.datasource.flights.FlightsDataSource
-import moozy.flightinformation.data.datasource.flights.dto.InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem
+import moozy.flightinformation.data.datasource.flights.dto.InstantScheduleDomesticArrivalDto
 import moozy.flightinformation.domain.model.flights.FlightStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -18,7 +18,7 @@ import java.time.LocalTime
 class FlightsRepositoryImplTest {
 
     private class FakeFlightsDataSource(
-        private val result: Result<List<InstantScheduleDomesticArrivalDtoItem>>,
+        private val result: Result<List<InstantScheduleDomesticArrivalDto>>,
     ) : FlightsDataSource {
         override suspend fun fetchArrivals() = result
     }
@@ -35,7 +35,7 @@ class FlightsRepositoryImplTest {
         airBoardingGate: String? = "17",
         airPlaneType: String? = "AT76",
         airFlyDelayCause: String? = "",
-    ) = InstantScheduleDomesticArrivalDtoItem(
+    ) = InstantScheduleDomesticArrivalDto(
         expectTime = expectTime,
         realTime = realTime,
         airLineName = airLineName,
@@ -51,7 +51,7 @@ class FlightsRepositoryImplTest {
         airFlyDelayCause = airFlyDelayCause,
     )
 
-    private fun repositoryReturning(vararg items: InstantScheduleDomesticArrivalDtoItem) =
+    private fun repositoryReturning(vararg items: InstantScheduleDomesticArrivalDto) =
         FlightsRepositoryImpl(FakeFlightsDataSource(Result.success(items.toList())))
 
     @Test

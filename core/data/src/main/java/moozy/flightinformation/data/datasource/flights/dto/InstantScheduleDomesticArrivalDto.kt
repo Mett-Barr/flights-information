@@ -3,9 +3,8 @@ package moozy.flightinformation.data.datasource.flights.dto
 import kotlinx.serialization.Serializable
 
 // 到達國內航班即時時刻表
-class InstantScheduleDomesticArrivalDto : ArrayList<InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem>(){
-    @Serializable
-    data class InstantScheduleDomesticArrivalDtoItem(
+@Serializable
+data class InstantScheduleDomesticArrivalDto(
         val expectTime: String? = null,
         val realTime: String? = null,
         val airLineName: String? = null,
@@ -19,5 +18,4 @@ class InstantScheduleDomesticArrivalDto : ArrayList<InstantScheduleDomesticArriv
         val airBoardingGate: String? = null,
         val airFlyStatus: String? = null,
         val airFlyDelayCause: String? = null
-    )
-}
+)

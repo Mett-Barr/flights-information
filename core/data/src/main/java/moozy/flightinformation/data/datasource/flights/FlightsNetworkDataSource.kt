@@ -10,7 +10,7 @@ import javax.inject.Singleton
 class FlightsNetworkDataSource @Inject constructor(
     private val api: FlightsApi
 ) : FlightsDataSource {
-    override suspend fun fetchArrivals(): Result<List<InstantScheduleDomesticArrivalDto.InstantScheduleDomesticArrivalDtoItem>> {
+    override suspend fun fetchArrivals(): Result<List<InstantScheduleDomesticArrivalDto>> {
         return api.instantDomesticArrivals()
     }
 }

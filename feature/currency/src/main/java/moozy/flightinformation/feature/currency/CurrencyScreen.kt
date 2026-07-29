@@ -37,6 +37,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.dropWhile
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.feature.calculator.Calculator
+import moozy.flightinformation.core.ui.messageRes
 
 /**
  * 方向：卡片網格（card grid）。
@@ -151,7 +152,7 @@ fun CurrencyScreen(
                 }
 
                 is CurrencyUiState.Error -> CardGridError(
-                    error = current.error,
+                    errorMessageRes = current.error.messageRes(),
                     onRetry = onRetry
                 )
 

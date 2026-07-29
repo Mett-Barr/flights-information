@@ -156,7 +156,7 @@ internal val updatedAtFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern
  * - 依整點分組，讀不出時刻的（`"--:--"`）整組收在最後，不猜也不丟——見 [buildTimeline]。
  * - 「現在」取自 [FlightArrivalsUiState.Content.updatedAt] 而不是 `LocalDateTime.now()`：
  *   標記要跟畫面上這份資料同一個時間基準。
- * - `refreshEvent` 每次成功載入後都會重設新鮮度倒數，**不捲動清單**。
+ * - 成功載入後更新的時間會重設新鮮度倒數，**不捲動清單**。
  * - 沒有任何 `AnimatedContent` 綁在每次輪詢都會變的東西上。
  * - 每一列都有 key，重複時補流水號。
  */

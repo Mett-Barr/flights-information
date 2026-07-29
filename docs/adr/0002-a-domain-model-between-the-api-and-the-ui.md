@@ -6,7 +6,7 @@ Accepted · 2026-07-26
 
 Two conventions were in play at once. Currency had a domain model and its
 repository returned it. Flights did not: `FlightsRepository` — declared in
-`:core:domain` — imported the DTO and returned `Result<List<InstantScheduleDomesticArrivalDtoItem>>`,
+`:core:domain` — imported the DTO and returned `Result<List<InstantScheduleDomesticArrivalDto>>`,
 which the UI mapper then consumed directly.
 
 That mattered more than it looks, because the project had picked a side. Putting

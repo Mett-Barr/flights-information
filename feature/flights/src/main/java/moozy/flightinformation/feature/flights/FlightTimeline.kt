@@ -30,8 +30,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import moozy.flightinformation.domain.error.LoadError
-import moozy.flightinformation.core.ui.messageRes
 
 @Composable
 internal fun TimelineLoading(modifier: Modifier = Modifier) {
@@ -45,7 +43,7 @@ internal fun TimelineLoading(modifier: Modifier = Modifier) {
 
 @Composable
 internal fun TimelineError(
-    error: LoadError,
+    errorMessageRes: Int,
     onRetry: () -> Unit,
     bottomPadding: Dp,
     modifier: Modifier = Modifier
@@ -62,7 +60,7 @@ internal fun TimelineError(
             modifier = Modifier.padding(24.dp)
         ) {
             Text(
-                text = stringResource(error.messageRes()),
+                text = stringResource(errorMessageRes),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center

@@ -1,7 +1,9 @@
 package moozy.flightinformation.feature.flights
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Immutable
 
+@Immutable
 sealed interface FlightStatusText {
     data class Resource(
         @get:StringRes
@@ -20,6 +22,7 @@ enum class FlightStatusLevel {
     Neutral,
 }
 
+@Immutable
 data class FlightArrivalItemUiModel(
     val headlineTimeText: String,   // 大字時間：realTime 優先，否則 expectTime，皆無則 "--:--"
     val scheduledTimeText: String,  // 預計時間未交給 mapper 組成文案，讓畫面依語系決定格式。

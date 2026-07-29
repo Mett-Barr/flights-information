@@ -4,10 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withTimeoutOrNull
@@ -39,9 +37,6 @@ class FlightsViewModel(
     /** 使用者宣告手上的資料已不可信。CONFLATED：連按只算一次。 */
     private val invalidated = Channel<Unit>(Channel.CONFLATED)
 
-    private val _refreshEvent = MutableSharedFlow<Unit>()
-    val refreshEvent = _refreshEvent.asSharedFlow()
-
     val state: StateFlow<FlightArrivalsUiState> = flow {
         var current: FlightArrivalsUiState = FlightArrivalsUiState.Loading
         while (true) {
@@ -51,8 +46,6 @@ class FlightsViewModel(
             }
             current = load(current)
             emit(current)
-            if (current is FlightArrivalsUiState.Content) _refreshEvent.emit(Unit)
-
             // 將逾時與使用者作廢收斂到同一個等待，讓新鮮度與手動刷新共用迴圈。
             withTimeoutOrNull(FRESHNESS) { invalidated.receive() }
         }
