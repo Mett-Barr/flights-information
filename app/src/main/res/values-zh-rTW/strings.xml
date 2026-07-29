@@ -4,7 +4,6 @@
     <string name="error_timeout">請求逾時，請再試一次。</string>
     <string name="error_server">服務暫時無法使用，請稍後再試。</string>
     <string name="flights_empty">目前沒有航班資訊。</string>
-    <string name="flights_last_updated">最後更新：%1$s</string>
     <string name="flights_unscheduled">尚未排定</string>
     <string name="flights_summary">已過 %1$d · 即將抵達 %2$d</string>
     <string name="flights_summary_next">已過 %1$d · 即將抵達 %2$d · 下一班 %3$s</string>
@@ -13,6 +12,7 @@
     <string name="error_generic">無法載入資料，請再試一次。</string>
     <string name="action_retry">重試</string>
     <string name="action_refresh">重新整理</string>
+    <string name="flights_refresh_countdown">重新整理航班資訊。最後更新：%1$s</string>
     <string name="action_done">完成</string>
     <string name="currency_per_one">每 1 %1$s</string>
     <string name="currency_converted_from">以 %1$s 換算</string>

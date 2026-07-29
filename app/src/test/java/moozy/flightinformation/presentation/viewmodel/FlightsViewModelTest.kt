@@ -151,7 +151,7 @@ class FlightsViewModelTest {
     }
 
     @Test
-    fun `freshness expiry reload does not show a refresh indicator`() = runTest {
+    fun `freshness expiry reload shows a refresh indicator until it completes`() = runTest {
         val repository = FakeFlightsRepository(responseDelayMillis = 1)
         val viewModel = FlightsViewModel(repository)
 
@@ -162,7 +162,8 @@ class FlightsViewModelTest {
 
             repository.responseDelayMillis = 1_000
             advanceTimeBy(TTL_MILLIS)
-            expectNoEvents()
+            val refreshing = awaitItem() as FlightArrivalsUiState.Content
+            assertTrue(refreshing.isRefreshing)
 
             advanceTimeBy(1_000)
             val reloaded = awaitItem() as FlightArrivalsUiState.Content

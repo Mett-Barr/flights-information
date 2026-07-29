@@ -45,9 +45,8 @@ class FlightsViewModel(
 
     val state: StateFlow<FlightArrivalsUiState> = flow {
         var current: FlightArrivalsUiState = FlightArrivalsUiState.Loading
-        var refreshWasUserInitiated = false
         while (true) {
-            if (refreshWasUserInitiated && current is FlightArrivalsUiState.Content) {
+            if (current is FlightArrivalsUiState.Content) {
                 current = current.copy(isRefreshing = true)
                 emit(current)
             }
@@ -55,10 +54,8 @@ class FlightsViewModel(
             emit(current)
             if (current is FlightArrivalsUiState.Content) _refreshEvent.emit(Unit)
 
-            // 等使用者作廢資料，最多等一個新鮮期。兩條路都是「資料失效了」，
-            // 但回傳值區分刷新來源，只有使用者主動刷新才顯示指示器。
-            refreshWasUserInitiated =
-                withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() } != null
+            // 將逾時與使用者作廢收斂到同一個等待，讓新鮮度與手動刷新共用迴圈。
+            withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
         }
     }.stateIn(
         scope = viewModelScope,
@@ -66,7 +63,7 @@ class FlightsViewModel(
         initialValue = FlightArrivalsUiState.Loading,
     )
 
-    /** 下拉刷新：把資料標記為失效，等待中的迴圈會立刻重抓。 */
+    /** 使用者刷新：把資料標記為失效，等待中的迴圈會立刻重抓。 */
     fun refresh() {
         invalidated.trySend(Unit)
     }

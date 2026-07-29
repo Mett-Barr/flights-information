@@ -81,11 +81,11 @@ grep -rn "Dto"                                         app/src/main/java/moozy/f
 ```kotlin
 val state: StateFlow<...> = flow {
     while (true) {
+        if (current is Content) emit(current.copy(isRefreshing = true))
         current = load(current)
         emit(current)
-        // 等使用者作廢資料，最多等一個新鮮期
-        refreshWasUserInitiated =
-            withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() } != null
+        // 等資料失效，最多等一個新鮮期
+        withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
     }
 }.stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS), Loading)
 ```
@@ -94,10 +94,10 @@ val state: StateFlow<...> = flow {
 
 - **「有人在看」** ← `WhileSubscribed`。收集停止就不再抓，所以進背景自動停止輪詢、
   回前景自動恢復，兩者都不需要額外處理。
-- **「已過期」** ← 迴圈內的等待。新鮮期屆滿、或使用者主動下拉刷新，兩條路都是
+- **「已過期」** ← 迴圈內的等待。新鮮期屆滿、或使用者主動刷新，兩條路都是
   「資料失效了」。手動刷新後重新計時，是迴圈重新進入的自然結果。
 
-回傳值區分刷新來源：只有使用者主動刷新才顯示指示器，背景輪詢不打擾畫面。
+每次抓取既有內容時都會顯示同一個刷新指示器，無論資料是因為新鮮期屆滿或使用者主動作廢。
 
 `docs/adr/0001` 記錄了完整論證。
 

@@ -7,6 +7,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,6 +60,7 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -239,7 +241,8 @@ fun FlightsScreen(
         ) {
             TimelineHeader(
                 content = flightArrivalsUiState as? FlightArrivalsUiState.Content,
-                refreshEvent = refreshEvent
+                refreshEvent = refreshEvent,
+                onRefresh = onRefresh,
             )
 
             Box(
@@ -278,6 +281,7 @@ fun FlightsScreen(
 private fun TimelineHeader(
     content: FlightArrivalsUiState.Content?,
     refreshEvent: SharedFlow<Unit>?,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (content == null) return
@@ -305,7 +309,8 @@ private fun TimelineHeader(
         FreshnessIndicator(
             updatedAt = content.updatedAt,
             isRefreshing = content.isRefreshing,
-            refreshEvent = refreshEvent
+            refreshEvent = refreshEvent,
+            onRefresh = onRefresh,
         )
     }
 }
@@ -318,13 +323,15 @@ private fun FreshnessIndicator(
     updatedAt: LocalDateTime,
     isRefreshing: Boolean,
     refreshEvent: SharedFlow<Unit>?,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val progress = remember { Animatable(1f) }
-    val updatedDescription = stringResource(
-        R.string.flights_last_updated,
-        updatedAt.format(updatedAtFormatter)
+    val refreshDescription = stringResource(
+        R.string.flights_refresh_countdown,
+        updatedAt.format(updatedAtFormatter),
     )
+    val refreshLabel = stringResource(R.string.action_refresh)
 
     suspend fun restartCountdown() {
         progress.snapTo(1f)
@@ -342,19 +349,26 @@ private fun FreshnessIndicator(
         refreshEvent?.collect { restartCountdown() }
     }
 
-    if (isRefreshing) {
-        CircularProgressIndicator(
-            modifier = modifier
-                .size(FreshnessIndicatorSize)
-                .semantics { contentDescription = updatedDescription }
-        )
-    } else {
-        CircularProgressIndicator(
-            progress = { progress.value },
-            modifier = modifier
-                .size(FreshnessIndicatorSize)
-                .semantics { contentDescription = updatedDescription }
-        )
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .size(MinTouchTarget)
+            .semantics { contentDescription = refreshDescription }
+            .clickable(
+                enabled = !isRefreshing,
+                onClickLabel = refreshLabel,
+                role = Role.Button,
+                onClick = onRefresh,
+            )
+    ) {
+        if (isRefreshing) {
+            CircularProgressIndicator(modifier = Modifier.size(FreshnessIndicatorSize))
+        } else {
+            CircularProgressIndicator(
+                progress = { progress.value },
+                modifier = Modifier.size(FreshnessIndicatorSize)
+            )
+        }
     }
 }
 
