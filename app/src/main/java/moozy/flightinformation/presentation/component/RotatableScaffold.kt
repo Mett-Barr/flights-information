@@ -32,20 +32,16 @@ fun RotatableScaffold(
     val adaptiveInfo = currentWindowAdaptiveInfo()
     val windowSizeClass = adaptiveInfo.windowSizeClass
 
-    // Compact（<600dp）底部導覽列／Medium（600dp+）側邊 Rail／Expanded 以上（840dp+）常駐抽屜。
-    //
-    // 例外是桌上型姿態：折疊機半開、鉸鏈橫躺時畫面被切成上下兩半，側邊元件會壓在鉸鏈上，
-    // 這時不管寬度多少都退回底部導覽列。NavigationSuiteScaffold 自己的預設也是這樣判斷。
-    val layoutType = when {
-        adaptiveInfo.windowPosture.isTabletop -> NavigationSuiteType.NavigationBar
-
-        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) ->
-            NavigationSuiteType.NavigationDrawer
-
-        windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) ->
-            NavigationSuiteType.NavigationRail
-
-        else -> NavigationSuiteType.NavigationBar
+    // Compact（<600dp）使用底部導覽列；600dp 以上使用窄側邊 Rail。
+    // 桌上型姿態仍維持底部導覽列，避免側邊導覽元件壓在橫向鉸鏈上。
+    // NavigationDrawer 在此應用只有兩個目的地時過寬，且會浪費橫向內容空間。
+    val layoutType = if (
+        !adaptiveInfo.windowPosture.isTabletop &&
+            windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    ) {
+        NavigationSuiteType.NavigationRail
+    } else {
+        NavigationSuiteType.NavigationBar
     }
 
     val insets = WindowInsets.safeDrawing.asPaddingValues()
