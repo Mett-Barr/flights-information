@@ -1,6 +1,13 @@
 package moozy.flightinformation.feature.calculator
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlin.math.roundToLong
 
 private const val MULTIPLY_SYMBOL = "×"
@@ -9,6 +16,8 @@ private val BINARY_OPERATOR_TOKENS = setOf("+", "-", MULTIPLY_SYMBOL, DIVIDE_SYM
 
 /** 沒有指定幣別時的 fallback 小數位數上限。 */
 private const val DEFAULT_MAX_DECIMALS = 2
+private const val DECIMAL_RADIX = 10L
+private const val WHOLE_NUMBER_DIVISOR = 1.0
 
 class Calculator(
     initialValue: Double = 0.0,
@@ -510,13 +519,13 @@ class Calculator(
          */
         private fun formatResult(value: Double, maxDecimals: Int): String? {
             if (!value.isFinite()) return null
-            if (value % 1.0 == 0.0) {
+            if (value % WHOLE_NUMBER_DIVISOR == 0.0) {
                 if (value < Long.MIN_VALUE.toDouble() || value >= Long.MAX_VALUE.toDouble()) return null
                 return value.toLong().toString()
             }
             // 用乘→四捨五入 截斷到 maxDecimals 位，再重建字串（避免 BigDecimal/科學記號）
             var factor = 1L
-            repeat(maxDecimals) { factor *= 10L }
+            repeat(maxDecimals) { factor *= DECIMAL_RADIX }
             val scaledValue = value * factor
             if (scaledValue < Long.MIN_VALUE.toDouble() || scaledValue >= Long.MAX_VALUE.toDouble()) return null
             val roundedLong = scaledValue.roundToLong()
@@ -569,6 +578,9 @@ class Calculator(
             stack.addLast(out)
         }
 
+        // 調車場演算法：分支數來自運算子優先序、結合性與括號三者的組合，
+        // 是演算法本身的形狀，拆開只會讓讀者需要在兩個函式之間對照。
+        @Suppress("CyclomaticComplexMethod")
         private fun infixToPostfix(infix: List<String>): List<String> {
             val stack = ArrayDeque<String>()
             val postfix = mutableListOf<String>()
@@ -576,8 +588,8 @@ class Calculator(
             fun precedence(op: String): Int =
                 when (op) {
                     "+", "-" -> 1
-                    MULTIPLY_SYMBOL, DIVIDE_SYMBOL -> 2
-                    UNARY_MINUS -> 3
+                    MULTIPLY_SYMBOL, DIVIDE_SYMBOL -> DEFAULT_MAX_DECIMALS
+                    UNARY_MINUS -> DEFAULT_MAX_DECIMALS + 1
                     else -> 0
                 }
 

@@ -84,6 +84,8 @@ fun mapCurrenciesToRows(
 
 
 // 複製貼上直接測試型最簡單實現（單函數、零外部狀態）
+// 換算的每個狀態轉換都要保留前一份內容的部分欄位，條件散開後反而看不出全貌。
+@Suppress("LongMethod")
 fun nextContent(
     content: CurrencyUiState.Content,   // ① 當前 Content（必填）
     chosenBase: CurrencyCode?,          // ② 當前選中的 Currency（可為 null；需存在於 rows）

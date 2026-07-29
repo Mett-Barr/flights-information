@@ -141,6 +141,9 @@ internal class Timeline(
  * 會把 00:10 排到最前面並判成已過去。model 只給了 "HH:mm" 字串、沒有日期，
  * 要正確處理就得先讓資料層帶上日期，不是這一層猜得出來的。
  */
+// 一次走訪就要同時決定整點分隔、現在的插入位置與下一班的索引，三者互相依賴：
+// 拆開就得走訪三次並在函式之間傳遞游標狀態，那比現在難讀。
+@Suppress("LongMethod")
 internal fun buildTimeline(
     items: List<FlightArrivalItemUiModel>,
     now: LocalTime,
@@ -241,12 +244,15 @@ internal fun buildTimeline(
  * 只有能明確讀成合法時刻的才回傳數字，其餘一律回 `null` ——
  * 呼叫端會把它們收進「時間未定」那一組，不會當掉，也不會默默把班次丟掉。
  */
+private const val MAX_HOUR = 23
+private const val MAX_MINUTE = 59
+
 private fun parseMinuteOfDay(text: String): Int? {
     val separator = text.indexOf(':')
     if (separator <= 0 || separator == text.lastIndex) return null
     val hour = text.substring(0, separator).trim().toIntOrNull() ?: return null
     val minute = text.substring(separator + 1).trim().toIntOrNull() ?: return null
-    if (hour !in 0..23 || minute !in 0..59) return null
+    if (hour !in 0..MAX_HOUR || minute !in 0..MAX_MINUTE) return null
     return hour * MINUTES_PER_HOUR + minute
 }
 

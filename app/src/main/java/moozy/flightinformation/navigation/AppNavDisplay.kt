@@ -39,6 +39,7 @@ fun AppNavDisplay(modifier: Modifier = Modifier) {
     // 真正的 back stack：能被返回鍵彈出、能參與預測返回、能跨設定變更與行程死亡還原。
     // 起始內容由啟動 intent 決定，所以 deep link 進來的是一條有上層路徑的堆疊。
     val initialKeys = rememberInitialBackStack()
+    @Suppress("SpreadOperator") // 初始導航鍵固定為兩個；這次防禦性複製沒有可觀察的成本。
     val backStack = rememberNavBackStack(*initialKeys)
     val currentRoute = backStack.currentTopLevel()
 

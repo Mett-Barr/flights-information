@@ -484,6 +484,8 @@ private val cardGridMoneyFormat = DecimalFormat("#,##0.00")
 
 /** 兩位小數會被捨成 0 的極小金額（例：1 KRW 換 USD）改用有效位數，否則整片網格都是 0.00。 */
 private val cardGridSmallMoneyFormat = DecimalFormat("#,##0.00######")
+private const val MONEY_DISPLAY_SCALE = 2
+private const val RATE_DISPLAY_SCALE = 4
 
 /** 匯率是配角，最多四位小數，尾數的 0 不補。 */
 private val cardGridRateFormat = DecimalFormat("#,##0.####")
@@ -491,9 +493,9 @@ private val cardGridRateFormat = DecimalFormat("#,##0.####")
 private val cardGridSmallRateFormat = DecimalFormat("#,##0.########")
 
 internal fun BigDecimal.toGridMoneyText(): String {
-    val rounded = setScale(2, RoundingMode.HALF_UP)
+    val rounded = setScale(MONEY_DISPLAY_SCALE, RoundingMode.HALF_UP)
     return if (rounded.signum() == 0 && signum() != 0) {
-        cardGridSmallMoneyFormat.format(round(MathContext(4, RoundingMode.HALF_UP)))
+        cardGridSmallMoneyFormat.format(round(MathContext(RATE_DISPLAY_SCALE, RoundingMode.HALF_UP)))
     } else {
         cardGridMoneyFormat.format(rounded)
     }
@@ -506,9 +508,9 @@ internal fun BigDecimal.toGridMoneyText(): String {
  * 四位小數足以判斷匯率，尾數的 0 也一併去掉。
  */
 internal fun BigDecimal.toGridRateText(): String {
-    val rounded = setScale(4, RoundingMode.HALF_UP)
+    val rounded = setScale(RATE_DISPLAY_SCALE, RoundingMode.HALF_UP)
     return if (rounded.signum() == 0 && signum() != 0) {
-        cardGridSmallRateFormat.format(round(MathContext(4, RoundingMode.HALF_UP)))
+        cardGridSmallRateFormat.format(round(MathContext(RATE_DISPLAY_SCALE, RoundingMode.HALF_UP)))
     } else {
         cardGridRateFormat.format(rounded)
     }

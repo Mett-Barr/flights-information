@@ -30,6 +30,7 @@ class KtorHttpRequesterImpl @Inject constructor(
     private val json: Json
 ) : KtorHttpRequester {
 
+    @Suppress("TooGenericExceptionCaught") // 將所有非取消失敗轉為 LoadError；取消例外在前一個 catch 立即重拋。
     override suspend fun <T> request(
         deserializer: DeserializationStrategy<T>,
         build: HttpRequestBuilder.() -> Unit

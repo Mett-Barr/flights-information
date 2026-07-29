@@ -16,6 +16,9 @@ private const val NO_VALUE = "--"
  * domain → UI。這一層只做呈現：補預設字串、排版、決定顯示文案。
  * 狀態的語意正規化已經在 data 層完成，這裡只把它翻成給人看的字。
  */
+// 分支數等於來源欄位數：每個欄位各有「有值」與「缺值」兩種呈現。
+// 拆成多個小函式不會減少分支，只會把同一張對照表攤到多個檔案。
+@Suppress("CyclomaticComplexMethod")
 fun FlightArrival.toUiModel(): FlightArrivalItemUiModel {
     val scheduledText = scheduled?.format(DISPLAY_TIME) ?: NO_TIME
     val headline = (actual ?: scheduled)?.format(DISPLAY_TIME) ?: NO_TIME

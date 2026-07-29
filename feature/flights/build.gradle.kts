@@ -8,7 +8,10 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
-detekt { config.setFrom(rootProject.files("config/detekt/detekt.yml")) }
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.files("config/detekt/detekt.yml"))
+}
 
 android {
     namespace = "moozy.flightinformation.feature.flights"
