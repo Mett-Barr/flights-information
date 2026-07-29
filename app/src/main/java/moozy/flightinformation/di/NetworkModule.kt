@@ -15,6 +15,7 @@ import moozy.flightinformation.data.network.KtorHttpRequester
 import moozy.flightinformation.data.network.KtorHttpRequesterImpl
 import javax.inject.Named
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -75,10 +76,10 @@ object NetworkModule {
  */
 private fun HttpClientConfig<*>.installTimeout() {
     install(HttpTimeout) {
-        requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
-        connectTimeoutMillis = REQUEST_TIMEOUT_MILLIS
-        socketTimeoutMillis = REQUEST_TIMEOUT_MILLIS
+        requestTimeoutMillis = REQUEST_TIMEOUT.inWholeMilliseconds
+        connectTimeoutMillis = REQUEST_TIMEOUT.inWholeMilliseconds
+        socketTimeoutMillis = REQUEST_TIMEOUT.inWholeMilliseconds
     }
 }
 
-private const val REQUEST_TIMEOUT_MILLIS = 10_000L
+private val REQUEST_TIMEOUT = 10.seconds

@@ -166,7 +166,7 @@ fun CurrencyScreen(
     val hasContent = content != null
     LaunchedEffect(hasContent) {
         if (hasContent && !entranceDone) {
-            delay(ENTRANCE_TOTAL_MS)
+            delay(ENTRANCE_TOTAL)
             entranceDone = true
         }
     }

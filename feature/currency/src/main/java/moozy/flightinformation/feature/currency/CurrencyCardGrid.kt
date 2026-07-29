@@ -410,7 +410,7 @@ private fun CardGridTile(
     val pressScale = animateFloatAsState(
         targetValue = if (pressed) CARD_GRID_PRESS_SCALE else 1f,
         animationSpec = tween(
-            durationMillis = PRESS_DURATION_MS,
+            durationMillis = PRESS_DURATION.inWholeMilliseconds.toInt(),
             easing = CardGridStandardEasing
         ),
         label = "cardGridPressScale"

@@ -90,9 +90,9 @@ val state: StateFlow<...> = flow {
         current = load(current)
         emit(current)
         // 等資料失效，最多等一個新鮮期
-        withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
+        withTimeoutOrNull(FRESHNESS) { invalidated.receive() }
     }
-}.stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS), Loading)
+}.stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE), Loading)
 ```
 
 兩個條件各由一個機制表達：

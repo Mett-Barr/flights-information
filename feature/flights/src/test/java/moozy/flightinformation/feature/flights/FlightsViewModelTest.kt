@@ -13,6 +13,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * 抓取的不變式是「有需求 ∧ 資料失效」：
@@ -28,10 +29,6 @@ class FlightsViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
-
-    private companion object {
-        const val TTL_MILLIS = 10_000L
-    }
 
     @Test
     fun `does not fetch until something collects the state`() = runTest {
@@ -81,7 +78,7 @@ class FlightsViewModelTest {
         viewModel.state.test {
             assertEquals(1, repository.callCount)
 
-            advanceTimeBy(TTL_MILLIS + 1)
+            advanceTimeBy(FlightsViewModel.FRESHNESS + 1.milliseconds)
             assertEquals(2, repository.callCount)
 
             cancelAndIgnoreRemainingEvents()
@@ -96,7 +93,7 @@ class FlightsViewModelTest {
         viewModel.state.test {
             assertEquals(1, repository.callCount)
 
-            advanceTimeBy(TTL_MILLIS - 1)
+            advanceTimeBy(FlightsViewModel.FRESHNESS - 1.milliseconds)
             assertEquals(1, repository.callCount)
 
             cancelAndIgnoreRemainingEvents()
@@ -112,15 +109,15 @@ class FlightsViewModelTest {
             assertEquals(1, repository.callCount)
 
             // 過了半個 TTL 後手動刷新：資料重新變新鮮，計時應從此刻重算。
-            advanceTimeBy(TTL_MILLIS / 2)
+            advanceTimeBy(FlightsViewModel.FRESHNESS / 2)
             viewModel.refresh()
             assertEquals(2, repository.callCount)
 
             // 從刷新起算再過 TTL-1，還不該自動抓。
-            advanceTimeBy(TTL_MILLIS - 1)
+            advanceTimeBy(FlightsViewModel.FRESHNESS - 1.milliseconds)
             assertEquals(2, repository.callCount)
 
-            advanceTimeBy(2)
+            advanceTimeBy(2.milliseconds)
             assertEquals(3, repository.callCount)
 
             cancelAndIgnoreRemainingEvents()
@@ -129,7 +126,7 @@ class FlightsViewModelTest {
 
     @Test
     fun `manual refresh shows its indicator until the reload completes`() = runTest {
-        val repository = FakeFlightsRepository(responseDelayMillis = 1)
+        val repository = FakeFlightsRepository(responseDelay = 1.milliseconds)
         val viewModel = FlightsViewModel(repository)
 
         viewModel.state.test {
@@ -137,7 +134,7 @@ class FlightsViewModelTest {
             advanceTimeBy(1)
             assertTrue(awaitItem() is FlightArrivalsUiState.Content)
 
-            repository.responseDelayMillis = 1_000
+            repository.responseDelay = 1_000.milliseconds
             viewModel.refresh()
 
             val refreshing = awaitItem() as FlightArrivalsUiState.Content
@@ -152,7 +149,7 @@ class FlightsViewModelTest {
 
     @Test
     fun `freshness expiry reload shows a refresh indicator until it completes`() = runTest {
-        val repository = FakeFlightsRepository(responseDelayMillis = 1)
+        val repository = FakeFlightsRepository(responseDelay = 1.milliseconds)
         val viewModel = FlightsViewModel(repository)
 
         viewModel.state.test {
@@ -160,8 +157,8 @@ class FlightsViewModelTest {
             advanceTimeBy(1)
             assertTrue(awaitItem() is FlightArrivalsUiState.Content)
 
-            repository.responseDelayMillis = 1_000
-            advanceTimeBy(TTL_MILLIS)
+            repository.responseDelay = 1_000.milliseconds
+            advanceTimeBy(FlightsViewModel.FRESHNESS)
             val refreshing = awaitItem() as FlightArrivalsUiState.Content
             assertTrue(refreshing.isRefreshing)
 
@@ -183,7 +180,7 @@ class FlightsViewModelTest {
         val afterUnsubscribe = repository.callCount
 
         // 需求消失後，即使過了好幾個 TTL 也不該再打 API。
-        advanceTimeBy(TTL_MILLIS * 5)
+        advanceTimeBy(FlightsViewModel.FRESHNESS * 5)
 
         assertEquals(afterUnsubscribe, repository.callCount)
     }
@@ -248,7 +245,7 @@ class FlightsViewModelTest {
             val first = expectMostRecentItem() as FlightArrivalsUiState.Content
             updatedAt = updatedAt.plusSeconds(10)
 
-            advanceTimeBy(TTL_MILLIS + 1)
+            advanceTimeBy(FlightsViewModel.FRESHNESS + 1.milliseconds)
 
             val refreshed = viewModel.state.value as FlightArrivalsUiState.Content
             assertEquals(updatedAt, refreshed.updatedAt)

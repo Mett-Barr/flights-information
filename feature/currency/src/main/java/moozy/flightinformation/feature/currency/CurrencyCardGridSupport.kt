@@ -93,6 +93,7 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.launch
 import moozy.flightinformation.feature.currency.R
@@ -181,19 +182,19 @@ internal val CardGridStandardEasing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
  * ============================================================ */
 
 /** 每張卡之間錯開的間隔（MD3 duration short1）。 */
-internal const val ENTRANCE_STEP_MS = 50L
+internal val ENTRANCE_STEP = 50.milliseconds
 
 /** 最多錯開幾階。幣別可以有三十幾個，不設上限的話最後一張要等一秒多才進來。 */
 internal const val ENTRANCE_MAX_STEPS = 11
 
 /** 單張卡的淡入時間（MD3 duration medium4：元素進場）。 */
-internal const val ENTRANCE_DURATION_MS = 400
+internal val ENTRANCE_DURATION = 400.milliseconds
 
 /** 整段進場的長度：最後一階的延遲（11 × 50）加上一張卡的淡入（400）。 */
-internal const val ENTRANCE_TOTAL_MS = 950L
+internal val ENTRANCE_TOTAL = 950.milliseconds
 
 /** 按下回饋的長度（MD3 duration short2）。 */
-internal const val PRESS_DURATION_MS = 100
+internal val PRESS_DURATION = 100.milliseconds
 
 /**
  * 單張卡的進場進度（0 → 1）。
@@ -209,11 +210,11 @@ internal fun rememberCardGridEntrance(
     val progress = remember { Animatable(if (animate) 0f else 1f) }
     LaunchedEffect(animate, index) {
         if (animate) {
-            delay(index.coerceAtMost(ENTRANCE_MAX_STEPS) * ENTRANCE_STEP_MS)
+            delay(ENTRANCE_STEP * index.coerceAtMost(ENTRANCE_MAX_STEPS))
             progress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(
-                    durationMillis = ENTRANCE_DURATION_MS,
+                    durationMillis = ENTRANCE_DURATION.inWholeMilliseconds.toInt(),
                     easing = CardGridEnterEasing
                 )
             )

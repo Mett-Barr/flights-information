@@ -17,6 +17,7 @@ import moozy.flightinformation.feature.flights.toUiModels
 import moozy.flightinformation.feature.flights.FlightArrivalsUiState
 import java.time.LocalDateTime
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * 抓取的不變式是「**有需求 ∧ 資料失效**」，兩者缺一不可：
@@ -55,11 +56,11 @@ class FlightsViewModel(
             if (current is FlightArrivalsUiState.Content) _refreshEvent.emit(Unit)
 
             // 將逾時與使用者作廢收斂到同一個等待，讓新鮮度與手動刷新共用迴圈。
-            withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
+            withTimeoutOrNull(FRESHNESS) { invalidated.receive() }
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE_MILLIS),
+        started = SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE.inWholeMilliseconds),
         initialValue = FlightArrivalsUiState.Loading,
     )
 
@@ -87,11 +88,11 @@ class FlightsViewModel(
                 },
             )
 
-    private companion object {
-        const val FRESHNESS_MILLIS = 10_000L
+    companion object {
+        internal val FRESHNESS = 10.seconds
 
         /** 短暫離開（轉螢幕、切頁又切回）不要重啟整條流程。 */
-        const val SUBSCRIPTION_GRACE_MILLIS = 5_000L
+        private val SUBSCRIPTION_GRACE = 5.seconds
     }
 }
 

@@ -83,6 +83,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.delay
+import kotlin.time.Duration
 import androidx.compose.ui.draw.clip
 
 @Composable
@@ -186,19 +187,19 @@ private fun TimelineHeader(
 }
 
 /**
- * [active] 結束後，讓指示器繼續顯示 [tailMillis]。
+ * [active] 結束後，讓指示器繼續顯示 [tail]。
  *
  * 抓取通常幾百毫秒內就結束，指示器會冒出一點點又立刻縮回去，看起來像閃爍而不是回饋。
  * 這裡只延後「結束」的時機，資料本身照樣立刻上畫面——不會為了動畫好看而讓使用者晚一點
  * 看到新資料。
  */
 @Composable
-internal fun refreshIndicatorVisible(active: Boolean, tailMillis: Long = MIN_REFRESH_VISIBLE_MILLIS): Boolean =
-    produceState(initialValue = active, active, tailMillis) {
+internal fun refreshIndicatorVisible(active: Boolean, tail: Duration = MIN_REFRESH_VISIBLE): Boolean =
+    produceState(initialValue = active, active, tail) {
         if (active) {
             value = true
         } else {
-            delay(tailMillis)
+            delay(tail)
             value = false
         }
     }.value
@@ -226,7 +227,7 @@ private fun FreshnessIndicator(
         progress.animateTo(
             targetValue = 0f,
             animationSpec = tween(
-                durationMillis = FRESHNESS_MILLIS.toInt(),
+                durationMillis = FlightsViewModel.FRESHNESS.inWholeMilliseconds.toInt(),
                 easing = LinearEasing
             )
         )

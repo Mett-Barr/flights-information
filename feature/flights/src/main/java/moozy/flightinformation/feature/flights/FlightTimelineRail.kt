@@ -157,16 +157,11 @@ internal val StatusBadgeMaxWidth = 132.dp
 internal val HeadlineBadgeSpacing = 8.dp
 internal val FreshnessIndicatorSize = 32.dp
 
-/**
- * 資料新鮮度的唯一來源在 FlightsViewModel.FRESHNESS_MILLIS；因其為 private，於此同步維護。
- */
-internal const val FRESHNESS_MILLIS = 10_000L
-
 /** 可點擊元素的最小高度，符合觸控目標規範。 */
 internal val MinTouchTarget = 48.dp
 
 /** 刷新指示器最短的可見時間，避免快速完成時只閃一下。 */
-internal const val MIN_REFRESH_VISIBLE_MILLIS = 700L
+internal val MIN_REFRESH_VISIBLE = 700.milliseconds
 
 /** 萬一主題把行高設成非 sp（Em 或未指定），節點高度就退回這個值。 */
 internal val FallbackHeadlineLineHeight = 32.dp

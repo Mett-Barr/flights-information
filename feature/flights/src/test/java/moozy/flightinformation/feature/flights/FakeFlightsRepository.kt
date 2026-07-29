@@ -5,6 +5,7 @@ import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
 import moozy.flightinformation.domain.repository.flights.FlightsRepository
 import java.time.LocalTime
+import kotlin.time.Duration
 
 /**
  * Fake 而非 mock：官方建議測 repository/data source 時用 fake，因為它能建模
@@ -12,7 +13,7 @@ import java.time.LocalTime
  */
 class FakeFlightsRepository(
     var result: Result<List<FlightArrival>> = Result.success(listOf(anArrival())),
-    var responseDelayMillis: Long = 0,
+    var responseDelay: Duration = Duration.ZERO,
 ) : FlightsRepository {
 
     var callCount = 0
@@ -20,7 +21,7 @@ class FakeFlightsRepository(
 
     override suspend fun fetchArrivals(): Result<List<FlightArrival>> {
         callCount++
-        delay(responseDelayMillis)
+        delay(responseDelay)
         return result
     }
 

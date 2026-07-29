@@ -39,9 +39,9 @@ Both factors are state rather than events, so both are expressed directly:
 val state = flow {
     while (true) {
         emit(load())
-        withTimeoutOrNull(FRESHNESS_MILLIS) { invalidated.receive() }
+        withTimeoutOrNull(FRESHNESS) { invalidated.receive() }
     }
-}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Loading)
+}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE), Loading)
 ```
 
 `WhileSubscribed` is the demand factor. The wait inside the loop is the staleness
