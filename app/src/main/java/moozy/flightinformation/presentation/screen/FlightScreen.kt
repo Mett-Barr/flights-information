@@ -82,6 +82,12 @@ import moozy.flightinformation.presentation.theme.FlightInformationTheme
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
+import kotlin.time.TimeMark
+import kotlin.time.Duration
+import kotlinx.coroutines.delay
+import androidx.compose.ui.draw.clip
 
 /* ============================================================
  *  尺寸與字串常數
@@ -158,6 +164,9 @@ private const val FRESHNESS_MILLIS = 10_000L
 
 /** 可點擊元素的最小高度，符合觸控目標規範。 */
 private val MinTouchTarget = 48.dp
+
+/** 刷新指示器最短的可見時間，避免快速完成時只閃一下。 */
+private const val MIN_REFRESH_VISIBLE_MILLIS = 700L
 
 /** 萬一主題把行高設成非 sp（Em 或未指定），節點高度就退回這個值。 */
 private val FallbackHeadlineLineHeight = 32.dp
@@ -308,11 +317,36 @@ private fun TimelineHeader(
         Spacer(modifier = Modifier.width(12.dp))
         FreshnessIndicator(
             updatedAt = content.updatedAt,
-            isRefreshing = content.isRefreshing,
+            isRefreshing = sustained(content.isRefreshing),
             refreshEvent = refreshEvent,
             onRefresh = onRefresh,
         )
     }
+}
+
+/**
+ * 讓 [active] 至少維持 [minMillis] 才允許落下。
+ *
+ * 抓取通常幾百毫秒內就結束，指示器會冒出一點點又立刻縮回去，看起來像閃爍而不是回饋。
+ * 這裡只延後「結束」的時機，資料本身照樣立刻上畫面——不會為了動畫好看而讓使用者晚一點
+ * 看到新資料。
+ */
+@Composable
+private fun sustained(active: Boolean, minMillis: Long = MIN_REFRESH_VISIBLE_MILLIS): Boolean {
+    var visible by remember { mutableStateOf(active) }
+    var startedAt by remember { mutableStateOf<TimeMark?>(null) }
+    LaunchedEffect(active) {
+        if (active) {
+            startedAt = TimeSource.Monotonic.markNow()
+            visible = true
+        } else if (visible) {
+            val shown = startedAt?.elapsedNow() ?: Duration.ZERO
+            val remaining = minMillis.milliseconds - shown
+            if (remaining.isPositive()) delay(remaining)
+            visible = false
+        }
+    }
+    return visible
 }
 
 /**
@@ -353,6 +387,8 @@ private fun FreshnessIndicator(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .size(MinTouchTarget)
+            // 先裁圓再掛點擊：漣漪會被裁切形狀框住，否則方形的觸控範圍會露出方形水波。
+            .clip(CircleShape)
             .semantics { contentDescription = refreshDescription }
             .clickable(
                 enabled = !isRefreshing,
@@ -361,14 +397,12 @@ private fun FreshnessIndicator(
                 onClick = onRefresh,
             )
     ) {
-        if (isRefreshing) {
-            CircularProgressIndicator(modifier = Modifier.size(FreshnessIndicatorSize))
-        } else {
-            CircularProgressIndicator(
-                progress = { progress.value },
-                modifier = Modifier.size(FreshnessIndicatorSize)
-            )
-        }
+        // 這個環表達的是「資料還剩多新鮮」，不是「正在抓取」。抓取中另外有刷新圖示，
+        // 環再跟著轉就變成兩個轉圈講同一件事，而且會蓋掉倒數本來要傳達的訊息。
+        CircularProgressIndicator(
+            progress = { progress.value },
+            modifier = Modifier.size(FreshnessIndicatorSize)
+        )
     }
 }
 
@@ -483,7 +517,7 @@ private fun TimelineContent(
 ) {
     if (content.items.isEmpty()) {
         TimelineEmpty(
-            isRefreshing = content.isRefreshing,
+            isRefreshing = sustained(content.isRefreshing),
             onRefresh = onRefresh,
             bottomPadding = bottomPadding,
             modifier = modifier
@@ -513,7 +547,7 @@ private fun TimelineContent(
         }
 
         PullToRefreshBox(
-            isRefreshing = content.isRefreshing,
+            isRefreshing = sustained(content.isRefreshing),
             onRefresh = onRefresh,
             modifier = modifier.fillMaxSize()
         ) {
