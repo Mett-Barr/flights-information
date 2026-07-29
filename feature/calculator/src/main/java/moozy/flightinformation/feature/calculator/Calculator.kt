@@ -235,13 +235,11 @@ class Calculator(
                         val previous = infix.last()
                         if (key == OpKey.Minus && previous in setOf(MULTIPLY_SYMBOL, DIVIDE_SYMBOL)) {
                             infix.add(op)
-                        } else if (
+                        } else if (!(
                             key == OpKey.Minus &&
                             previous == OpKey.Minus.label &&
                             infix.getOrNull(infix.lastIndex - 1) in setOf(MULTIPLY_SYMBOL, DIVIDE_SYMBOL)
-                        ) {
-                            Unit
-                        } else {
+                        )) {
                             while (infix.lastOrNull() in BINARY_OPERATOR_TOKENS) {
                                 infix.removeAt(infix.lastIndex)
                             }
@@ -549,12 +547,12 @@ class Calculator(
             }
 
             if (token == UNARY_MINUS) {
-                if (stack.isEmpty()) return errorToken(token)
+                if (stack.isEmpty()) errorToken(token)
                 stack.addLast(-stack.removeLast())
                 return
             }
 
-            if (stack.size < 2) return errorToken(token)
+            if (stack.size < 2) errorToken(token)
 
             val right = stack.removeLast()
             val left = stack.removeLast()

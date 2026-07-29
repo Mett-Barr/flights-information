@@ -14,7 +14,7 @@ class CurrenciesDtoTest {
             isLenient = true
         }
 
-        val currenciesDto = json.decodeFromString<CurrenciesDto>(currenciesJson)
+        val currenciesDto = json.decodeFromString<CurrenciesDto>(CURRENCIES_JSON)
 
         assertEquals(5, currenciesDto.data.size)
         assertEquals(0, BigDecimal("1").compareTo(BigDecimal(currenciesDto.data.getValue("EUR").content)))
@@ -22,7 +22,7 @@ class CurrenciesDtoTest {
     }
 
     private companion object {
-        const val currenciesJson = """{
+        const val CURRENCIES_JSON = """{
             "data": {
                 "EUR": 1,
                 "JPY": 176.3319718999,

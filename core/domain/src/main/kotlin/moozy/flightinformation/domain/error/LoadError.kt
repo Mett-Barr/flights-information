@@ -13,6 +13,7 @@ package moozy.flightinformation.domain.error
 sealed class LoadError(message: String) : Exception(message) {
 
     /** 連線不到對方：沒網路、DNS 解析失敗、連線被拒。 */
+    @Suppress("ObjectInheritsException") // 此錯誤是值物件，從不以堆疊追蹤判斷拋出位置。
     data object NoNetwork : LoadError("No network connection") {
         // JVM 反序列化透過反射呼叫，靜態分析看不到呼叫端。
         // data object 繼承了可序列化的 Exception，沒有這個 hook 反序列化
@@ -22,6 +23,7 @@ sealed class LoadError(message: String) : Exception(message) {
     }
 
     /** 對方沒有在時限內回應。 */
+    @Suppress("ObjectInheritsException") // 此錯誤是值物件，從不以堆疊追蹤判斷拋出位置。
     data object Timeout : LoadError("The request timed out") {
         // JVM 反序列化透過反射呼叫，靜態分析看不到呼叫端。
         // data object 繼承了可序列化的 Exception，沒有這個 hook 反序列化
