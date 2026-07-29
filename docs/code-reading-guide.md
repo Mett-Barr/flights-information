@@ -132,7 +132,7 @@ val state: StateFlow<...> = flow {
 
 ## 測試
 
-157 個 JVM 單元測試 + 11 個 instrumented 測試。全部不觸及網路，毫秒級完成。
+158 個 JVM 單元測試 + 11 個 instrumented 測試。全部不觸及網路，毫秒級完成。
 
 | 模組 | 檔案 | @Test | 涵蓋 |
 |---|---|---:|---|

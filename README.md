@@ -49,7 +49,7 @@ free_currency_api_key=你的金鑰
 - [x] Jetpack Navigation 3：返回堆疊、預測返回與深連結
 - [x] 依視窗尺寸切換底部導覽列、導覽 rail 或導覽 drawer
 - [x] 使用第三方 library
-- [x] 157 項 JVM 單元測試與 11 項 Android instrumentation 測試
+- [x] 158 項 JVM 單元測試與 11 項 Android instrumentation 測試
 - [x] 支援螢幕轉向與深色模式
 
 ## 架構
@@ -133,7 +133,7 @@ class :feature:calculator android-library
 
 ## 測試
 
-共有 157 個 JVM 單元測試與 11 個 `:app` 的 Android instrumentation 測試。JVM 測試分布為：`:app` 84、`:feature:calculator` 51、`:core:data` 22、`:core:domain` 0。
+共有 158 個 JVM 單元測試與 11 個 `:app` 的 Android instrumentation 測試。JVM 測試分布為：`:app` 85、`:feature:calculator` 51、`:core:data` 22、`:core:domain` 0。
 
 | 範圍 | 內容 |
 |---|---|
