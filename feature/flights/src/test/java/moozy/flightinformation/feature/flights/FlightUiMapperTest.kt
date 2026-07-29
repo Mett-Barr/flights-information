@@ -1,10 +1,7 @@
 package moozy.flightinformation.feature.flights
 
-import moozy.flightinformation.feature.flights.R
 import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
-import moozy.flightinformation.feature.flights.FlightStatusText
-import moozy.flightinformation.feature.flights.FlightStatusLevel
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalTime

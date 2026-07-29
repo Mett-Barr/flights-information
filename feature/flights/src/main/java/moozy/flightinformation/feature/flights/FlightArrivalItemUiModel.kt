@@ -1,7 +1,6 @@
 package moozy.flightinformation.feature.flights
 
 import androidx.annotation.StringRes
-import moozy.flightinformation.feature.flights.R
 
 sealed interface FlightStatusText {
     data class Resource(

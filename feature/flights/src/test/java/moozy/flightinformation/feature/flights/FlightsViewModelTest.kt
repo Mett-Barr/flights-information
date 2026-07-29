@@ -4,9 +4,6 @@ import app.cash.turbine.test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
-import moozy.flightinformation.feature.flights.FlightArrivalsUiState
-import moozy.flightinformation.feature.flights.FakeFlightsRepository
-import moozy.flightinformation.feature.flights.MainDispatcherRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule

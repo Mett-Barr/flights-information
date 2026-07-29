@@ -1,7 +1,6 @@
 package moozy.flightinformation.core.ui
 
 import androidx.annotation.StringRes
-import moozy.flightinformation.core.ui.R
 import moozy.flightinformation.domain.error.LoadError
 
 /**

@@ -13,8 +13,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withTimeoutOrNull
 import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.flights.FlightsRepository
-import moozy.flightinformation.feature.flights.toUiModels
-import moozy.flightinformation.feature.flights.FlightArrivalsUiState
 import java.time.LocalDateTime
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds

@@ -2,10 +2,6 @@ package moozy.flightinformation.feature.currency
 
 import kotlinx.collections.immutable.persistentSetOf
 import moozy.flightinformation.domain.value.CurrencyCode
-import moozy.flightinformation.feature.currency.CurrencyRow
-import moozy.flightinformation.feature.currency.CurrencyRowPlain
-import moozy.flightinformation.feature.currency.CurrencyRowWithConversion
-import moozy.flightinformation.feature.currency.CurrencyUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

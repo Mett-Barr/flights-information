@@ -5,10 +5,6 @@ import moozy.flightinformation.domain.model.currency.CurrencyRate
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.CurrencyInfo
 import moozy.flightinformation.domain.value.MoneyCode
-import moozy.flightinformation.feature.currency.CurrencyRow
-import moozy.flightinformation.feature.currency.CurrencyRowPlain
-import moozy.flightinformation.feature.currency.CurrencyRowWithConversion
-import moozy.flightinformation.feature.currency.CurrencyUiState
 import java.math.BigDecimal
 import java.math.RoundingMode
 

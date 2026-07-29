@@ -11,9 +11,6 @@ import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.currency.CurrencyRepository
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.MoneyCode
-import moozy.flightinformation.feature.currency.CurrencyRowWithConversion
-import moozy.flightinformation.feature.currency.CurrencyUiState
-import moozy.flightinformation.feature.currency.MainDispatcherRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

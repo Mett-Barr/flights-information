@@ -14,11 +14,6 @@ import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.repository.currency.CurrencyRepository
 import moozy.flightinformation.domain.value.CurrencyCode
 import moozy.flightinformation.domain.value.MoneyCode
-import moozy.flightinformation.feature.currency.mapCurrenciesToRows
-import moozy.flightinformation.feature.currency.nextContent
-import moozy.flightinformation.feature.currency.CurrencyRow
-import moozy.flightinformation.feature.currency.CurrencyUiState
-import moozy.flightinformation.feature.currency.toggle
 import javax.inject.Inject
 
 @HiltViewModel

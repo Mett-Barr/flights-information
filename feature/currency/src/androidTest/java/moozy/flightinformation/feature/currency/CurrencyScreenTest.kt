@@ -12,13 +12,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import moozy.flightinformation.feature.currency.R
 import moozy.flightinformation.domain.error.LoadError
 import java.math.BigDecimal
 import moozy.flightinformation.domain.value.CurrencyCode
-import moozy.flightinformation.feature.currency.CurrencyRowPlain
-import moozy.flightinformation.feature.currency.CurrencyRowWithConversion
-import moozy.flightinformation.feature.currency.CurrencyUiState
 import moozy.flightinformation.core.ui.FlightInformationTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule

@@ -4,7 +4,6 @@ import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentSetOf
 import moozy.flightinformation.domain.error.LoadError
 import moozy.flightinformation.domain.value.CurrencyCode
-import moozy.flightinformation.feature.currency.CurrencyRow
 import java.math.BigDecimal
 
 sealed class CurrencyUiState {

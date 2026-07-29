@@ -1,11 +1,7 @@
 package moozy.flightinformation.feature.flights
 
-import moozy.flightinformation.feature.flights.R
 import moozy.flightinformation.domain.model.flights.FlightArrival
 import moozy.flightinformation.domain.model.flights.FlightStatus
-import moozy.flightinformation.feature.flights.FlightArrivalItemUiModel
-import moozy.flightinformation.feature.flights.FlightStatusLevel
-import moozy.flightinformation.feature.flights.FlightStatusText
 import java.time.format.DateTimeFormatter
 
 private val DISPLAY_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
