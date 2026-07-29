@@ -10,17 +10,18 @@
 ## 規模
 
 ```
-app/src/main/java/   4,318 行 / 57 檔
+app/src/main/java/   6,830 行 / 60 檔
 
   domain/              191 行   模型、錯誤型別、repository 介面
   data/                373 行   網路、DTO、repository 實作
   di/                  137 行   Hilt 綁定
-  presentation/      3,038 行   ViewModel、mapper、畫面、元件、主題
-  feature/             529 行   計算機（獨立元件）
+  presentation/      5,153 行   ViewModel、mapper、畫面、導覽、元件、主題
+  feature/             937 行   計算機（獨立元件）
   util/                 10 行
 ```
 
-小到可以一次讀完，建議真的讀完而不是抽樣。
+兩個畫面各約 1,400 行，是行數的大宗——它們的版面（時間軸的軌道與節點、
+匯率的卡片網格）都在 Compose 裡直接繪製，沒有拆成一堆小元件。
 
 ---
 
@@ -36,7 +37,8 @@ app/src/main/java/   4,318 行 / 57 檔
 | 4 | `presentation/viewmodel/` | 核心機制在這（見下節） |
 | 5 | `presentation/mapper/` + `state/` | domain → UI 的最後一哩 |
 | 6 | `presentation/screen/` + `component/` | 畫面本身 |
-| 7 | `feature/calculator/` | 獨立元件，可最後看 |
+| 7 | `presentation/navigation/` | Navigation 3：back stack、deep link、window size class 自適應 |
+| 8 | `feature/calculator/` | 獨立元件，可最後看 |
 
 ---
 
@@ -62,8 +64,9 @@ grep -rn "Dto"                                         .../presentation/  # 0
 
 最後一條是真正要守的界線：DTO 不出現在 presentation。
 
-分層目前由套件命名慣例維持，尚無機制強制；下一階段以架構測試（Konsist）
-把它升級成 CI 檢查。
+這些規則由 `app/src/test/java/moozy/flightinformation/architecture/LayeringTest.kt`
+的 Konsist 架構測試強制，跑在一般的 `./gradlew test` 裡。違規會讓 CI 失敗，
+不再只靠作者紀律。
 
 **結構例外**：`feature/calculator/` 是第四個頂層目錄，不屬於三層任何一層。
 它是自足的元件，對外只暴露 `Calculator` 與 `CalculatorUI`。

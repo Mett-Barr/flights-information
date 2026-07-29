@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">&#33322;&#29677;&#36039;&#35338;</string>
+    <string name="error_no_network">&#27794;&#26377;&#32178;&#36335;&#36899;&#32218;&#65292;&#35531;&#27298;&#26597;&#36899;&#32218;&#24460;&#20877;&#35430;&#19968;&#27425;&#12290;</string>
+    <string name="error_timeout">&#35531;&#27714;&#36926;&#26178;&#65292;&#35531;&#20877;&#35430;&#19968;&#27425;&#12290;</string>
+    <string name="error_server">&#26381;&#21209;&#26283;&#26178;&#28961;&#27861;&#20351;&#29992;&#65292;&#35531;&#31245;&#24460;&#20877;&#35430;&#12290;</string>
+    <string name="flights_empty">&#30446;&#21069;&#27794;&#26377;&#33322;&#29677;&#36039;&#35338;&#12290;</string>
+    <string name="flights_last_updated">&#26368;&#24460;&#26356;&#26032;&#65306;%1$s</string>
+    <string name="flights_arrivals_timeline">&#25269;&#36948;&#26178;&#21051;&#36600;</string>
+    <string name="flights_unscheduled">&#23578;&#26410;&#25490;&#23450;</string>
+    <string name="flights_summary">&#24050;&#36942; %1$d &#183; &#21363;&#23559;&#25269;&#36948; %2$d</string>
+    <string name="flights_summary_next">&#24050;&#36942; %1$d &#183; &#21363;&#23559;&#25269;&#36948; %2$d &#183; &#19979;&#19968;&#29677; %3$s</string>
+    <string name="flights_summary_unscheduled">&#24050;&#36942; %1$d &#183; &#21363;&#23559;&#25269;&#36948; %2$d &#183; &#23578;&#26410;&#25490;&#23450; %3$d</string>
+    <string name="flights_summary_next_unscheduled">&#24050;&#36942; %1$d &#183; &#21363;&#23559;&#25269;&#36948; %2$d &#183; &#19979;&#19968;&#29677; %3$s &#183; &#23578;&#26410;&#25490;&#23450; %4$d</string>
+    <string name="error_generic">&#28961;&#27861;&#36617;&#20837;&#36039;&#26009;&#65292;&#35531;&#20877;&#35430;&#19968;&#27425;&#12290;</string>
+    <string name="action_retry">&#37325;&#35430;</string>
+    <string name="action_refresh">&#37325;&#26032;&#25972;&#29702;</string>
+    <string name="action_done">&#23436;&#25104;</string>
+    <string name="action_update">&#26356;&#26032;</string>
+    <string name="currency_title">&#21295;&#29575;</string>
+    <string name="currency_manage_currencies">&#31649;&#29702;&#24163;&#21029;</string>
+    <string name="currency_per_one">&#27599; 1 %1$s</string>
+    <string name="currency_converted_from">&#20197; %1$s &#25563;&#31639;</string>
+    <string name="currency_base_amount">&#22522;&#28310;&#37329;&#38989;</string>
+    <string name="currency_open_keypad">&#38283;&#21855;&#25976;&#23383;&#37749;&#30436;</string>
+    <string name="currency_change_base_currency">&#35722;&#26356;&#22522;&#28310;&#24163;&#21029;</string>
+    <string name="currency_tap_amount_hint">%1$s &#183; &#40670;&#36984;&#37329;&#38989;&#21363;&#21487;&#36664;&#20837;</string>
+    <string name="currency_use_as_base">&#23559; %1$s &#35373;&#28858;&#22522;&#28310;&#24163;&#21029;</string>
+    <string name="currency_rate_per_base">%1$s / 1 %2$s</string>
+    <string name="currency_empty">&#23578;&#28961;&#21487;&#25563;&#31639;&#30340;&#24163;&#21029;&#12290;</string>
+    <string name="currency_choose_currencies">&#36984;&#25799;&#24163;&#21029;</string>
+    <string name="currency_base_amount_code">&#22522;&#28310;&#37329;&#38989; &#183; %1$s</string>
+    <string name="currency_currencies">&#24163;&#21029;</string>
+    <string name="currency_base_currency">&#22522;&#28310;&#24163;&#21029;</string>
+    <string name="currency_base_currency_description">&#25152;&#26377;&#21345;&#29255;&#30342;&#20197;&#27492;&#24163;&#21029;&#25563;&#31639;&#12290;&#35722;&#26356;&#24460;&#26371;&#37325;&#26032;&#36617;&#20837;&#21295;&#29575;&#12290;</string>
+    <string name="currency_shown_in_grid">&#39023;&#31034;&#26044;&#26684;&#29376;&#28165;&#21934;</string>
+    <string name="currency_selected_description">&#24050;&#36984;&#25799; %1$d &#38917;&#12290;&#40670;&#36984;&#12300;&#26356;&#26032;&#12301;&#20197;&#22871;&#29992;&#12290;</string>
+</resources>
