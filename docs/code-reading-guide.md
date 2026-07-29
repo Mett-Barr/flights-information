@@ -85,15 +85,19 @@ rg -n "import io.ktor|Dto" feature/flights/src/main feature/currency/src/main co
 
 ```kotlin
 val state: StateFlow<...> = flow {
+    var refreshAttempt = 0L
     while (true) {
         if (current is Content) emit(current.copy(isRefreshing = true))
         current = load(current)
+        if (current is Content) current = current.copy(refreshAttempt = ++refreshAttempt)
         emit(current)
         // 等資料失效，最多等一個新鮮期
         withTimeoutOrNull(FRESHNESS) { invalidated.receive() }
     }
 }.stateIn(scope, SharingStarted.WhileSubscribed(SUBSCRIPTION_GRACE), Loading)
 ```
+
+每次完成嘗試都會遞增 `refreshAttempt`；倒數環以此重啟，失敗時也不會停住。
 
 兩個條件各由一個機制表達：
 

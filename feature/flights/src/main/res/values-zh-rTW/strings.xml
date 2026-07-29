@@ -9,6 +9,7 @@
     <plurals name="flights_summary_next_unscheduled"><item quantity="other">已過 %1$d · 即將抵達 %2$d · 下一班 %3$s · 尚未排定 %4$d</item></plurals>
     <string name="action_refresh">重新整理</string>
     <string name="flights_refresh_countdown">重新整理航班資訊。最後更新：%1$s</string>
+    <string name="flights_refresh_countdown_failed">重新整理航班資訊。最後更新：%1$s。上次重新整理失敗：%2$s</string>
     <string name="flights_timeline_now">現在</string>
     <string name="flights_timeline_now_description">目前時間，%1$s</string>
     <string name="flight_status_arrived">已抵達</string>

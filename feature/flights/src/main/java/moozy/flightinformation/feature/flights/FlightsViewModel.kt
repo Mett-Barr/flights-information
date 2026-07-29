@@ -39,12 +39,16 @@ class FlightsViewModel(
 
     val state: StateFlow<FlightArrivalsUiState> = flow {
         var current: FlightArrivalsUiState = FlightArrivalsUiState.Loading
+        var refreshAttempt = 0L
         while (true) {
             if (current is FlightArrivalsUiState.Content) {
                 current = current.copy(isRefreshing = true)
                 emit(current)
             }
             current = load(current)
+            if (current is FlightArrivalsUiState.Content) {
+                current = current.copy(refreshAttempt = ++refreshAttempt)
+            }
             emit(current)
             // 將逾時與使用者作廢收斂到同一個等待，讓新鮮度與手動刷新共用迴圈。
             withTimeoutOrNull(FRESHNESS) { invalidated.receive() }
@@ -69,13 +73,28 @@ class FlightsViewModel(
                         items = items,
                         updatedAt = clock(),
                         isRefreshing = false,
+                        refreshHealth = if (
+                            previous is FlightArrivalsUiState.Content &&
+                            previous.refreshHealth is RefreshHealth.Failed
+                        ) {
+                            RefreshHealth.Recovered
+                        } else {
+                            RefreshHealth.NeverFailed
+                        },
                     )
                 },
                 onFailure = { error ->
                     // 刷新失敗時寧可留著舊資料，也不要把畫面清空；
                     // 只有從頭就沒東西可顯示時才進錯誤畫面。
-                    if (previous is FlightArrivalsUiState.Content) previous.copy(isRefreshing = false)
-                    else FlightArrivalsUiState.Error(error.asLoadError())
+                    val loadError = error.asLoadError()
+                    if (previous is FlightArrivalsUiState.Content) {
+                        previous.copy(
+                            isRefreshing = false,
+                            refreshHealth = RefreshHealth.Failed(loadError),
+                        )
+                    } else {
+                        FlightArrivalsUiState.Error(loadError)
+                    }
                 },
             )
 

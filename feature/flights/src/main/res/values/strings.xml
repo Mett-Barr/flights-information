@@ -9,6 +9,7 @@
     <plurals name="flights_summary_next_unscheduled"><item quantity="one">%1$d past · %2$d upcoming · next %3$s · %4$d unscheduled</item><item quantity="other">%1$d past · %2$d upcoming · next %3$s · %4$d unscheduled</item></plurals>
     <string name="action_refresh">Refresh</string>
     <string name="flights_refresh_countdown">Refresh flight information. Last updated: %1$s</string>
+    <string name="flights_refresh_countdown_failed">Refresh flight information. Last updated: %1$s. Last refresh failed: %2$s</string>
     <string name="flights_timeline_now">Now</string>
     <string name="flights_timeline_now_description">Current time, %1$s</string>
     <string name="flight_status_arrived">Arrived</string>
