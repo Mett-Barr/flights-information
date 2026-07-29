@@ -2,11 +2,11 @@ package moozy.flightinformation.presentation.screen
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +34,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,7 +47,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -59,6 +57,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -136,7 +135,12 @@ private val LogoSize = 32.dp
 private val LogoSpacing = 8.dp
 private val StatusBadgeMaxWidth = 132.dp
 private val HeadlineBadgeSpacing = 8.dp
-private val LiveDotSize = 8.dp
+private val FreshnessIndicatorSize = 32.dp
+
+/**
+ * 資料新鮮度的唯一來源在 FlightsViewModel.FRESHNESS_MILLIS；因其為 private，於此同步維護。
+ */
+private const val FRESHNESS_MILLIS = 10_000L
 
 /** 可點擊元素的最小高度，符合觸控目標規範。 */
 private val MinTouchTarget = 48.dp
@@ -158,8 +162,6 @@ private const val PRE_NEXT_CONTEXT_ROWS = 2
 
 /** 「下一班」節點外圈柔光的透明度：夠亮到看得出來，又不至於變成第二個節點。 */
 private const val NEXT_NODE_HALO_ALPHA = 0.18f
-
-private const val LIVE_PULSE_MIN_ALPHA = 0.25f
 
 /** 等寬數字。時間是要被上下比較的東西，位數不對齊就白費了整條時間軸。 */
 private const val TABULAR_NUMBERS = "tnum"
@@ -194,7 +196,7 @@ private val updatedAtFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(
  * - 依整點分組，讀不出時刻的（`"--:--"`）整組收在最後，不猜也不丟——見 [buildTimeline]。
  * - 「現在」取自 [FlightArrivalsUiState.Content.updatedAt] 而不是 `LocalDateTime.now()`：
  *   標記要跟畫面上這份資料同一個時間基準。
- * - `refreshEvent` 每 10 秒就發一次，**不捲動清單**，只讓標題列的指示燈閃一下。
+ * - `refreshEvent` 每次成功載入後都會重設新鮮度倒數，**不捲動清單**。
  * - 沒有任何 `AnimatedContent` 綁在每次輪詢都會變的東西上。
  * - 每一列都有 key，重複時補流水號。
  */
@@ -208,18 +210,6 @@ fun FlightsScreen(
 ) {
     val layoutDirection = LocalLayoutDirection.current
 
-    // refreshEvent 每一次輪詢成功都會發（不只手動下拉），也就是每 10 秒一次。
-    // 收到就捲回頂端，在時間軸上等於每 10 秒把使用者正在讀的段落抽走，所以這裡只閃指示燈：
-    // 資料有動，畫面不動。
-    val pulseSpec = spring<Float>(dampingRatio = 0.7f, stiffness = 200f)
-    val livePulse = remember { Animatable(1f) }
-    LaunchedEffect(refreshEvent, pulseSpec) {
-        refreshEvent?.collect {
-            livePulse.snapTo(LIVE_PULSE_MIN_ALPHA)
-            livePulse.animateTo(1f, pulseSpec)
-        }
-    }
-
     Surface(
         color = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
@@ -228,8 +218,6 @@ fun FlightsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // 外層 pager 已經吃掉狀態列 inset 並標記為已消費，所以這裡的 statusBarsPadding()
-                // 會解析成 0；獨立使用這個畫面時它才會真的補上狀態列高度。
                 .statusBarsPadding()
                 .padding(
                     start = innerPadding.calculateStartPadding(layoutDirection),
@@ -237,10 +225,8 @@ fun FlightsScreen(
                 )
         ) {
             TimelineHeader(
-                updatedAtText = (flightArrivalsUiState as? FlightArrivalsUiState.Content)
-                    ?.updatedAt
-                    ?.format(updatedAtFormatter),
-                livePulse = livePulse
+                content = flightArrivalsUiState as? FlightArrivalsUiState.Content,
+                refreshEvent = refreshEvent
             )
 
             Box(
@@ -273,55 +259,89 @@ fun FlightsScreen(
  * ============================================================ */
 
 /**
- * 畫面標題與「最後更新」。
- *
- * 這裡刻意不用 `TopAppBar`：這個版本是被橫向 pager 當成一頁托住的，
- * 上面已經有一條分頁列，再疊一條 app bar 不是 MD3 的用法，也會把可視高度吃掉一大截。
- * 附帶的好處是不必為了 `TopAppBarScrollBehavior` 開實驗性 opt-in。
- *
- * [livePulse] 以物件形式傳進來、在這個函式裡才讀 `value`，
- * 這樣每秒 60 次的動畫只會重組這一小塊，不會把整個畫面拖下水。
+ * 導覽列已標示目前目的地，這裡只保留新鮮度與下一步資訊。
  */
 @Composable
 private fun TimelineHeader(
-    updatedAtText: String?,
-    livePulse: Animatable<Float, AnimationVector1D>,
+    content: FlightArrivalsUiState.Content?,
+    refreshEvent: SharedFlow<Unit>?,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    if (content == null) return
+
+    val unscheduledLabel = stringResource(R.string.flights_unscheduled)
+    val timeline = remember(content.items, content.updatedAt, unscheduledLabel) {
+        buildTimeline(content.items, content.updatedAt.toLocalTime(), unscheduledLabel)
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = ScreenHorizontalPadding, vertical = 12.dp)
+            .padding(horizontal = ScreenHorizontalPadding, vertical = 8.dp)
     ) {
         Text(
-            text = stringResource(R.string.flights_arrivals_timeline),
-            style = MaterialTheme.typography.titleLarge,
+            text = summaryTextOf(timeline),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
+        Spacer(modifier = Modifier.width(12.dp))
+        FreshnessIndicator(
+            updatedAt = content.updatedAt,
+            isRefreshing = content.isRefreshing,
+            refreshEvent = refreshEvent
+        )
+    }
+}
 
-        if (updatedAtText != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(LiveDotSize)
-                        .alpha(livePulse.value)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = CircleShape
-                        )
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.flights_last_updated, updatedAtText),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
+/**
+ * 動畫值只在 Material 3 指示器的 progress lambda 內讀取，避免逐幀重組時間軸與清單。
+ */
+@Composable
+private fun FreshnessIndicator(
+    updatedAt: LocalDateTime,
+    isRefreshing: Boolean,
+    refreshEvent: SharedFlow<Unit>?,
+    modifier: Modifier = Modifier
+) {
+    val progress = remember { Animatable(1f) }
+    val updatedDescription = stringResource(
+        R.string.flights_last_updated,
+        updatedAt.format(updatedAtFormatter)
+    )
+
+    suspend fun restartCountdown() {
+        progress.snapTo(1f)
+        progress.animateTo(
+            targetValue = 0f,
+            animationSpec = tween(
+                durationMillis = FRESHNESS_MILLIS.toInt(),
+                easing = LinearEasing
+            )
+        )
+    }
+
+    LaunchedEffect(updatedAt) { restartCountdown() }
+    LaunchedEffect(refreshEvent) {
+        refreshEvent?.collect { restartCountdown() }
+    }
+
+    if (isRefreshing) {
+        CircularProgressIndicator(
+            modifier = modifier
+                .size(FreshnessIndicatorSize)
+                .semantics { contentDescription = updatedDescription }
+        )
+    } else {
+        CircularProgressIndicator(
+            progress = { progress.value },
+            modifier = modifier
+                .size(FreshnessIndicatorSize)
+                .semantics { contentDescription = updatedDescription }
+        )
     }
 }
 
@@ -465,73 +485,44 @@ private fun TimelineContent(
             }
         }
 
-        Column(modifier = modifier.fillMaxSize()) {
-            TimelineSummary(timeline = timeline)
-
-            PullToRefreshBox(
-                isRefreshing = content.isRefreshing,
-                onRefresh = onRefresh,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+        PullToRefreshBox(
+            isRefreshing = content.isRefreshing,
+            onRefresh = onRefresh,
+            modifier = modifier.fillMaxSize()
+        ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = bottomPadding + 24.dp)
             ) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = bottomPadding + 24.dp)
-                ) {
-                    // 這裡刻意不給 verticalArrangement：格與格之間只要出現任何間隙，
-                    // 軌道就會斷成一節一節。列距畫在每一格自己的 padding 裡。
-                    items(
-                        items = timeline.rows,
-                        key = { row -> row.key },
-                        contentType = { row -> row::class }
-                    ) { row ->
-                        when (row) {
-                            is TimelineRow.Head -> TimelineRailCap(
-                                height = RailHeadHeight,
-                                fadeAtTop = true
-                            )
+                // 這裡刻意不給 verticalArrangement：格與格之間只要出現任何間隙，
+                // 軌道就會斷成一節一節。列距畫在每一格自己的 padding 裡。
+                items(
+                    items = timeline.rows,
+                    key = { row -> row.key },
+                    contentType = { row -> row::class }
+                ) { row ->
+                    when (row) {
+                        is TimelineRow.Head -> TimelineRailCap(
+                            height = RailHeadHeight,
+                            fadeAtTop = true
+                        )
 
-                            is TimelineRow.Marker -> TimelineHourMarker(
-                                label = row.label,
-                                note = row.note
-                            )
+                        is TimelineRow.Marker -> TimelineHourMarker(
+                            label = row.label,
+                            note = row.note
+                        )
 
-                            is TimelineRow.Flight -> TimelineFlightRow(entry = row.entry)
+                        is TimelineRow.Flight -> TimelineFlightRow(entry = row.entry)
 
-                            is TimelineRow.Tail -> TimelineRailCap(
-                                height = RailTailHeight,
-                                fadeAtTop = false
-                            )
-                        }
+                        is TimelineRow.Tail -> TimelineRailCap(
+                            height = RailTailHeight,
+                            fadeAtTop = false
+                        )
                     }
                 }
             }
         }
-    }
-}
-
-/** 一行摘要：幾筆已經過去、下一班是幾點、幾筆還沒到、幾筆時間未定。 */
-@Composable
-private fun TimelineSummary(
-    timeline: Timeline,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = summaryTextOf(timeline),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(
-                start = ScreenHorizontalPadding,
-                end = ScreenHorizontalPadding,
-                bottom = 8.dp
-            )
-        )
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
 

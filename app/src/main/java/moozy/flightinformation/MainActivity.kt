@@ -1,6 +1,6 @@
 package moozy.flightinformation
 
-import AppNavDisplay
+import moozy.flightinformation.presentation.navigation.AppNavDisplay
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent

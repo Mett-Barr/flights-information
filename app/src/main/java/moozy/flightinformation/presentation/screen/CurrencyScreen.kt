@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +26,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
@@ -51,8 +50,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -74,7 +71,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathBuilder
 import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
@@ -206,44 +202,15 @@ fun CurrencyScreen(
             }
     }
 
-    val topInset = innerPadding.calculateTopPadding()
-    // MD3：app bar 捲動後要換成 scrolled container color，內容才不會和它糊在一起。
-    // pinned 這個 behavior 只換色、不收合，所以靜止時的版面和原本完全一樣。
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-
     Column(
         modifier = modifier
             .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection)
+            .statusBarsPadding()
             .padding(
                 start = innerPadding.calculateStartPadding(layoutDirection),
                 end = innerPadding.calculateEndPadding(layoutDirection)
             )
     ) {
-        TopAppBar(
-            title = { Text(text = stringResource(R.string.currency_title)) },
-            actions = {
-                IconButton(
-                    onClick = { showPicker = true },
-                    enabled = content != null
-                ) {
-                    Icon(
-                        imageVector = rememberGridTuneIcon(),
-                        contentDescription = stringResource(R.string.currency_manage_currencies)
-                    )
-                }
-            },
-            // 水平安全區已經由外層 Column 吃掉了，這裡只補頂端高度，讓 app bar 的底色
-            // 一路延伸到螢幕頂端。宿主沒給 top inset 時（例如被單獨預覽）自己補狀態列，
-            // 標題才不會跑到狀態列底下。
-            windowInsets = if (topInset > 0.dp) {
-                WindowInsets(top = topInset)
-            } else {
-                WindowInsets.statusBars
-            },
-            scrollBehavior = scrollBehavior
-        )
-
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -268,6 +235,7 @@ fun CurrencyScreen(
                     animateEntrance = animateEntrance,
                     onAmountClick = { showCalculator = true },
                     onBaseClick = { showPicker = true },
+                    onManageClick = { showPicker = true },
                     onPromote = { row ->
                         // 點目標卡＝把它變成新的基準，換算方向整個翻過來。
                         val code = CurrencyCode.fromCode(row.code)
@@ -319,6 +287,7 @@ private fun CardGridContent(
     animateEntrance: Boolean,
     onAmountClick: () -> Unit,
     onBaseClick: () -> Unit,
+    onManageClick: () -> Unit,
     onPromote: (CurrencyRow) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
@@ -376,7 +345,8 @@ private fun CardGridContent(
                     baseCode = baseCode,
                     amount = baseAmount,
                     onAmountClick = onAmountClick,
-                    onBaseClick = onBaseClick
+                    onBaseClick = onBaseClick,
+                    onManageClick = onManageClick
                 )
             }
 
@@ -427,6 +397,7 @@ private fun CardGridBaseTile(
     amount: BigDecimal?,
     onAmountClick: () -> Unit,
     onBaseClick: () -> Unit,
+    onManageClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // 還沒輸入時用 1 當佔位值：此時每張卡顯示的就是「1 基準幣別換得到多少」，也就是匯率本身。
@@ -534,6 +505,19 @@ private fun CardGridBaseTile(
                             imageVector = rememberGridChevronDownIcon(),
                             contentDescription = stringResource(R.string.currency_change_base_currency),
                             modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(CardGridSpace.xs))
+
+                    // 管理目標幣別與切換基準幣別同屬這張輸入卡，避免把設定動作拆到頁面別處。
+                    IconButton(
+                        onClick = onManageClick,
+                        modifier = Modifier.size(CARD_GRID_MIN_TOUCH_TARGET)
+                    ) {
+                        Icon(
+                            imageVector = rememberGridTuneIcon(),
+                            contentDescription = stringResource(R.string.currency_manage_currencies)
                         )
                     }
                 }
@@ -1220,7 +1204,7 @@ private fun buildCardGridIcon(
     return builder.build()
 }
 
-/** 滑桿圖示：app bar 上的「幣別管理」動作。 */
+/** 滑桿圖示：基準金額卡上的「幣別管理」動作。 */
 @Composable
 private fun rememberGridTuneIcon(): ImageVector {
     val tint = LocalContentColor.current

@@ -1,7 +1,6 @@
 package moozy.flightinformation.data.repository.currency
 
 import moozy.flightinformation.data.datasource.currency.CurrencyDataSource
-import moozy.flightinformation.data.datasource.currency.CurrencyNetworkDataSource
 import moozy.flightinformation.data.datasource.currency.dto.toCurrencies
 import moozy.flightinformation.domain.model.currency.Currencies
 import moozy.flightinformation.domain.repository.currency.CurrencyRepository

@@ -1,3 +1,5 @@
+package moozy.flightinformation.presentation.navigation
+
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -20,10 +22,6 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.launch
 import moozy.flightinformation.presentation.component.RotatableScaffold
-import moozy.flightinformation.presentation.navigation.NavRoute
-import moozy.flightinformation.presentation.navigation.currentTopLevel
-import moozy.flightinformation.presentation.navigation.rememberInitialBackStack
-import moozy.flightinformation.presentation.navigation.switchTopLevel
 import moozy.flightinformation.presentation.screen.FlightsScreen
 import moozy.flightinformation.presentation.screen.CurrencyScreen
 import moozy.flightinformation.presentation.viewmodel.CurrencyViewModel
